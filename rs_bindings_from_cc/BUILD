@@ -417,8 +417,9 @@ genrule(
     outs = [
         "ir_generated.h.gen",
         "ir_generated.rs.gen",
+        "ir_layout_assertions_generated.rs.gen",
     ],
-    cmd = "$(execpath :ir_codegen) $(execpath ir_generated.h.gen) $(execpath ir_generated.rs.gen)",
+    cmd = "$(execpath :ir_codegen) $(execpath ir_generated.h.gen) $(execpath ir_generated.rs.gen) $(execpath ir_layout_assertions_generated.rs.gen)",
     tools = [":ir_codegen"],
 )
 
@@ -430,12 +431,16 @@ sh_test(
         "$(rootpath :ir_generated.h.gen)",
         "$(rootpath ir_generated.rs)",
         "$(rootpath :ir_generated.rs.gen)",
+        "$(rootpath ir_layout_assertions_generated.rs)",
+        "$(rootpath :ir_layout_assertions_generated.rs.gen)",
     ],
     data = [
         "ir_generated.h",
         "ir_generated.rs",
+        "ir_layout_assertions_generated.rs",
         ":ir_generated.h.gen",
         ":ir_generated.rs.gen",
+        ":ir_layout_assertions_generated.rs.gen",
         "//common:LICENSE_HEADER",
     ],
     tags = ["crubit_golden_test"],
@@ -484,20 +489,22 @@ rust_library(
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",
-        "//common:error_report",
         "//common:ffi_types",
         "//common:memoized",
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
-        "@crate_index//:syn",  # v1
     ],
 )
 
 crubit_rust_test(
     name = "rs_ir_test",
-    srcs = ["ir_test.rs"],
+    srcs = [
+        "ir_layout_assertions_generated.rs",
+        "ir_test.rs",
+    ],
+    crate_root = "ir_test.rs",
     deps = [
         ":ir",
         "@crate_index//:googletest",

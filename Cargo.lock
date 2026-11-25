@@ -1914,7 +1914,6 @@ dependencies = [
  "arc_anyhow",
  "code_gen_utils",
  "crubit_feature",
- "error_report",
  "ffi_types",
  "flagset",
  "googletest",
@@ -1924,7 +1923,6 @@ dependencies = [
  "quote",
  "rs_bindings_from_cc_bazel_label",
  "rs_bindings_from_cc_ir",
- "syn 2.0.119",
 ]
 
 [[package]]

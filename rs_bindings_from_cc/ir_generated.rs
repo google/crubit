@@ -611,12 +611,6 @@ mod __defs {
             &mut self.name
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<HeaderName>() == 16);
-        assert!(core::mem::align_of::<HeaderName>() == 8);
-        assert!(core::mem::offset_of!(HeaderName, name) == 0);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -654,13 +648,6 @@ mod __defs {
             &mut self.id
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<LifetimeName>() == 24);
-        assert!(core::mem::align_of::<LifetimeName>() == 8);
-        assert!(core::mem::offset_of!(LifetimeName, name) == 0);
-        assert!(core::mem::offset_of!(LifetimeName, id) == 16);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -698,13 +685,6 @@ mod __defs {
             &mut self.line
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<SourceLocation>() == 24);
-        assert!(core::mem::align_of::<SourceLocation>() == 8);
-        assert!(core::mem::offset_of!(SourceLocation, path) == 0);
-        assert!(core::mem::offset_of!(SourceLocation, line) == 16);
-    };
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -787,14 +767,6 @@ mod __defs {
             &mut self.name_range
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<DeclLocation>() == 64);
-        assert!(core::mem::align_of::<DeclLocation>() == 8);
-        assert!(core::mem::offset_of!(DeclLocation, spelling) == 8);
-        assert!(core::mem::offset_of!(DeclLocation, expansion) == 32);
-        assert!(core::mem::offset_of!(DeclLocation, name_range) == 56);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -832,13 +804,6 @@ mod __defs {
             &mut self.message
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<FormattedError>() == 32);
-        assert!(core::mem::align_of::<FormattedError>() == 8);
-        assert!(core::mem::offset_of!(FormattedError, fmt) == 0);
-        assert!(core::mem::offset_of!(FormattedError, message) == 16);
-    };
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -913,14 +878,6 @@ mod __defs {
             &mut self.defining_target
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Blocker>() == 56);
-        assert!(core::mem::align_of::<Blocker>() == 8);
-        assert!(core::mem::offset_of!(Blocker, name) == 8);
-        assert!(core::mem::offset_of!(Blocker, unique_name) == 24);
-        assert!(core::mem::offset_of!(Blocker, defining_target) == 40);
-    };
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -1021,17 +978,6 @@ mod __defs {
             self.template_args = val;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<CcType>() == 136);
-        assert!(core::mem::align_of::<CcType>() == 8);
-        assert!(core::mem::offset_of!(CcType, variant) == 0);
-        assert!(core::mem::offset_of!(CcType, is_const) == 64);
-        assert!(core::mem::offset_of!(CcType, is_nonnull) == 65);
-        assert!(core::mem::offset_of!(CcType, unknown_attr) == 72);
-        assert!(core::mem::offset_of!(CcType, explicit_lifetimes) == 88);
-        assert!(core::mem::offset_of!(CcType, template_args) == 112);
-    };
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -1066,12 +1012,6 @@ mod __defs {
             &mut self.identifier
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Identifier>() == 16);
-        assert!(core::mem::align_of::<Identifier>() == 8);
-        assert!(core::mem::offset_of!(Identifier, identifier) == 0);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, Copy, PartialEq, Eq, Hash)]
@@ -1109,13 +1049,6 @@ mod __defs {
             &mut self.wrapped_value
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<IntegerConstant>() == 16);
-        assert!(core::mem::align_of::<IntegerConstant>() == 8);
-        assert!(core::mem::offset_of!(IntegerConstant, is_negative) == 0);
-        assert!(core::mem::offset_of!(IntegerConstant, wrapped_value) == 8);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, Copy, PartialEq, Eq, Hash)]
@@ -1144,12 +1077,6 @@ mod __defs {
             &mut self.bits
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<FloatConstant>() == 8);
-        assert!(core::mem::align_of::<FloatConstant>() == 8);
-        assert!(core::mem::offset_of!(FloatConstant, bits) == 0);
-    };
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -1188,12 +1115,6 @@ mod __defs {
             &mut self.name
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Operator>() == 16);
-        assert!(core::mem::align_of::<Operator>() == 8);
-        assert!(core::mem::offset_of!(Operator, name) == 0);
-    };
 
     #[repr(C, u32)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -1252,11 +1173,6 @@ mod __defs {
             *self = Self::ConversionOperator;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<UnqualifiedIdentifier>() == 24);
-        assert!(core::mem::align_of::<UnqualifiedIdentifier>() == 8);
-    };
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -1352,17 +1268,6 @@ mod __defs {
             &mut self.unknown_attr
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<FuncParam>() == 208);
-        assert!(core::mem::align_of::<FuncParam>() == 8);
-        assert!(core::mem::offset_of!(FuncParam, type_) == 8);
-        assert!(core::mem::offset_of!(FuncParam, identifier) == 144);
-        assert!(core::mem::offset_of!(FuncParam, clang_lifetime_capture_by) == 160);
-        assert!(core::mem::offset_of!(FuncParam, clang_lifetimebound) == 184);
-        assert!(core::mem::offset_of!(FuncParam, clang_noescape) == 185);
-        assert!(core::mem::offset_of!(FuncParam, unknown_attr) == 192);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, Copy, PartialEq, Eq, Hash)]
@@ -1408,14 +1313,6 @@ mod __defs {
             &mut self.is_virtual
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<InstanceMethodMetadata>() == 8);
-        assert!(core::mem::align_of::<InstanceMethodMetadata>() == 4);
-        assert!(core::mem::offset_of!(InstanceMethodMetadata, reference) == 0);
-        assert!(core::mem::offset_of!(InstanceMethodMetadata, is_const) == 4);
-        assert!(core::mem::offset_of!(InstanceMethodMetadata, is_virtual) == 5);
-    };
 
     #[repr(C, u32)]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1454,11 +1351,6 @@ mod __defs {
             *self = Self::Constructor;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<MemberFuncSemantic>() == 152);
-        assert!(core::mem::align_of::<MemberFuncSemantic>() == 8);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -1923,42 +1815,6 @@ mod __defs {
             &mut self.is_pub_crate
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Func>() == 680);
-        assert!(core::mem::align_of::<Func>() == 8);
-        assert!(core::mem::offset_of!(Func, cc_name) == 8);
-        assert!(core::mem::offset_of!(Func, rs_name) == 32);
-        assert!(core::mem::offset_of!(Func, unique_name) == 56);
-        assert!(core::mem::offset_of!(Func, owning_target) == 72);
-        assert!(core::mem::offset_of!(Func, mangled_name) == 88);
-        assert!(core::mem::offset_of!(Func, doc_comment) == 104);
-        assert!(core::mem::offset_of!(Func, return_type) == 120);
-        assert!(core::mem::offset_of!(Func, params) == 256);
-        assert!(core::mem::offset_of!(Func, lifetime_params) == 280);
-        assert!(core::mem::offset_of!(Func, is_inline) == 304);
-        assert!(core::mem::offset_of!(Func, is_always_inline) == 305);
-        assert!(core::mem::offset_of!(Func, instance_method_metadata) == 308);
-        assert!(core::mem::offset_of!(Func, is_extern_c) == 316);
-        assert!(core::mem::offset_of!(Func, is_noreturn) == 317);
-        assert!(core::mem::offset_of!(Func, is_variadic) == 318);
-        assert!(core::mem::offset_of!(Func, is_consteval) == 319);
-        assert!(core::mem::offset_of!(Func, nodiscard) == 320);
-        assert!(core::mem::offset_of!(Func, deprecated) == 336);
-        assert!(core::mem::offset_of!(Func, unknown_attr) == 352);
-        assert!(core::mem::offset_of!(Func, call_conv) == 368);
-        assert!(core::mem::offset_of!(Func, is_member_or_descendant_of_class_template) == 372);
-        assert!(core::mem::offset_of!(Func, safety_annotation) == 376);
-        assert!(core::mem::offset_of!(Func, decl_loc) == 384);
-        assert!(core::mem::offset_of!(Func, id) == 448);
-        assert!(core::mem::offset_of!(Func, enclosing_item_id) == 456);
-        assert!(core::mem::offset_of!(Func, adl_enclosing_record) == 464);
-        assert!(core::mem::offset_of!(Func, must_bind) == 472);
-        assert!(core::mem::offset_of!(Func, inline_cpp_source_text) == 480);
-        assert!(core::mem::offset_of!(Func, lifetime_inputs) == 496);
-        assert!(core::mem::offset_of!(Func, semantic) == 520);
-        assert!(core::mem::offset_of!(Func, is_pub_crate) == 672);
-    };
 
     #[repr(C, u32)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -2012,11 +1868,6 @@ mod __defs {
             inner
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<StatusOrOptionalString>() == 24);
-        assert!(core::mem::align_of::<StatusOrOptionalString>() == 8);
-    };
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -2206,24 +2057,6 @@ mod __defs {
             &mut self.deprecated
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Field>() == 264);
-        assert!(core::mem::align_of::<Field>() == 8);
-        assert!(core::mem::offset_of!(Field, rust_identifier) == 8);
-        assert!(core::mem::offset_of!(Field, cpp_identifier) == 24);
-        assert!(core::mem::offset_of!(Field, doc_comment) == 40);
-        assert!(core::mem::offset_of!(Field, type_) == 56);
-        assert!(core::mem::offset_of!(Field, access) == 192);
-        assert!(core::mem::offset_of!(Field, offset) == 200);
-        assert!(core::mem::offset_of!(Field, size) == 208);
-        assert!(core::mem::offset_of!(Field, unknown_attr) == 216);
-        assert!(core::mem::offset_of!(Field, is_no_unique_address) == 240);
-        assert!(core::mem::offset_of!(Field, is_bitfield) == 241);
-        assert!(core::mem::offset_of!(Field, is_inheritable) == 242);
-        assert!(core::mem::offset_of!(Field, is_mutable) == 243);
-        assert!(core::mem::offset_of!(Field, deprecated) == 248);
-    };
 
     #[repr(C)]
     #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -2280,13 +2113,6 @@ mod __defs {
             &mut self.offset
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<BaseClass>() == 24);
-        assert!(core::mem::align_of::<BaseClass>() == 8);
-        assert!(core::mem::offset_of!(BaseClass, base_record_id) == 8);
-        assert!(core::mem::offset_of!(BaseClass, offset) == 16);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, Copy, PartialEq, Eq, Hash)]
@@ -2324,13 +2150,6 @@ mod __defs {
             &mut self.alignment
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<SizeAlign>() == 16);
-        assert!(core::mem::align_of::<SizeAlign>() == 8);
-        assert!(core::mem::offset_of!(SizeAlign, size) == 0);
-        assert!(core::mem::offset_of!(SizeAlign, alignment) == 8);
-    };
 
     #[repr(C, u32)]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2373,11 +2192,6 @@ mod __defs {
             inner
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<TemplateArg>() == 144);
-        assert!(core::mem::align_of::<TemplateArg>() == 8);
-    };
 
     #[repr(C, u32)]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2440,11 +2254,6 @@ mod __defs {
             inner
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<BridgeType>() == 280);
-        assert!(core::mem::align_of::<BridgeType>() == 8);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -2482,13 +2291,6 @@ mod __defs {
             &mut self.length
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<ArrayValue>() == 64);
-        assert!(core::mem::align_of::<ArrayValue>() == 8);
-        assert!(core::mem::offset_of!(ArrayValue, kind) == 0);
-        assert!(core::mem::offset_of!(ArrayValue, length) == 56);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -2730,25 +2532,6 @@ mod __defs {
             self.macro_kind = val;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Constant>() == 424);
-        assert!(core::mem::align_of::<Constant>() == 8);
-        assert!(core::mem::offset_of!(Constant, kind) == 8);
-        assert!(core::mem::offset_of!(Constant, cc_name) == 80);
-        assert!(core::mem::offset_of!(Constant, rs_name) == 96);
-        assert!(core::mem::offset_of!(Constant, unique_name) == 112);
-        assert!(core::mem::offset_of!(Constant, id) == 128);
-        assert!(core::mem::offset_of!(Constant, owning_target) == 136);
-        assert!(core::mem::offset_of!(Constant, decl_loc) == 152);
-        assert!(core::mem::offset_of!(Constant, unknown_attr) == 216);
-        assert!(core::mem::offset_of!(Constant, enclosing_item_id) == 232);
-        assert!(core::mem::offset_of!(Constant, type_) == 240);
-        assert!(core::mem::offset_of!(Constant, must_bind) == 376);
-        assert!(core::mem::offset_of!(Constant, deprecated) == 384);
-        assert!(core::mem::offset_of!(Constant, doc_comment) == 400);
-        assert!(core::mem::offset_of!(Constant, macro_kind) == 416);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -2786,13 +2569,6 @@ mod __defs {
             &mut self.kind
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<TemplateSpecialization>() == 296);
-        assert!(core::mem::align_of::<TemplateSpecialization>() == 8);
-        assert!(core::mem::offset_of!(TemplateSpecialization, defining_target) == 0);
-        assert!(core::mem::offset_of!(TemplateSpecialization, kind) == 16);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -2860,17 +2636,6 @@ mod __defs {
             self.custom = val;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<TraitDerives>() == 48);
-        assert!(core::mem::align_of::<TraitDerives>() == 8);
-        assert!(core::mem::offset_of!(TraitDerives, clone) == 0);
-        assert!(core::mem::offset_of!(TraitDerives, copy) == 4);
-        assert!(core::mem::offset_of!(TraitDerives, debug) == 8);
-        assert!(core::mem::offset_of!(TraitDerives, send) == 12);
-        assert!(core::mem::offset_of!(TraitDerives, sync) == 16);
-        assert!(core::mem::offset_of!(TraitDerives, custom) == 24);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -2908,13 +2673,6 @@ mod __defs {
             &mut self.drop_impl
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<OwnedPtrConfig>() == 32);
-        assert!(core::mem::align_of::<OwnedPtrConfig>() == 8);
-        assert!(core::mem::offset_of!(OwnedPtrConfig, owned_ptr_type) == 0);
-        assert!(core::mem::offset_of!(OwnedPtrConfig, drop_impl) == 16);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -3578,60 +3336,6 @@ mod __defs {
             self.children = val;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Record>() == 1160);
-        assert!(core::mem::align_of::<Record>() == 8);
-        assert!(core::mem::offset_of!(Record, rs_name) == 8);
-        assert!(core::mem::offset_of!(Record, cc_name) == 24);
-        assert!(core::mem::offset_of!(Record, unique_name) == 40);
-        assert!(core::mem::offset_of!(Record, mangled_cc_name) == 56);
-        assert!(core::mem::offset_of!(Record, id) == 72);
-        assert!(core::mem::offset_of!(Record, owning_target) == 80);
-        assert!(core::mem::offset_of!(Record, template_specialization) == 96);
-        assert!(core::mem::offset_of!(Record, unknown_attr) == 392);
-        assert!(core::mem::offset_of!(Record, doc_comment) == 408);
-        assert!(core::mem::offset_of!(Record, bridge_type) == 424);
-        assert!(core::mem::offset_of!(Record, owned_ptr_config) == 704);
-        assert!(core::mem::offset_of!(Record, decl_loc) == 736);
-        assert!(core::mem::offset_of!(Record, unambiguous_public_bases) == 800);
-        assert!(core::mem::offset_of!(Record, fields) == 824);
-        assert!(core::mem::offset_of!(Record, lifetime_params) == 848);
-        assert!(core::mem::offset_of!(Record, size_align) == 872);
-        assert!(core::mem::offset_of!(Record, trait_derives) == 888);
-        assert!(core::mem::offset_of!(Record, is_derived_class) == 936);
-        assert!(core::mem::offset_of!(Record, has_virtual_bases) == 937);
-        assert!(core::mem::offset_of!(Record, override_alignment) == 938);
-        assert!(core::mem::offset_of!(Record, pack) == 944);
-        assert!(core::mem::offset_of!(Record, safety_annotation) == 952);
-        assert!(core::mem::offset_of!(Record, copy_constructor) == 956);
-        assert!(core::mem::offset_of!(Record, move_constructor) == 960);
-        assert!(core::mem::offset_of!(Record, destructor) == 964);
-        assert!(core::mem::offset_of!(Record, is_rust_movable) == 968);
-        assert!(core::mem::offset_of!(Record, not_rust_movable_reason) == 976);
-        assert!(core::mem::offset_of!(Record, libcxx_only_fields) == 992);
-        assert!(core::mem::offset_of!(Record, is_inheritable) == 1016);
-        assert!(core::mem::offset_of!(Record, is_abstract) == 1017);
-        assert!(core::mem::offset_of!(Record, nodiscard) == 1024);
-        assert!(core::mem::offset_of!(Record, record_type) == 1040);
-        assert!(core::mem::offset_of!(Record, is_aggregate) == 1044);
-        assert!(core::mem::offset_of!(Record, is_canonical_alias) == 1045);
-        assert!(core::mem::offset_of!(Record, mangled_rs_name) == 1048);
-        assert!(core::mem::offset_of!(Record, enclosing_item_id) == 1064);
-        assert!(core::mem::offset_of!(Record, must_bind) == 1072);
-        assert!(core::mem::offset_of!(Record, overloads_operator_delete) == 1073);
-        assert!(core::mem::offset_of!(Record, has_private_or_deleted_operator_delete) == 1074);
-        assert!(core::mem::offset_of!(Record, lifetime_inputs) == 1080);
-        assert!(core::mem::offset_of!(Record, impl_debug) == 1104);
-        assert!(core::mem::offset_of!(Record, has_private_pointer_or_reference_fields) == 1105);
-        assert!(core::mem::offset_of!(Record, has_template_argument_lifetime) == 1106);
-        assert!(core::mem::offset_of!(Record, detected_formatter) == 1107);
-        assert!(core::mem::offset_of!(Record, detected_hasher) == 1108);
-        assert!(core::mem::offset_of!(Record, deprecated) == 1112);
-        assert!(core::mem::offset_of!(Record, is_thread_safe) == 1128);
-        assert!(core::mem::offset_of!(Record, is_explicit_class_template_instantiation_definition) == 1129);
-        assert!(core::mem::offset_of!(Record, children) == 1136);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -3786,20 +3490,6 @@ mod __defs {
             &mut self.must_bind
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<IncompleteRecord>() == 120);
-        assert!(core::mem::align_of::<IncompleteRecord>() == 8);
-        assert!(core::mem::offset_of!(IncompleteRecord, cc_name) == 8);
-        assert!(core::mem::offset_of!(IncompleteRecord, rs_name) == 24);
-        assert!(core::mem::offset_of!(IncompleteRecord, unique_name) == 40);
-        assert!(core::mem::offset_of!(IncompleteRecord, id) == 56);
-        assert!(core::mem::offset_of!(IncompleteRecord, owning_target) == 64);
-        assert!(core::mem::offset_of!(IncompleteRecord, unknown_attr) == 80);
-        assert!(core::mem::offset_of!(IncompleteRecord, record_type) == 96);
-        assert!(core::mem::offset_of!(IncompleteRecord, enclosing_item_id) == 104);
-        assert!(core::mem::offset_of!(IncompleteRecord, must_bind) == 112);
-    };
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -3902,16 +3592,6 @@ mod __defs {
             &mut self.doc_comment
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Enumerator>() == 88);
-        assert!(core::mem::align_of::<Enumerator>() == 8);
-        assert!(core::mem::offset_of!(Enumerator, identifier) == 8);
-        assert!(core::mem::offset_of!(Enumerator, value) == 24);
-        assert!(core::mem::offset_of!(Enumerator, unknown_attr) == 40);
-        assert!(core::mem::offset_of!(Enumerator, deprecated) == 56);
-        assert!(core::mem::offset_of!(Enumerator, doc_comment) == 72);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -4183,27 +3863,6 @@ mod __defs {
             &mut self.doc_comment
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Enum>() == 400);
-        assert!(core::mem::align_of::<Enum>() == 8);
-        assert!(core::mem::offset_of!(Enum, cc_name) == 8);
-        assert!(core::mem::offset_of!(Enum, rs_name) == 24);
-        assert!(core::mem::offset_of!(Enum, unique_name) == 40);
-        assert!(core::mem::offset_of!(Enum, mangled_cc_name) == 56);
-        assert!(core::mem::offset_of!(Enum, id) == 72);
-        assert!(core::mem::offset_of!(Enum, owning_target) == 80);
-        assert!(core::mem::offset_of!(Enum, decl_loc) == 96);
-        assert!(core::mem::offset_of!(Enum, underlying_type) == 160);
-        assert!(core::mem::offset_of!(Enum, enumerators) == 296);
-        assert!(core::mem::offset_of!(Enum, unknown_attr) == 320);
-        assert!(core::mem::offset_of!(Enum, enclosing_item_id) == 336);
-        assert!(core::mem::offset_of!(Enum, must_bind) == 344);
-        assert!(core::mem::offset_of!(Enum, detected_formatter) == 345);
-        assert!(core::mem::offset_of!(Enum, nodiscard) == 352);
-        assert!(core::mem::offset_of!(Enum, deprecated) == 368);
-        assert!(core::mem::offset_of!(Enum, doc_comment) == 384);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -4435,24 +4094,6 @@ mod __defs {
             &mut self.doc_comment
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<GlobalVar>() == 360);
-        assert!(core::mem::align_of::<GlobalVar>() == 8);
-        assert!(core::mem::offset_of!(GlobalVar, cc_name) == 8);
-        assert!(core::mem::offset_of!(GlobalVar, rs_name) == 24);
-        assert!(core::mem::offset_of!(GlobalVar, unique_name) == 40);
-        assert!(core::mem::offset_of!(GlobalVar, id) == 56);
-        assert!(core::mem::offset_of!(GlobalVar, owning_target) == 64);
-        assert!(core::mem::offset_of!(GlobalVar, decl_loc) == 80);
-        assert!(core::mem::offset_of!(GlobalVar, unknown_attr) == 144);
-        assert!(core::mem::offset_of!(GlobalVar, enclosing_item_id) == 160);
-        assert!(core::mem::offset_of!(GlobalVar, mangled_name) == 168);
-        assert!(core::mem::offset_of!(GlobalVar, type_) == 184);
-        assert!(core::mem::offset_of!(GlobalVar, must_bind) == 320);
-        assert!(core::mem::offset_of!(GlobalVar, deprecated) == 328);
-        assert!(core::mem::offset_of!(GlobalVar, doc_comment) == 344);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -4686,25 +4327,6 @@ mod __defs {
             self.lifetime_inputs = val;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<TypeAlias>() == 368);
-        assert!(core::mem::align_of::<TypeAlias>() == 8);
-        assert!(core::mem::offset_of!(TypeAlias, cc_name) == 8);
-        assert!(core::mem::offset_of!(TypeAlias, rs_name) == 24);
-        assert!(core::mem::offset_of!(TypeAlias, unique_name) == 40);
-        assert!(core::mem::offset_of!(TypeAlias, id) == 56);
-        assert!(core::mem::offset_of!(TypeAlias, owning_target) == 64);
-        assert!(core::mem::offset_of!(TypeAlias, doc_comment) == 80);
-        assert!(core::mem::offset_of!(TypeAlias, unknown_attr) == 96);
-        assert!(core::mem::offset_of!(TypeAlias, underlying_type) == 112);
-        assert!(core::mem::offset_of!(TypeAlias, decl_loc) == 248);
-        assert!(core::mem::offset_of!(TypeAlias, enclosing_item_id) == 312);
-        assert!(core::mem::offset_of!(TypeAlias, names_template_instantiation) == 320);
-        assert!(core::mem::offset_of!(TypeAlias, must_bind) == 321);
-        assert!(core::mem::offset_of!(TypeAlias, deprecated) == 328);
-        assert!(core::mem::offset_of!(TypeAlias, lifetime_inputs) == 344);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -4903,22 +4525,6 @@ mod __defs {
             self.do_not_bind = val;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<UnsupportedItem>() == 248);
-        assert!(core::mem::align_of::<UnsupportedItem>() == 8);
-        assert!(core::mem::offset_of!(UnsupportedItem, name) == 8);
-        assert!(core::mem::offset_of!(UnsupportedItem, unique_name) == 24);
-        assert!(core::mem::offset_of!(UnsupportedItem, kind) == 40);
-        assert!(core::mem::offset_of!(UnsupportedItem, path) == 48);
-        assert!(core::mem::offset_of!(UnsupportedItem, errors) == 88);
-        assert!(core::mem::offset_of!(UnsupportedItem, decl_loc) == 112);
-        assert!(core::mem::offset_of!(UnsupportedItem, inline_cpp_source_text) == 176);
-        assert!(core::mem::offset_of!(UnsupportedItem, id) == 192);
-        assert!(core::mem::offset_of!(UnsupportedItem, must_bind) == 200);
-        assert!(core::mem::offset_of!(UnsupportedItem, defining_target) == 208);
-        assert!(core::mem::offset_of!(UnsupportedItem, do_not_bind) == 224);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, Eq)]
@@ -4979,14 +4585,6 @@ mod __defs {
             &mut self.must_bind
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Comment>() == 32);
-        assert!(core::mem::align_of::<Comment>() == 8);
-        assert!(core::mem::offset_of!(Comment, text) == 0);
-        assert!(core::mem::offset_of!(Comment, id) == 16);
-        assert!(core::mem::offset_of!(Comment, must_bind) == 24);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -5201,24 +4799,6 @@ mod __defs {
             self.children = val;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Namespace>() == 176);
-        assert!(core::mem::align_of::<Namespace>() == 8);
-        assert!(core::mem::offset_of!(Namespace, cc_name) == 8);
-        assert!(core::mem::offset_of!(Namespace, rs_name) == 24);
-        assert!(core::mem::offset_of!(Namespace, unique_name) == 40);
-        assert!(core::mem::offset_of!(Namespace, id) == 56);
-        assert!(core::mem::offset_of!(Namespace, canonical_namespace_id) == 64);
-        assert!(core::mem::offset_of!(Namespace, unknown_attr) == 72);
-        assert!(core::mem::offset_of!(Namespace, owning_target) == 88);
-        assert!(core::mem::offset_of!(Namespace, enclosing_item_id) == 104);
-        assert!(core::mem::offset_of!(Namespace, is_inline) == 112);
-        assert!(core::mem::offset_of!(Namespace, must_bind) == 113);
-        assert!(core::mem::offset_of!(Namespace, deprecated) == 120);
-        assert!(core::mem::offset_of!(Namespace, doc_comment) == 136);
-        assert!(core::mem::offset_of!(Namespace, children) == 152);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, Eq)]
@@ -5289,15 +4869,6 @@ mod __defs {
             &mut self.must_bind
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<UseMod>() == 48);
-        assert!(core::mem::align_of::<UseMod>() == 8);
-        assert!(core::mem::offset_of!(UseMod, path) == 0);
-        assert!(core::mem::offset_of!(UseMod, mod_name) == 16);
-        assert!(core::mem::offset_of!(UseMod, id) == 32);
-        assert!(core::mem::offset_of!(UseMod, must_bind) == 40);
-    };
 
     #[repr(C)]
     #[derive(Clone, Eq)]
@@ -5495,24 +5066,6 @@ mod __defs {
             &mut self.is_trivially_copyable
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<ExistingRustType>() == 184);
-        assert!(core::mem::align_of::<ExistingRustType>() == 8);
-        assert!(core::mem::offset_of!(ExistingRustType, rs_name) == 8);
-        assert!(core::mem::offset_of!(ExistingRustType, cc_name) == 24);
-        assert!(core::mem::offset_of!(ExistingRustType, unique_name) == 40);
-        assert!(core::mem::offset_of!(ExistingRustType, template_args) == 56);
-        assert!(core::mem::offset_of!(ExistingRustType, lifetime_inputs) == 80);
-        assert!(core::mem::offset_of!(ExistingRustType, owning_target) == 104);
-        assert!(core::mem::offset_of!(ExistingRustType, size_align) == 120);
-        assert!(core::mem::offset_of!(ExistingRustType, is_same_abi) == 136);
-        assert!(core::mem::offset_of!(ExistingRustType, id) == 144);
-        assert!(core::mem::offset_of!(ExistingRustType, must_bind) == 152);
-        assert!(core::mem::offset_of!(ExistingRustType, impl_debug) == 153);
-        assert!(core::mem::offset_of!(ExistingRustType, label_hint) == 160);
-        assert!(core::mem::offset_of!(ExistingRustType, is_trivially_copyable) == 176);
-    };
 
     #[repr(C, u32)]
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -5627,11 +5180,6 @@ mod __defs {
             inner.make_mut()
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<Item>() == 16);
-        assert!(core::mem::align_of::<Item>() == 8);
-    };
 
     #[repr(C)]
     #[derive(Clone, PartialEq, Eq, Hash)]
@@ -5742,19 +5290,6 @@ mod __defs {
             self.crate_names = val;
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<IR>() == 184);
-        assert!(core::mem::align_of::<IR>() == 8);
-        assert!(core::mem::offset_of!(IR, public_headers) == 8);
-        assert!(core::mem::offset_of!(IR, current_target) == 32);
-        assert!(core::mem::offset_of!(IR, crate_root_path) == 48);
-        assert!(core::mem::offset_of!(IR, crubit_features) == 64);
-        assert!(core::mem::offset_of!(IR, unstable_rust_features) == 88);
-        assert!(core::mem::offset_of!(IR, reexported_namespaces) == 112);
-        assert!(core::mem::offset_of!(IR, top_level_items) == 136);
-        assert!(core::mem::offset_of!(IR, crate_names) == 160);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -5864,21 +5399,6 @@ mod __defs {
             &mut self.kythe_default_corpus
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<GenerateBindingsRequest>() == 288);
-        assert!(core::mem::align_of::<GenerateBindingsRequest>() == 8);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, ir) == 0);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, crubit_support_path_format) == 184);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, crubit_support_versioned_path_format) == 200);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, clang_format_exe_path) == 216);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, rustfmt_exe_path) == 232);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, rustfmt_config_path) == 248);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, generate_error_report) == 264);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, is_golden_test) == 265);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, kythe_annotations) == 266);
-        assert!(core::mem::offset_of!(GenerateBindingsRequest, kythe_default_corpus) == 272);
-    };
 
     #[repr(C)]
     #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -5934,15 +5454,6 @@ mod __defs {
             &mut self.fatal_errors
         }
     }
-    #[cfg(target_pointer_width = "64")]
-    const _: () = {
-        assert!(core::mem::size_of::<GenerateBindingsResponse>() == 64);
-        assert!(core::mem::align_of::<GenerateBindingsResponse>() == 8);
-        assert!(core::mem::offset_of!(GenerateBindingsResponse, rs_api) == 0);
-        assert!(core::mem::offset_of!(GenerateBindingsResponse, rs_api_impl) == 16);
-        assert!(core::mem::offset_of!(GenerateBindingsResponse, error_report) == 32);
-        assert!(core::mem::offset_of!(GenerateBindingsResponse, fatal_errors) == 48);
-    };
 
     pub mod array_value {
         use super::*;
@@ -6001,13 +5512,6 @@ mod __defs {
                 &mut self.filler
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<IntegerElements>() == 48);
-            assert!(core::mem::align_of::<IntegerElements>() == 8);
-            assert!(core::mem::offset_of!(IntegerElements, elements) == 8);
-            assert!(core::mem::offset_of!(IntegerElements, filler) == 32);
-        };
 
         #[repr(C)]
         #[derive(Clone, PartialEq, Eq, Hash)]
@@ -6063,13 +5567,6 @@ mod __defs {
                 &mut self.filler
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<FloatElements>() == 40);
-            assert!(core::mem::align_of::<FloatElements>() == 8);
-            assert!(core::mem::offset_of!(FloatElements, elements) == 8);
-            assert!(core::mem::offset_of!(FloatElements, filler) == 32);
-        };
 
         #[repr(C)]
         #[derive(Clone, PartialEq, Eq, Hash)]
@@ -6125,13 +5622,6 @@ mod __defs {
                 self.filler.make_mut()
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<ArrayElements>() == 40);
-            assert!(core::mem::align_of::<ArrayElements>() == 8);
-            assert!(core::mem::offset_of!(ArrayElements, elements) == 8);
-            assert!(core::mem::offset_of!(ArrayElements, filler) == 32);
-        };
 
         #[repr(C, u32)]
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -6182,11 +5672,6 @@ mod __defs {
                 inner
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<Kind>() == 56);
-            assert!(core::mem::align_of::<Kind>() == 8);
-        };
     }
 
     pub mod bridge_type {
@@ -6316,16 +5801,6 @@ mod __defs {
                 &mut self.label_hint
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<Bridge>() == 96);
-            assert!(core::mem::align_of::<Bridge>() == 8);
-            assert!(core::mem::offset_of!(Bridge, rust_name) == 8);
-            assert!(core::mem::offset_of!(Bridge, abi_rust) == 24);
-            assert!(core::mem::offset_of!(Bridge, abi_cpp) == 40);
-            assert!(core::mem::offset_of!(Bridge, template_args) == 56);
-            assert!(core::mem::offset_of!(Bridge, label_hint) == 80);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -6354,12 +5829,6 @@ mod __defs {
                 &mut self.inner_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<StdOptional>() == 136);
-            assert!(core::mem::align_of::<StdOptional>() == 8);
-            assert!(core::mem::offset_of!(StdOptional, inner_type) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -6397,13 +5866,6 @@ mod __defs {
                 &mut self.second_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<StdPair>() == 272);
-            assert!(core::mem::align_of::<StdPair>() == 8);
-            assert!(core::mem::offset_of!(StdPair, first_type) == 0);
-            assert!(core::mem::offset_of!(StdPair, second_type) == 136);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -6432,12 +5894,6 @@ mod __defs {
                 &mut self.rust_name
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<ProtoMessageBridge>() == 16);
-            assert!(core::mem::align_of::<ProtoMessageBridge>() == 8);
-            assert!(core::mem::offset_of!(ProtoMessageBridge, rust_name) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -6490,15 +5946,6 @@ mod __defs {
                 self.param_types = val;
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<Callable>() == 168);
-            assert!(core::mem::align_of::<Callable>() == 8);
-            assert!(core::mem::offset_of!(Callable, backing_type) == 0);
-            assert!(core::mem::offset_of!(Callable, fn_trait) == 4);
-            assert!(core::mem::offset_of!(Callable, return_type) == 8);
-            assert!(core::mem::offset_of!(Callable, param_types) == 144);
-        };
     }
 
     pub mod cc_type {
@@ -6559,13 +6006,6 @@ mod __defs {
                 &mut self.blocked_by
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<ErrorType>() == 96);
-            assert!(core::mem::align_of::<ErrorType>() == 8);
-            assert!(core::mem::offset_of!(ErrorType, error) == 8);
-            assert!(core::mem::offset_of!(ErrorType, blocked_by) == 40);
-        };
 
         #[repr(C)]
         #[derive(Clone, PartialEq, Eq, Hash)]
@@ -6631,14 +6071,6 @@ mod __defs {
                 self.pointee_type.make_mut()
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<PointerType>() == 24);
-            assert!(core::mem::align_of::<PointerType>() == 8);
-            assert!(core::mem::offset_of!(PointerType, kind) == 8);
-            assert!(core::mem::offset_of!(PointerType, lifetime) == 12);
-            assert!(core::mem::offset_of!(PointerType, pointee_type) == 16);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -6691,15 +6123,6 @@ mod __defs {
                 self.lifetime_inputs = val;
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<FuncPointer>() == 56);
-            assert!(core::mem::align_of::<FuncPointer>() == 8);
-            assert!(core::mem::offset_of!(FuncPointer, non_null) == 0);
-            assert!(core::mem::offset_of!(FuncPointer, call_conv) == 4);
-            assert!(core::mem::offset_of!(FuncPointer, param_and_return_types) == 8);
-            assert!(core::mem::offset_of!(FuncPointer, lifetime_inputs) == 32);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -6737,13 +6160,6 @@ mod __defs {
                 self.element_type.make_mut()
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<ConstantArrayType>() == 16);
-            assert!(core::mem::align_of::<ConstantArrayType>() == 8);
-            assert!(core::mem::offset_of!(ConstantArrayType, num_elements) == 0);
-            assert!(core::mem::offset_of!(ConstantArrayType, element_type) == 8);
-        };
 
         #[repr(C, u32)]
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -6806,11 +6222,6 @@ mod __defs {
                 inner
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<Variant>() == 64);
-            assert!(core::mem::align_of::<Variant>() == 8);
-        };
     }
 
     pub mod constant {
@@ -6885,11 +6296,6 @@ mod __defs {
                 inner
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<Kind>() == 72);
-            assert!(core::mem::align_of::<Kind>() == 8);
-        };
     }
 
     pub mod decl_location {
@@ -6931,13 +6337,6 @@ mod __defs {
                 &mut self.end
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<ByteRange>() == 8);
-            assert!(core::mem::align_of::<ByteRange>() == 4);
-            assert!(core::mem::offset_of!(ByteRange, begin) == 0);
-            assert!(core::mem::offset_of!(ByteRange, end) == 4);
-        };
     }
 
     pub mod instance_method_metadata {
@@ -7003,13 +6402,6 @@ mod __defs {
                 &mut self.offset
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<Setter>() == 144);
-            assert!(core::mem::align_of::<Setter>() == 8);
-            assert!(core::mem::offset_of!(Setter, type_) == 0);
-            assert!(core::mem::offset_of!(Setter, offset) == 136);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7047,13 +6439,6 @@ mod __defs {
                 &mut self.offset
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<Getter>() == 144);
-            assert!(core::mem::align_of::<Getter>() == 8);
-            assert!(core::mem::offset_of!(Getter, type_) == 0);
-            assert!(core::mem::offset_of!(Getter, offset) == 136);
-        };
     }
 
     pub mod template_specialization {
@@ -7086,12 +6471,6 @@ mod __defs {
                 &mut self.element_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<StdVector>() == 136);
-            assert!(core::mem::align_of::<StdVector>() == 8);
-            assert!(core::mem::offset_of!(StdVector, element_type) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7120,12 +6499,6 @@ mod __defs {
                 &mut self.element_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<StdOptional>() == 136);
-            assert!(core::mem::align_of::<StdOptional>() == 8);
-            assert!(core::mem::offset_of!(StdOptional, element_type) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7154,12 +6527,6 @@ mod __defs {
                 &mut self.element_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<StdSharedPtr>() == 136);
-            assert!(core::mem::align_of::<StdSharedPtr>() == 8);
-            assert!(core::mem::offset_of!(StdSharedPtr, element_type) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7188,12 +6555,6 @@ mod __defs {
                 &mut self.element_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<StdUniquePtr>() == 136);
-            assert!(core::mem::align_of::<StdUniquePtr>() == 8);
-            assert!(core::mem::offset_of!(StdUniquePtr, element_type) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7221,12 +6582,6 @@ mod __defs {
                 self.element_types = val;
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<StdVariant>() == 24);
-            assert!(core::mem::align_of::<StdVariant>() == 8);
-            assert!(core::mem::offset_of!(StdVariant, element_types) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7255,12 +6610,6 @@ mod __defs {
                 &mut self.element_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<AbslSpan>() == 136);
-            assert!(core::mem::align_of::<AbslSpan>() == 8);
-            assert!(core::mem::offset_of!(AbslSpan, element_type) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7289,12 +6638,6 @@ mod __defs {
                 &mut self.element_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<C9Co>() == 136);
-            assert!(core::mem::align_of::<C9Co>() == 8);
-            assert!(core::mem::offset_of!(C9Co, element_type) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7323,12 +6666,6 @@ mod __defs {
                 &mut self.element_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<StdAtomic>() == 136);
-            assert!(core::mem::align_of::<StdAtomic>() == 8);
-            assert!(core::mem::offset_of!(StdAtomic, element_type) == 0);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7366,13 +6703,6 @@ mod __defs {
                 &mut self.value_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<AbslFlatHashMap>() == 272);
-            assert!(core::mem::align_of::<AbslFlatHashMap>() == 8);
-            assert!(core::mem::offset_of!(AbslFlatHashMap, key_type) == 0);
-            assert!(core::mem::offset_of!(AbslFlatHashMap, value_type) == 136);
-        };
 
         #[repr(C)]
         #[derive(Debug,Clone, PartialEq, Eq, Hash)]
@@ -7401,12 +6731,6 @@ mod __defs {
                 &mut self.element_type
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<AbslFlatHashSet>() == 136);
-            assert!(core::mem::align_of::<AbslFlatHashSet>() == 8);
-            assert!(core::mem::offset_of!(AbslFlatHashSet, element_type) == 0);
-        };
 
         #[repr(C, u32)]
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -7517,11 +6841,6 @@ mod __defs {
                 *self = Self::NonSpecial;
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<Kind>() == 280);
-            assert!(core::mem::align_of::<Kind>() == 8);
-        };
     }
 
     pub mod unsupported_item {
@@ -7618,13 +6937,6 @@ mod __defs {
                 &mut self.enclosing_item_id
             }
         }
-        #[cfg(target_pointer_width = "64")]
-        const _: () = {
-            assert!(core::mem::size_of::<Path>() == 40);
-            assert!(core::mem::align_of::<Path>() == 8);
-            assert!(core::mem::offset_of!(Path, ident) == 8);
-            assert!(core::mem::offset_of!(Path, enclosing_item_id) == 32);
-        };
     }
 }
 #[rustfmt::skip]

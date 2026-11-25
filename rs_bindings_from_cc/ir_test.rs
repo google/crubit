@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+mod ir_layout_assertions_generated;
+
 use googletest::{expect_eq, expect_ne, gtest};
 use ir::{
     ir_generated, proto_to_ir, rs_imported_crate_name, BazelLabel, CcTypeVariant, FfiMap, FfiRc,
