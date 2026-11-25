@@ -88,7 +88,6 @@ set(_CRUBIT_STD_HELPER_HEADERS
 
 set(_CRUBIT_STD_EXTRA_RS_SRCS
   "lossy_utf8.rs"
-  "slice_ptr.rs"
   "allocator.rs=std"
   "non_null.rs=std"
   "nullable.rs=std"

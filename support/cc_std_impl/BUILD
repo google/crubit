@@ -11,7 +11,6 @@ package(default_applicable_licenses = ["//:license"])
 
 _EXTRA_RS_SRCS_FOR_CC_STD = [
     "lossy_utf8.rs",
-    "slice_ptr.rs",
 ]
 
 _CRUBIT_INTERNAL_HELPER_HEADERS = [
