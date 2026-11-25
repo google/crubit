@@ -6476,6 +6476,7 @@ fn test_assumed_lifetimes_function() {
                         identifier: "x",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     }
                 ],
@@ -6521,6 +6522,7 @@ fn test_assumed_lifetimes_function_with_explicit_binding() {
                         identifier: "x",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     }
                 ],
@@ -6570,6 +6572,7 @@ fn test_assumed_lifetimes_function_with_explicit_bindings() {
                         identifier: "x",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     }
                 ],
@@ -6659,6 +6662,7 @@ fn test_assumed_lifetimes_lifetimebound_free_function() {
                         identifier: "x",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: true,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6682,6 +6686,7 @@ fn test_assumed_lifetimes_lifetimebound_free_function() {
                         identifier: "y",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                 ],
@@ -6729,6 +6734,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_free_function() {
                         identifier: "x",
                         clang_lifetime_capture_by: [1],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6752,6 +6758,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_free_function() {
                         identifier: "y",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                 ],
@@ -6783,6 +6790,7 @@ fn test_assumed_lifetimes_lifetimebound_member_function() {
                         identifier: "__this",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: true,
+                        clang_noescape: false,
                         unknown_attr: None,
                     }
                 ],
@@ -6814,6 +6822,7 @@ fn test_assumed_lifetimes_lifetimebound_internal_param_member_function() {
                         identifier: "__this",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6821,6 +6830,7 @@ fn test_assumed_lifetimes_lifetimebound_internal_param_member_function() {
                         identifier: "x",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: true,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                 ],
@@ -6852,6 +6862,7 @@ fn test_assumed_lifetimes_lifetimebound_member_function_with_param() {
                         identifier: "__this",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: true,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6859,6 +6870,7 @@ fn test_assumed_lifetimes_lifetimebound_member_function_with_param() {
                         identifier: "x",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                 ],
@@ -6890,6 +6902,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_member_function() {
                         identifier: "__this",
                         clang_lifetime_capture_by: [2],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6897,6 +6910,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_member_function() {
                         identifier: "x",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6904,6 +6918,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_member_function() {
                         identifier: "y",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                 ],
@@ -6932,6 +6947,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_member_function_this() {
                         identifier: "__this",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: true,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6939,6 +6955,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_member_function_this() {
                         identifier: "x",
                         clang_lifetime_capture_by: [0],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6946,6 +6963,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_member_function_this() {
                         identifier: "y",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                 ],
@@ -6977,6 +6995,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_multiple_params() {
                         identifier: "x",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6984,6 +7003,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_multiple_params() {
                         identifier: "y",
                         clang_lifetime_capture_by: [0, 2],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -6991,6 +7011,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_multiple_params() {
                         identifier: "z",
                         clang_lifetime_capture_by: [],
                         clang_lifetimebound: false,
+                        clang_noescape: false,
                         unknown_attr: None,
                     },
                 ],
@@ -9026,4 +9047,73 @@ fn test_macro_constants_with_unbalanced_brackets() {
         .collect();
     expect_that!(unbound_balanced_macros, is_empty());
     expect_true!(is_bound("kAfterUnbalancedMacros"));
+}
+
+#[gtest]
+fn test_param_noescape() {
+    let proto = ir_proto_from_cc(
+        r#"
+        void f([[clang::noescape]] int* p, int* q);
+        "#,
+    )
+    .unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let func = retrieve_func(&ir, "f");
+    let params = func.params();
+    expect_eq!(params[0].identifier(), "p");
+    expect_true!(params[0].clang_noescape());
+    // The attribute is still reported as unknown: nothing reads the field yet.
+    expect_eq!(params[0].unknown_attr(), Some("clang::noescape"));
+    expect_eq!(params[1].identifier(), "q");
+    expect_true!(!params[1].clang_noescape());
+    expect_eq!(params[1].unknown_attr(), None);
+}
+
+#[gtest]
+fn test_param_noescape_assumed_lifetimes() {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        "int& f(int& x [[clang::lifetimebound]], [[clang::noescape]] int& y, int& z);",
+    )
+    .unwrap();
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
+    let func = retrieve_func(&ir, "f");
+    let params = func.params();
+    expect_true!(params[0].clang_lifetimebound());
+    expect_true!(!params[0].clang_noescape());
+    expect_true!(!params[1].clang_lifetimebound());
+    expect_true!(params[1].clang_noescape());
+    expect_true!(!params[2].clang_noescape());
+}
+
+#[gtest]
+fn test_param_noescape_ignored_attr() {
+    let proto = ir_proto_from_cc(
+        r#"
+        void f([[clang::annotate("crubit_unsafe_ignore_attr", "clang::noescape")]]
+               [[clang::noescape]] int* p);
+        "#,
+    )
+    .unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let func = retrieve_func(&ir, "f");
+    let params = func.params();
+    expect_true!(!params[0].clang_noescape());
+    expect_eq!(params[0].unknown_attr(), None);
+}
+
+/// Ignoring `clang::noescape` on a parameter that doesn't have it is a no-op: the parameter is
+/// not noescape.
+#[gtest]
+fn test_param_noescape_ignored_attr_without_noescape() {
+    let proto = ir_proto_from_cc(
+        r#"
+        void f([[clang::annotate("crubit_unsafe_ignore_attr", "clang::noescape")]] int* p);
+        "#,
+    )
+    .unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let func = retrieve_func(&ir, "f");
+    let params = func.params();
+    expect_true!(!params[0].clang_noescape());
+    expect_eq!(params[0].unknown_attr(), None);
 }

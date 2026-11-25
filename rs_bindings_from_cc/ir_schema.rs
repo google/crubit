@@ -237,6 +237,13 @@ pub(crate) fn schema() -> Schema {
             identifier: Identifier,
             clang_lifetime_capture_by: Vec(I32),
             clang_lifetimebound: Bool,
+            // Whether the parameter carries a `[[clang::noescape]]` attribute
+            // WRITTEN in the source (implicit attributes and attributes listed in
+            // `CRUBIT_UNSAFE_IGNORE_ATTR` do not count). Recorded whether or not
+            // `assume_lifetimes` is enabled. Not read yet: the attribute still
+            // also appears in `unknown_attr`, so a function with such a
+            // parameter is still not bound.
+            clang_noescape: Bool,
             #[optional]
             unknown_attr: Str,
         }

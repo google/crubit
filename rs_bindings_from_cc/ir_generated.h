@@ -746,6 +746,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI FuncParam {
   void add_clang_lifetime_capture_by(int32_t value) { clang_lifetime_capture_by_.push_back(value); }
   bool clang_lifetimebound() const { return clang_lifetimebound_; }
   void set_clang_lifetimebound(bool value) { clang_lifetimebound_ = value; }
+  bool clang_noescape() const { return clang_noescape_; }
+  void set_clang_noescape(bool value) { clang_noescape_ = value; }
   bool has_unknown_attr() const { return (has_bits_ & 0x1ULL) != 0; }
   void clear_unknown_attr() { has_bits_ &= ~0x1ULL; unknown_attr_ = {}; }
   std::string_view unknown_attr() const { return unknown_attr_.AsView(); }
@@ -756,6 +758,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI FuncParam {
   ::crubit::ffi::Identifier identifier_{};
   FfiVec<int32_t> clang_lifetime_capture_by_{};
   bool clang_lifetimebound_{};
+  bool clang_noescape_{};
   FfiString unknown_attr_{};
 };
 
@@ -3659,6 +3662,10 @@ static_assert(
   sizeof(size_t) != 8 ||
   offsetof(FuncParam, clang_lifetimebound_) ==
     184);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(FuncParam, clang_noescape_) ==
+    185);
 static_assert(
   sizeof(size_t) != 8 ||
   offsetof(FuncParam, unknown_attr_) ==

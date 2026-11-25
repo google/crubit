@@ -73,6 +73,23 @@ golden_test(
     golden_rs = "member_function_rs_api.rs",
 )
 
+crubit_test_cc_library(
+    name = "noescape",
+    hdrs = ["noescape.h"],
+    aspect_hints = [
+        "//features:assume_lifetimes",
+        "//features:supported",
+    ],
+)
+
+golden_test(
+    name = "noescape_golden_test",
+    basename = "noescape",
+    cc_library = "noescape",
+    golden_cc = "noescape_api_impl.cc",
+    golden_rs = "noescape_rs_api.rs",
+)
+
 crubit_rust_test(
     name = "member_function_test",
     srcs = ["member_function_test.rs"],

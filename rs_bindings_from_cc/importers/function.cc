@@ -1128,6 +1128,19 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
         }
       }
     }
+    // `[[clang::noescape]]` is recorded as a fact, independently of
+    // `assume_lifetimes`. Only attributes written in the source count.
+    // Nothing reads it yet: the attribute is still also reported in
+    // `unknown_attr` above.
+    if (crubit::HasAttr<clang::NoEscapeAttr>(param)) {
+      for (const clang::NoEscapeAttr* attr :
+           param->specific_attrs<clang::NoEscapeAttr>()) {
+        if (!attr->isImplicit()) {
+          proto_param.set_clang_noescape(true);
+          break;
+        }
+      }
+    }
     params.push_back(std::move(proto_param));
   }
 

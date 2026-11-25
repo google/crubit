@@ -46,6 +46,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, clang_format_exe_path, $($arg:tt)*) => { $msg.set_clang_format_exe_path($($arg)*) };
     ($msg:ident, clang_lifetime_capture_by, $($arg:tt)*) => { $msg.set_clang_lifetime_capture_by($($arg)*) };
     ($msg:ident, clang_lifetimebound, $($arg:tt)*) => { $msg.set_clang_lifetimebound($($arg)*) };
+    ($msg:ident, clang_noescape, $($arg:tt)*) => { $msg.set_clang_noescape($($arg)*) };
     ($msg:ident, clone, $($arg:tt)*) => { $msg.set_clone($($arg)*) };
     ($msg:ident, comment, $($arg:tt)*) => { $msg.set_comment($($arg)*) };
     ($msg:ident, constant, $($arg:tt)*) => { $msg.set_constant($($arg)*) };
@@ -1265,6 +1266,7 @@ mod __defs {
         pub identifier: Identifier,
         pub clang_lifetime_capture_by: FfiVec<i32>,
         pub clang_lifetimebound: bool,
+        pub clang_noescape: bool,
         pub unknown_attr: FfiString,
     }
 
@@ -1275,6 +1277,7 @@ mod __defs {
                 .field("identifier", &self.identifier)
                 .field("clang_lifetime_capture_by", &self.clang_lifetime_capture_by)
                 .field("clang_lifetimebound", &self.clang_lifetimebound)
+                .field("clang_noescape", &self.clang_noescape)
                 .field("unknown_attr", &self.unknown_attr())
                 .finish()
         }
@@ -1296,6 +1299,7 @@ mod __defs {
             identifier: Identifier::EMPTY,
             clang_lifetime_capture_by: FfiVec::EMPTY,
             clang_lifetimebound: false,
+            clang_noescape: false,
             unknown_attr: FfiString::EMPTY,
         };
         pub fn type_(&self) -> &CcType {
@@ -1309,6 +1313,9 @@ mod __defs {
         }
         pub fn clang_lifetimebound(&self) -> bool {
             self.clang_lifetimebound
+        }
+        pub fn clang_noescape(&self) -> bool {
+            self.clang_noescape
         }
         pub fn has_unknown_attr(&self) -> bool {
             (self.has_bits & 0x1) != 0
@@ -1335,6 +1342,10 @@ mod __defs {
             self.clang_lifetimebound = val;
             &mut self.clang_lifetimebound
         }
+        pub fn set_clang_noescape(&mut self, val: bool) -> &mut bool {
+            self.clang_noescape = val;
+            &mut self.clang_noescape
+        }
         pub fn set_unknown_attr(&mut self, val: FfiString) -> &mut FfiString {
             self.has_bits |= 0x1;
             self.unknown_attr = val;
@@ -1349,6 +1360,7 @@ mod __defs {
         assert!(core::mem::offset_of!(FuncParam, identifier) == 144);
         assert!(core::mem::offset_of!(FuncParam, clang_lifetime_capture_by) == 160);
         assert!(core::mem::offset_of!(FuncParam, clang_lifetimebound) == 184);
+        assert!(core::mem::offset_of!(FuncParam, clang_noescape) == 185);
         assert!(core::mem::offset_of!(FuncParam, unknown_attr) == 192);
     };
 
