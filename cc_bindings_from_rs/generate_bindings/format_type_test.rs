@@ -7,7 +7,7 @@
 extern crate rustc_middle;
 
 use code_gen_utils::format_cc_includes;
-use database::{BindingsGenerator, TypeLocation};
+use database::TypeLocation;
 use format_type::{cpp_layout_equivalent_type, is_bridged_type};
 use proc_macro2::TokenStream;
 use query_compiler::{is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions};
@@ -948,7 +948,7 @@ fn test_format_ty_for_cc_unique_ptr_without_delete_succeeds() {
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
         &[(
             "cc_std::std::unique_ptr<StructWithoutDelete>",
-            "::std::unique_ptr<::rust_out::StructWithoutDelete>",
+            "::std::unique_ptr<::rust_out::StructWithoutDelete> crubit_nonnull",
         )],
         unique_ptr_preamble(),
         |desc, tcx, ty, expected| {
@@ -971,7 +971,7 @@ fn test_format_ty_for_cc_virtual_unique_ptr_with_delete_succeeds() {
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
         &[(
             "cc_std::std::virtual_unique_ptr<StructWithDelete>",
-            "::std::unique_ptr<::rust_out::StructWithDelete>",
+            "::std::unique_ptr<::rust_out::StructWithDelete> crubit_nonnull",
         )],
         unique_ptr_preamble(),
         |desc, tcx, ty, expected| {
@@ -1011,18 +1011,6 @@ fn test_format_ty_for_cc_unique_ptr_with_delete_fails() {
     );
 }
 
-/// The `NonNull` bridge is gated on `nonnull_smart_pointers`, which is not in the default test
-/// feature set.
-fn nonnull_bindings_db_for_tests(tcx: TyCtxt<'_>) -> BindingsGenerator<'_> {
-    bindings_db_for_tests_with_features(
-        tcx,
-        crubit_feature::CrubitFeature::Supported
-            | crubit_feature::CrubitFeature::NonnullSmartPointers,
-        /* with_kythe_annotations= */ false,
-        None,
-    )
-}
-
 /// `NonNull<Ptr>` is spelled as `Ptr` plus an attribute, so the outer ADT is no longer
 /// `unique_ptr` and the `Delete` guard cannot match on it directly. The guard must still fire via
 /// the recursion that formats `{Ptr}`.
@@ -1039,7 +1027,7 @@ fn test_format_ty_for_cc_nonnull_unique_ptr_with_delete_fails() {
         )],
         unique_ptr_preamble(),
         |desc, tcx, ty, expected_err| {
-            let db = nonnull_bindings_db_for_tests(tcx);
+            let db = bindings_db_for_tests(tcx);
             let anyhow_err = db
                 .format_ty_for_cc(
                     ty,
@@ -1062,7 +1050,7 @@ fn test_format_ty_for_cc_nonnull_virtual_unique_ptr_with_delete_succeeds() {
         )],
         unique_ptr_preamble(),
         |desc, tcx, ty, expected| {
-            let db = nonnull_bindings_db_for_tests(tcx);
+            let db = bindings_db_for_tests(tcx);
             let cc_snippet = db
                 .format_ty_for_cc(
                     ty,
@@ -1163,7 +1151,7 @@ fn test_format_ty_for_cc_smart_pointers_under_nonnull_smart_pointers() {
         ],
         unique_ptr_preamble(),
         |desc, tcx, ty, expected| {
-            let db = nonnull_bindings_db_for_tests(tcx);
+            let db = bindings_db_for_tests(tcx);
             let cc_snippet = db
                 .format_ty_for_cc(
                     ty,
@@ -1617,9 +1605,7 @@ fn test_format_cc_type_is_pointer() {
     test_ty(fn_param, cases, preamble, |desc, tcx, ty, expectations| {
         let db = bindings_db_for_tests_with_features(
             tcx,
-            crubit_feature::CrubitFeature::Supported
-                | crubit_feature::CrubitFeature::Generics
-                | crubit_feature::CrubitFeature::NonnullSmartPointers,
+            crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
             /* with_kythe_annotations= */ false,
             None,
         );
