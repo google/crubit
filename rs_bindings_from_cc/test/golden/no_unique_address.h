@@ -4,7 +4,6 @@
 
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_NO_UNIQUE_ADDRESS_NO_UNIQUE_ADDRESS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_NO_UNIQUE_ADDRESS_NO_UNIQUE_ADDRESS_H_
-#pragma clang lifetime_elision
 
 // The no_unique_address.h header is present both in
 // rs_bindings_from_cc/test/struct/no_unique_address/ and in

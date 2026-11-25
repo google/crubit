@@ -5,8 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 
-#pragma clang lifetime_elision
-
 // To avoid relying on cstdef
 using PtrDiff =
     decltype(static_cast<int*>(nullptr) - static_cast<int*>(nullptr));

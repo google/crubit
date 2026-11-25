@@ -10,8 +10,6 @@
 
 #include "absl/log/check.h"
 
-#pragma clang lifetime_elision
-
 // A deliberately !Unpin class.
 class Nonunpin {
  public:

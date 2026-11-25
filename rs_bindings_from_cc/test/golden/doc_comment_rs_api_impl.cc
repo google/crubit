@@ -74,7 +74,7 @@ static_assert(CRUBIT_SIZEOF(struct MyTemplate<int>) == 4);
 static_assert(alignof(struct MyTemplate<int>) == 4);
 static_assert(CRUBIT_OFFSET_OF(value, struct MyTemplate<int>) == 0);
 
-extern "C" void __rust_thunk__c114dea5__ZN10MyTemplateIiEC1Ev(
+extern "C" void __rust_thunk__92443893__ZN10MyTemplateIiEC1Ev(
     struct MyTemplate<int>* __this) {
   crubit::construct_at(__this);
 }
@@ -83,7 +83,7 @@ static_assert(CRUBIT_SIZEOF(struct MyTemplate<float>) == 4);
 static_assert(alignof(struct MyTemplate<float>) == 4);
 static_assert(CRUBIT_OFFSET_OF(value, struct MyTemplate<float>) == 0);
 
-extern "C" void __rust_thunk__2a6ef96a__ZN10MyTemplateIfEC1Ev(
+extern "C" void __rust_thunk__43bc7961__ZN10MyTemplateIfEC1Ev(
     struct MyTemplate<float>* __this) {
   crubit::construct_at(__this);
 }
@@ -91,7 +91,7 @@ extern "C" void __rust_thunk__2a6ef96a__ZN10MyTemplateIfEC1Ev(
 static_assert(sizeof(struct OuterTemplate<int>) == 1);
 static_assert(alignof(struct OuterTemplate<int>) == 1);
 
-extern "C" void __rust_thunk__2cd151a5__ZN13OuterTemplateIiEC1Ev(
+extern "C" void __rust_thunk__5fc350e6__ZN13OuterTemplateIiEC1Ev(
     struct OuterTemplate<int>* __this) {
   crubit::construct_at(__this);
 }

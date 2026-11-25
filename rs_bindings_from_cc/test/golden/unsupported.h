@@ -5,8 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 
-#pragma clang lifetime_elision
-
 struct TrivialCustomType final {
   // Replace this with some other unsupported operator, if support is later
   // added.

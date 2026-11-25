@@ -23,19 +23,19 @@
 static_assert(CRUBIT_SIZEOF(class MyTemplate<int>) == 4);
 static_assert(alignof(class MyTemplate<int>) == 4);
 
-extern "C" void __rust_thunk__de4d35d3__ZN10MyTemplateIiEC1Ev(
+extern "C" void __rust_thunk__11cb6aaa__ZN10MyTemplateIiEC1Ev(
     class MyTemplate<int>* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk__5a9d55c6__ZN10MyTemplateIiE6CreateEi(
+extern "C" void __rust_thunk__de4d35d3__ZN10MyTemplateIiE6CreateEi(
     class MyTemplate<int>* __return, int value) {
   new (__return) auto(MyTemplate<int>::Create(value));
 }
 
 static_assert((class MyTemplate<int> (*)(int)) & ::MyTemplate<int>::Create);
 
-extern "C" int const* __rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv(
+extern "C" int const* __rust_thunk__93e13b1a__ZNK10MyTemplateIiE5valueEv(
     class MyTemplate<int> const* __this) {
   return std::addressof(__this->value());
 }
@@ -46,12 +46,12 @@ static_assert((int const& (::MyTemplate<int>::*)() const) &
 static_assert(CRUBIT_SIZEOF(class MyTemplate<float>) == 4);
 static_assert(alignof(class MyTemplate<float>) == 4);
 
-extern "C" void __rust_thunk__de4d35d3__ZN10MyTemplateIfEC1Ev(
+extern "C" void __rust_thunk__11cb6aaa__ZN10MyTemplateIfEC1Ev(
     class MyTemplate<float>* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk__5a9d55c6__ZN10MyTemplateIfE6CreateEf(
+extern "C" void __rust_thunk__de4d35d3__ZN10MyTemplateIfE6CreateEf(
     class MyTemplate<float>* __return, float value) {
   new (__return) auto(MyTemplate<float>::Create(value));
 }
@@ -59,7 +59,7 @@ extern "C" void __rust_thunk__5a9d55c6__ZN10MyTemplateIfE6CreateEf(
 static_assert((class MyTemplate<float> (*)(float)) &
               ::MyTemplate<float>::Create);
 
-extern "C" float const* __rust_thunk__758630aa__ZNK10MyTemplateIfE5valueEv(
+extern "C" float const* __rust_thunk__93e13b1a__ZNK10MyTemplateIfE5valueEv(
     class MyTemplate<float> const* __this) {
   return std::addressof(__this->value());
 }
@@ -91,12 +91,12 @@ static_assert((class MyTemplate<double> (*)(double)) & ::MakeUnaliased);
 static_assert(CRUBIT_SIZEOF(class MyTemplate<double>) == 8);
 static_assert(alignof(class MyTemplate<double>) == 8);
 
-extern "C" void __rust_thunk__de4d35d3__ZN10MyTemplateIdEC1Ev(
+extern "C" void __rust_thunk__11cb6aaa__ZN10MyTemplateIdEC1Ev(
     class MyTemplate<double>* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk__5a9d55c6__ZN10MyTemplateIdE6CreateEd(
+extern "C" void __rust_thunk__de4d35d3__ZN10MyTemplateIdE6CreateEd(
     class MyTemplate<double>* __return, double value) {
   new (__return) auto(MyTemplate<double>::Create(value));
 }
@@ -104,7 +104,7 @@ extern "C" void __rust_thunk__5a9d55c6__ZN10MyTemplateIdE6CreateEd(
 static_assert((class MyTemplate<double> (*)(double)) &
               ::MyTemplate<double>::Create);
 
-extern "C" double const* __rust_thunk__758630aa__ZNK10MyTemplateIdE5valueEv(
+extern "C" double const* __rust_thunk__93e13b1a__ZNK10MyTemplateIdE5valueEv(
     class MyTemplate<double> const* __this) {
   return std::addressof(__this->value());
 }

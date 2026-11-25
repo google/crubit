@@ -11,8 +11,6 @@
 #include "common/test/bidirectional_deps/leaf_rs_lib.h"
 #include "support/lifetime_annotations.h"
 
-#pragma clang lifetime_elision
-
 namespace crubit {
 
 inline leaf_rs_lib::LeafRsType Wrap(unsigned char x) {
