@@ -4,7 +4,7 @@
 
 """Module extension for downloading LLVM source and configuring host C dependencies."""
 
-_GCS_LLVM_URL = "https://storage.googleapis.com/crubit-ci-bazel/llvm-project/{commit}.tar.zst"
+_GCS_LLVM_URL = "https://storage.googleapis.com/crubit-ci-bazel/llvm-project/v2/{commit}.tar.zst"
 _GITHUB_LLVM_URL = "https://github.com/llvm/llvm-project/archive/{commit}.tar.gz"
 
 def _llvm_source_fetch_impl(repository_ctx):

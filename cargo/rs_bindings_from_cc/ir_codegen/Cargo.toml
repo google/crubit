@@ -1,0 +1,23 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_ir_codegen.
+
+[package]
+name = "rs_bindings_from_cc_ir_codegen"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[[bin]]
+name = "rs_bindings_from_cc_ir_codegen"
+path = "../../../rs_bindings_from_cc/ir_codegen.rs"
+
+doctest = false
+
+[dependencies]
+genco.workspace = true
+heck.workspace = true

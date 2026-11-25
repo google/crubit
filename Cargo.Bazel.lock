@@ -1,5 +1,5 @@
 {
-  "checksum": "f47f9e7e5af4457f121a62c4fee6fd87b8d5414bdb6bda7b5e04f3e74c015869",
+  "checksum": "250d70a32d91ba35867b30cc324349624a5d9ada76bc20e97d7108ffd9b7c3cd",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -972,10 +972,6 @@
             "target": "flagset"
           },
           {
-            "id": "itertools 0.13.0",
-            "target": "itertools"
-          },
-          {
             "id": "proc-macro2 1.0.107",
             "target": "proc_macro2"
           },
@@ -1580,6 +1576,12 @@
             "target": "syn"
           }
         ],
+        "deps_dev": [
+          {
+            "id": "googletest 0.14.3",
+            "target": "googletest"
+          }
+        ],
         "edition": "2024"
       },
       "library_target_name": "cc_bindings_from_rs_rustversion_impl",
@@ -1956,7 +1958,7 @@
             "target": "syn"
           },
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           }
         ],
@@ -2225,6 +2227,10 @@
           {
             "id": "googletest 0.14.3",
             "target": "googletest"
+          },
+          {
+            "id": "static_assertions 1.1.0",
+            "target": "static_assertions"
           }
         ],
         "edition": "2024"
@@ -3241,6 +3247,99 @@
         }
       ],
       "version": "0.3.34"
+    },
+    "genco 0.20.0": {
+      "common_attrs": {
+        "crate_features": [
+          "alloc",
+          "default",
+          "std"
+        ],
+        "deps": [
+          {
+            "id": "relative-path 2.0.3",
+            "target": "relative_path"
+          },
+          {
+            "id": "smallvec 1.16.6",
+            "target": "smallvec"
+          }
+        ],
+        "edition": "2018",
+        "proc_macro_deps": [
+          {
+            "id": "genco-macros 0.20.0",
+            "target": "genco_macros"
+          }
+        ]
+      },
+      "library_target_name": "genco",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "genco",
+      "package_url": "https://github.com/udoprog/genco",
+      "repository": {
+        "Http": {
+          "sha256": "8b9baa0af01aa73e334f1d5533ddd013a27d5451ea2bc2551fb84bd710cf9a95",
+          "url": "https://static.crates.io/crates/genco/0.20.0/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "genco",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.20.0"
+    },
+    "genco-macros 0.20.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "proc-macro2 1.0.107",
+            "target": "proc_macro2"
+          },
+          {
+            "alias": "q",
+            "id": "quote 1.0.47",
+            "target": "quote"
+          },
+          {
+            "id": "syn 2.0.119",
+            "target": "syn"
+          }
+        ],
+        "edition": "2018"
+      },
+      "library_target_name": "genco_macros",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "genco-macros",
+      "package_url": "https://github.com/udoprog/genco",
+      "repository": {
+        "Http": {
+          "sha256": "bfc2f50e990ca43e548926a9b52545a21a2510ddda41d2422fab6e293784e200",
+          "url": "https://static.crates.io/crates/genco-macros/0.20.0/download"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "genco_macros",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.20.0"
     },
     "getrandom 0.4.3": {
       "build_script_attrs": {},
@@ -4609,13 +4708,32 @@
     "proc-macro2 1.0.107": {
       "build_script_attrs": {},
       "common_attrs": {
-        "crate_features": [
-          "default",
-          "proc-macro"
-        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "proc-macro"
+          ],
+          "selects": {
+            "aarch64-apple-darwin": [
+              "span-locations"
+            ],
+            "aarch64-unknown-linux-gnu": [
+              "span-locations"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "span-locations"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "span-locations"
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              "span-locations"
+            ]
+          }
+        },
         "deps": [
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           }
         ],
@@ -4741,7 +4859,7 @@
             "target": "memchr"
           },
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           },
           {
@@ -5015,6 +5133,39 @@
         }
       ],
       "version": "0.8.11"
+    },
+    "relative-path 2.0.3": {
+      "common_attrs": {
+        "crate_features": [
+          "alloc",
+          "std"
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "relative_path",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "relative-path",
+      "package_url": "https://github.com/udoprog/relative-path",
+      "repository": {
+        "Http": {
+          "sha256": "38540a682c6e9bca04a8bca9e5ec5a6ba168dfbb04c9998fe517a9befb92eb68",
+          "url": "https://static.crates.io/crates/relative-path/2.0.3/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "relative_path",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "2.0.3"
     },
     "rs_bindings_from_cc 0.0.0": {
       "common_attrs": {
@@ -5740,7 +5891,7 @@
             "target": "syn"
           },
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           }
         ],
@@ -5957,7 +6108,7 @@
             "target": "syn"
           },
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           }
         ],
@@ -6159,6 +6310,27 @@
       ],
       "version": "0.0.0"
     },
+    "rs_bindings_from_cc_ir_codegen 0.0.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "genco 0.20.0",
+            "target": "genco"
+          },
+          {
+            "id": "heck 0.5.0",
+            "target": "heck"
+          }
+        ],
+        "edition": "2024"
+      },
+      "license_file": "../../../LICENSE",
+      "name": "rs_bindings_from_cc_ir_codegen",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [],
+      "version": "0.0.0"
+    },
     "rs_bindings_from_cc_ir_from_cc_dependency_sys 0.0.0": {
       "build_script_attrs": {},
       "common_attrs": {
@@ -6319,7 +6491,7 @@
             "target": "syn"
           },
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           }
         ],
@@ -6743,7 +6915,7 @@
             "target": "syn"
           },
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           }
         ],
@@ -7365,6 +7537,35 @@
       ],
       "version": "0.4.12"
     },
+    "smallvec 1.16.6": {
+      "common_attrs": {
+        "edition": "2018"
+      },
+      "library_target_name": "smallvec",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "smallvec",
+      "package_url": "https://github.com/smallvec/smallvec",
+      "repository": {
+        "Http": {
+          "sha256": "3244542535d5de959d90ec55d1b5ff0fd2bb7b1310223907d5f11932847f7b59",
+          "url": "https://static.crates.io/crates/smallvec/1.16.6/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "smallvec",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "1.16.6"
+    },
     "static_assertions 1.1.0": {
       "common_attrs": {
         "edition": "2015"
@@ -7477,7 +7678,7 @@
             "target": "quote"
           },
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           }
         ],
@@ -7557,7 +7758,7 @@
             "target": "quote"
           },
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           }
         ],
@@ -7609,7 +7810,7 @@
             "target": "quote"
           },
           {
-            "id": "unicode-ident 1.0.24",
+            "id": "unicode-ident 1.0.27",
             "target": "unicode_ident"
           }
         ],
@@ -7971,7 +8172,7 @@
       ],
       "version": "0.0.0"
     },
-    "unicode-ident 1.0.24": {
+    "unicode-ident 1.0.27": {
       "common_attrs": {
         "edition": "2021"
       },
@@ -7987,8 +8188,8 @@
       "package_url": "https://github.com/dtolnay/unicode-ident",
       "repository": {
         "Http": {
-          "sha256": "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75",
-          "url": "https://static.crates.io/crates/unicode-ident/1.0.24/download"
+          "sha256": "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563",
+          "url": "https://static.crates.io/crates/unicode-ident/1.0.27/download"
         }
       },
       "targets": [
@@ -7999,7 +8200,7 @@
           }
         }
       ],
-      "version": "1.0.24"
+      "version": "1.0.27"
     },
     "unicode-properties 0.1.5": {
       "common_attrs": {
@@ -8187,6 +8388,7 @@
     "clap-cargo 0.18.3",
     "either 1.18.0",
     "flagset 0.4.7",
+    "genco 0.20.0",
     "heck 0.5.0",
     "indenter 0.3.4",
     "itertools 0.13.0",
@@ -8202,7 +8404,7 @@
     "serde_json 1.0.151",
     "syn 2.0.119",
     "tempfile 3.27.0",
-    "unicode-ident 1.0.24"
+    "unicode-ident 1.0.27"
   ],
   "direct_dev_deps": [
     "googletest 0.14.3",
@@ -8310,6 +8512,7 @@
     "rs_bindings_from_cc_impl_sys 0.0.0": "cargo/rs_bindings_from_cc/rs_bindings_from_cc_impl_sys",
     "rs_bindings_from_cc_importer_sys 0.0.0": "cargo/rs_bindings_from_cc/importer_sys",
     "rs_bindings_from_cc_ir 0.0.0": "cargo/rs_bindings_from_cc/ir",
+    "rs_bindings_from_cc_ir_codegen 0.0.0": "cargo/rs_bindings_from_cc/ir_codegen",
     "rs_bindings_from_cc_ir_from_cc_dependency_sys 0.0.0": "cargo/rs_bindings_from_cc/ir_from_cc_dependency_sys",
     "rs_bindings_from_cc_ir_from_cc_sys 0.0.0": "cargo/rs_bindings_from_cc/ir_from_cc_sys",
     "rs_bindings_from_cc_ir_matchers 0.0.0": "cargo/rs_bindings_from_cc/ir_matchers",
