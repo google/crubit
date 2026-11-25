@@ -1,9 +1,12 @@
 # C++ bindings for Rust standard library (`std`) types
 
-When generating C++ bindings for a Rust crate (via `cpp_api_from_rust`) bindings
-to the Rust standard library types (`std`, `alloc`, and `core`) are
-automatically generated for those types under the namespaces `rs::std`,
-`rs::alloc`, and `rs::core`.
+When generating C++ bindings for a Rust crate (via `cpp_api_from_rust`),
+bindings to types in the Rust standard library (`std`, `alloc`, and `core`) are
+automatically generated under `rs::std`, `rs::alloc`, and `rs::core`. Types in
+the Rust prelude (such as `rs::String`, `rs::Option<T>`, `rs::Result<T, E>`,
+`rs::Vec<T>`, and `rs::Box<T>`) are available directly in the `rs::` namespace;
+prefer `rs::T` over `rs::std::...` or `rs::alloc::...` when referring to prelude
+types in C++.
 
 ## Working with `String` in C++ {#string}
 
@@ -12,7 +15,7 @@ Rust's `String` becomes `rs::String` in C++ (an alias for
 constructed from a C++ string literal:
 
 ```c++
-rs::std::string::String s("hello, world!");
+rs::String s("hello, world!");
 ```
 
 An existing `std::string_view` (or `absl::string_view`) can be converted to a
@@ -24,7 +27,7 @@ void AcceptsStringView(std::string_view view) {
   if (!str_ref.has_value()) {
     return;
   }
-  rs::std::string::String s(*str_ref);
+  rs::String s(*str_ref);
   // Continue on with using your Rust String...
 }
 ```
@@ -48,12 +51,12 @@ pub fn append_to_rust_string(val: &mut String, s: &str) {
 }
 ```
 
-becomes a C++ method taking a reference to a `rs::std::string::String`:
+becomes a C++ method taking a reference to an `rs::String`:
 
 ```c++
 // You could just as easily call `push_str` directly. It receives Crubit
 // bindings. We use a wrapper method here for expository purposes.
-void append_to_rust_string(rs::std::string::String& val, rs::StrRef s);
+void append_to_rust_string(rs::String& val, rs::StrRef s);
 ```
 
 Allowing for C++ to call it:
