@@ -110,9 +110,6 @@ fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
     // Verify that no C++ thunk got generated.
     assert_cc_not_matches!(rs_api_impl, quote! { return get_ptr_to_func(); });
 
-    // TODO(b/217419782): Add another test for more exotic calling conventions /
-    // abis.
-
     Ok(())
 }
 
@@ -209,22 +206,10 @@ fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
     // Verify that no C++ thunk got generated.
     assert_cc_not_matches!(rs_api_impl, quote! { return get_ptr_to_func(); });
 
-    // TODO(b/217419782): Add another test where params (and the return
-    // type) are references with lifetimes.  Something like this:
-    //     #pragma clang lifetime_elision
-    //     const int& (*get_ptr_to_func())(const int&, const int&); "#)?;
-    // 1) Need to investigate why this fails - seeing raw pointers in Rust seems to indicate that no
-    //    lifetimes are present at the `importer.cc` level. Maybe lifetime elision doesn't support
-    //    this scenario? Unclear how to explicitly apply [[clang::annotate("lifetimes", "a, b ->
-    //    a")]] to the _inner_ function.
-    // 2) It is important to have 2 reference parameters, so see if the problem of passing
-    //    `lifetimes` by value would have been caught - see:
-    //    cl/428079010/depot/rs_bindings_from_cc/
-    // importer.cc?version=s6#823
-
-    // TODO(b/217419782): Decide what to do if the C++ pointer is *not*
-    // annotated with a lifetime - emit `unsafe fn(...) -> ...` in that
-    // case?
+    // Note: `#pragma clang lifetime_elision` does not elide lifetimes inside nested returned
+    // function pointer types (such as `const int& (*get_ptr_to_func())(const int&, const int&)`),
+    // so unannotated references in returned function pointers also decay to raw pointers (`unsafe
+    // extern "C" fn`).
 
     Ok(())
 }

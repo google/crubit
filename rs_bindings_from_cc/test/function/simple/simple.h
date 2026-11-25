@@ -53,10 +53,4 @@ class CRUBIT_MUST_BIND NonMovableWithNoInline final {
   int value_;
 };
 
-// TODO(b/217419782): Add testcases for pointers to functions that take or
-// return takes/returns non-trivially-movable types by value. In particular,
-// some function signatures might require going through a C++ thunk - such
-// function pointers can't work without a thunk. See also
-// <internal link>
-
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SIMPLE_SIMPLE_FUNCTIONS_H_

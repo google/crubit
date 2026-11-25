@@ -206,12 +206,6 @@ pub mod non_movable_with_no_inline {
     }
 }
 
-// TODO(b/217419782): Add testcases for pointers to functions that take or
-// return takes/returns non-trivially-movable types by value. In particular,
-// some function signatures might require going through a C++ thunk - such
-// function pointers can't work without a thunk. See also
-// <internal link>
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
