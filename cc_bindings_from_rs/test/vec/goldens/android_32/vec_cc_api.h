@@ -35,6 +35,64 @@
 
 namespace vec {
 
+struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: MoveOnly") alignas(4)
+    [[clang::trivial_abi]] MoveOnly final {
+ public:
+  // Default::default
+  MoveOnly();
+
+  // Drop::drop
+  ~MoveOnly();
+
+  MoveOnly(MoveOnly&&) noexcept;
+  ::vec::MoveOnly& operator=(MoveOnly&&) noexcept;
+
+  // `vec_golden::MoveOnly` doesn't implement the `Clone` trait
+  MoveOnly(const MoveOnly&) = delete;
+  MoveOnly& operator=(const MoveOnly&) = delete;
+  MoveOnly(::crubit::UnsafeRelocateTag, MoveOnly&& value);
+
+  static ::vec::MoveOnly new_();
+
+  ::std::uintptr_t strong_count() const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> counter;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: NonDefault") alignas(4)
+    [[clang::trivial_abi]] NonDefault final {
+ public:
+  // `vec_golden::NonDefault` doesn't implement the `Default` trait
+  NonDefault() = delete;
+
+  // Drop::drop
+  ~NonDefault();
+
+  // Clone::clone
+  NonDefault(const NonDefault&) noexcept;
+
+  // Clone::clone_from
+  ::vec::NonDefault& operator=(const NonDefault&) noexcept;
+
+  NonDefault(::crubit::UnsafeRelocateTag, NonDefault&& value);
+
+  static ::vec::NonDefault new_(::std::int32_t value);
+
+  ::std::int32_t value() const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> value_;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: RustVecOwner") alignas(4)
     [[clang::trivial_abi]] RustVecOwner final {
  public:
@@ -71,6 +129,38 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: RustVecOwner") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
+struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: Tracked") alignas(4)
+    [[clang::trivial_abi]] Tracked final {
+ public:
+  // Default::default
+  Tracked();
+
+  // Drop::drop
+  ~Tracked();
+
+  Tracked(Tracked&&) noexcept;
+  ::vec::Tracked& operator=(Tracked&&) noexcept;
+
+  // Clone::clone
+  Tracked(const Tracked&) noexcept;
+
+  // Clone::clone_from
+  ::vec::Tracked& operator=(const Tracked&) noexcept;
+
+  Tracked(::crubit::UnsafeRelocateTag, Tracked&& value);
+
+  static ::vec::Tracked new_();
+
+  ::std::uintptr_t strong_count() const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> counter;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 void drop_vec(::rs::Vec<::std::int32_t> _v);
 
 ::rs::Vec<::std::int32_t> return_grown_vec();
@@ -80,6 +170,12 @@ void drop_vec(::rs::Vec<::std::int32_t> _v);
 ::rs::Vec<::std::int32_t> return_vec();
 
 void rust_add_elements(::rs::Vec<::std::int32_t>& v);
+
+::std::uintptr_t take_move_only_vec(::rs::Vec<::vec::MoveOnly> v);
+
+::std::uintptr_t take_non_default_vec(::rs::Vec<::vec::NonDefault> v);
+
+::std::uintptr_t take_tracked_vec(::rs::Vec<::vec::Tracked> v);
 
 ::std::int32_t take_vec(::rs::Vec<::std::int32_t> v);
 
@@ -166,8 +262,230 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020MoveOnly_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020MoveOnly_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    ":: alloc :: vec :: Vec < :: vec_golden :: MoveOnly >")::rs::
+    Vec<::vec::MoveOnly> : public ::rs::VecBase<::vec::MoveOnly> {
+ public:
+  using ::rs::VecBase<::vec::MoveOnly>::VecBase;
+
+  // Default::default
+  Vec() noexcept;
+
+  // `alloc::vec::Vec` doesn't implement the `Clone` trait
+  Vec(const Vec&) = delete;
+  Vec& operator=(const Vec&) = delete;
+  Vec(Vec&&) noexcept;
+  ::rs::Vec<::vec::MoveOnly>& operator=(Vec&&) noexcept;
+  Vec(::crubit::UnsafeRelocateTag, Vec&& value);
+
+  ~Vec() noexcept;
+
+ private:
+  friend class ::rs::VecBase<::vec::MoveOnly>;
+  static constexpr ::std::size_t kPtrOffset = 4;
+  static constexpr ::std::size_t kCapOffset = 0;
+  static constexpr ::std::size_t kLenOffset = 8;
+  unsigned char storage_[12];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020NonDefault_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020NonDefault_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    ":: alloc :: vec :: Vec < :: vec_golden :: NonDefault >")::rs::
+    Vec<::vec::NonDefault> : public ::rs::VecBase<::vec::NonDefault> {
+ public:
+  using ::rs::VecBase<::vec::NonDefault>::VecBase;
+
+  // Default::default
+  Vec() noexcept;
+
+  // Clone::clone
+  Vec(const Vec&) noexcept;
+
+  // Clone::clone_from
+  ::rs::Vec<::vec::NonDefault>& operator=(const Vec&) noexcept;
+
+  Vec(Vec&&) noexcept;
+  ::rs::Vec<::vec::NonDefault>& operator=(Vec&&) noexcept;
+  Vec(::crubit::UnsafeRelocateTag, Vec&& value);
+
+  ~Vec() noexcept;
+
+ private:
+  friend class ::rs::VecBase<::vec::NonDefault>;
+  static constexpr ::std::size_t kPtrOffset = 4;
+  static constexpr ::std::size_t kCapOffset = 0;
+  static constexpr ::std::size_t kLenOffset = 8;
+  unsigned char storage_[12];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020Tracked_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020Tracked_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    ":: alloc :: vec :: Vec < :: vec_golden :: Tracked >")::rs::
+    Vec<::vec::Tracked> : public ::rs::VecBase<::vec::Tracked> {
+ public:
+  using ::rs::VecBase<::vec::Tracked>::VecBase;
+
+  // Default::default
+  Vec() noexcept;
+
+  // Clone::clone
+  Vec(const Vec&) noexcept;
+
+  // Clone::clone_from
+  ::rs::Vec<::vec::Tracked>& operator=(const Vec&) noexcept;
+
+  Vec(Vec&&) noexcept;
+  ::rs::Vec<::vec::Tracked>& operator=(Vec&&) noexcept;
+  Vec(::crubit::UnsafeRelocateTag, Vec&& value);
+
+  ~Vec() noexcept;
+
+ private:
+  friend class ::rs::VecBase<::vec::Tracked>;
+  static constexpr ::std::size_t kPtrOffset = 4;
+  static constexpr ::std::size_t kCapOffset = 0;
+  static constexpr ::std::size_t kLenOffset = 8;
+  unsigned char storage_[12];
+};
+#endif
+
 namespace vec {
 
+static_assert(
+    sizeof(::vec::MoveOnly) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::vec::MoveOnly) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Default_udefault_uvec_ugolden_x0000003a_x0000003aMoveOnly(
+    ::vec::MoveOnly* __ret_ptr);
+}
+inline ::vec::MoveOnly::MoveOnly() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uvec_ugolden_x0000003a_x0000003aMoveOnly(
+          this);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aMoveOnly(
+    ::vec::MoveOnly&);
+}
+inline ::vec::MoveOnly::~MoveOnly() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aMoveOnly(*this);
+}
+inline ::vec::MoveOnly::MoveOnly(MoveOnly&& other) noexcept : MoveOnly() {
+  *this = ::std::move(other);
+}
+inline ::vec::MoveOnly& ::vec::MoveOnly::operator=(MoveOnly&& other) noexcept {
+  crubit::MemSwap(*this, other);
+  return *this;
+}
+inline ::vec::MoveOnly::MoveOnly(::crubit::UnsafeRelocateTag,
+                                 MoveOnly&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::vec::MoveOnly* __ret_ptr);
+}
+inline ::vec::MoveOnly(MoveOnly::new_)() {
+  crubit::Slot<::vec::MoveOnly> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_strong_ucount(
+    ::vec::MoveOnly const&);
+}
+inline ::std::uintptr_t(MoveOnly::strong_count)() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_strong_ucount(self);
+}
+inline void ::vec::MoveOnly::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::vec::MoveOnly;
+  static_assert(0 == offsetof(__crubit_assert_type, counter));
+}
+static_assert(
+    sizeof(::vec::NonDefault) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::vec::NonDefault) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aNonDefault(
+    ::vec::NonDefault&);
+}
+inline ::vec::NonDefault::~NonDefault() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aNonDefault(
+          *this);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_uvec_ugolden_x0000003a_x0000003aNonDefault(
+    ::vec::NonDefault const&, ::vec::NonDefault* __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_uvec_ugolden_x0000003a_x0000003aNonDefault(
+    ::vec::NonDefault&, ::vec::NonDefault const&);
+}
+inline ::vec::NonDefault::NonDefault(const NonDefault& other) noexcept {
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_uvec_ugolden_x0000003a_x0000003aNonDefault(
+          other, this);
+}
+inline ::vec::NonDefault& ::vec::NonDefault::operator=(
+    const NonDefault& other) noexcept {
+  if (this != &other) {
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_uvec_ugolden_x0000003a_x0000003aNonDefault(
+            *this, other);
+  }
+  return *this;
+}
+inline ::vec::NonDefault::NonDefault(::crubit::UnsafeRelocateTag,
+                                     NonDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::std::int32_t,
+                                   ::vec::NonDefault* __ret_ptr);
+}
+inline ::vec::NonDefault(NonDefault::new_)(::std::int32_t value) {
+  crubit::Slot<::vec::NonDefault> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_value(::vec::NonDefault const&);
+}
+inline ::std::int32_t(NonDefault::value)() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_value(self);
+}
+inline void ::vec::NonDefault::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::vec::NonDefault;
+  static_assert(0 == offsetof(__crubit_assert_type, value_));
+}
 static_assert(
     sizeof(::vec::RustVecOwner) == 12,
     "Verify that ADT layout didn't change since this header got generated");
@@ -277,6 +595,87 @@ inline void ::vec::StructWithVec::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::vec::StructWithVec;
   static_assert(0 == offsetof(__crubit_assert_type, v));
 }
+static_assert(
+    sizeof(::vec::Tracked) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::vec::Tracked) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Default_udefault_uvec_ugolden_x0000003a_x0000003aTracked(
+    ::vec::Tracked* __ret_ptr);
+}
+inline ::vec::Tracked::Tracked() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uvec_ugolden_x0000003a_x0000003aTracked(
+          this);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aTracked(
+    ::vec::Tracked&);
+}
+inline ::vec::Tracked::~Tracked() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aTracked(*this);
+}
+inline ::vec::Tracked::Tracked(Tracked&& other) noexcept : Tracked() {
+  *this = ::std::move(other);
+}
+inline ::vec::Tracked& ::vec::Tracked::operator=(Tracked&& other) noexcept {
+  crubit::MemSwap(*this, other);
+  return *this;
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_uvec_ugolden_x0000003a_x0000003aTracked(
+    ::vec::Tracked const&, ::vec::Tracked* __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_uvec_ugolden_x0000003a_x0000003aTracked(
+    ::vec::Tracked&, ::vec::Tracked const&);
+}
+inline ::vec::Tracked::Tracked(const Tracked& other) noexcept {
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_uvec_ugolden_x0000003a_x0000003aTracked(other,
+                                                                          this);
+}
+inline ::vec::Tracked& ::vec::Tracked::operator=(
+    const Tracked& other) noexcept {
+  if (this != &other) {
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_uvec_ugolden_x0000003a_x0000003aTracked(
+            *this, other);
+  }
+  return *this;
+}
+inline ::vec::Tracked::Tracked(::crubit::UnsafeRelocateTag, Tracked&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::vec::Tracked* __ret_ptr);
+}
+inline ::vec::Tracked(Tracked::new_)() {
+  crubit::Slot<::vec::Tracked> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_strong_ucount(::vec::Tracked const&);
+}
+inline ::std::uintptr_t(Tracked::strong_count)() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_strong_ucount(self);
+}
+inline void ::vec::Tracked::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::vec::Tracked;
+  static_assert(0 == offsetof(__crubit_assert_type, counter));
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop_uvec(::rs::Vec<::std::int32_t>*);
 }
@@ -323,6 +722,34 @@ extern "C" void __crubit_thunk_rust_uadd_uelements(::rs::Vec<::std::int32_t>&);
 }
 inline void rust_add_elements(::rs::Vec<::std::int32_t>& v) {
   return __crubit_internal::__crubit_thunk_rust_uadd_uelements(v);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_take_umove_uonly_uvec(
+    ::rs::Vec<::vec::MoveOnly>*);
+}
+inline ::std::uintptr_t take_move_only_vec(::rs::Vec<::vec::MoveOnly> v) {
+  crubit::Slot v_slot((::std::move(v)));
+  return __crubit_internal::__crubit_thunk_take_umove_uonly_uvec(v_slot.Get());
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_take_unon_udefault_uvec(
+    ::rs::Vec<::vec::NonDefault>*);
+}
+inline ::std::uintptr_t take_non_default_vec(::rs::Vec<::vec::NonDefault> v) {
+  crubit::Slot v_slot((::std::move(v)));
+  return __crubit_internal::__crubit_thunk_take_unon_udefault_uvec(
+      v_slot.Get());
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_take_utracked_uvec(
+    ::rs::Vec<::vec::Tracked>*);
+}
+inline ::std::uintptr_t take_tracked_vec(::rs::Vec<::vec::Tracked> v) {
+  crubit::Slot v_slot((::std::move(v)));
+  return __crubit_internal::__crubit_thunk_take_utracked_uvec(v_slot.Get());
 }
 
 namespace __crubit_internal {
@@ -427,6 +854,126 @@ inline ::rs::Vec<::std::uint8_t>::Vec(::crubit::UnsafeRelocateTag,
 
 inline ::rs::Vec<::std::uint8_t>::Vec() noexcept : storage_{} { init_empty(); }
 inline ::rs::Vec<::std::uint8_t>::~Vec() noexcept { destroy(); }
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020MoveOnly_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020MoveOnly_x00000020_x0000003e
+inline ::rs::Vec<::vec::MoveOnly>::Vec(Vec&& other) noexcept : storage_{} {
+  ::std::memcpy(storage_, other.storage_, sizeof(storage_));
+  other.init_empty();
+}
+inline ::rs::Vec<::vec::MoveOnly>& ::rs::Vec<::vec::MoveOnly>::operator=(
+    Vec&& other) noexcept {
+  if (this != &other) {
+    destroy();
+    crubit::MemSwap(*this, other);
+  }
+  return *this;
+}
+inline ::rs::Vec<::vec::MoveOnly>::Vec(::crubit::UnsafeRelocateTag,
+                                       Vec&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+inline ::rs::Vec<::vec::MoveOnly>::Vec() noexcept : storage_{} { init_empty(); }
+inline ::rs::Vec<::vec::MoveOnly>::~Vec() noexcept { destroy(); }
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020NonDefault_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020NonDefault_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cvec_ugolden_x0000003a_x0000003aNonDefault_x0000003e(
+    ::rs::Vec<::vec::NonDefault> const&,
+    ::rs::Vec<::vec::NonDefault>* __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cvec_ugolden_x0000003a_x0000003aNonDefault_x0000003e(
+    ::rs::Vec<::vec::NonDefault>&, ::rs::Vec<::vec::NonDefault> const&);
+}
+inline ::rs::Vec<::vec::NonDefault>::Vec(const Vec& other) noexcept {
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cvec_ugolden_x0000003a_x0000003aNonDefault_x0000003e(
+          other, this);
+}
+inline ::rs::Vec<::vec::NonDefault>& ::rs::Vec<::vec::NonDefault>::operator=(
+    const Vec& other) noexcept {
+  if (this != &other) {
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cvec_ugolden_x0000003a_x0000003aNonDefault_x0000003e(
+            *this, other);
+  }
+  return *this;
+}
+inline ::rs::Vec<::vec::NonDefault>::Vec(Vec&& other) noexcept : storage_{} {
+  ::std::memcpy(storage_, other.storage_, sizeof(storage_));
+  other.init_empty();
+}
+inline ::rs::Vec<::vec::NonDefault>& ::rs::Vec<::vec::NonDefault>::operator=(
+    Vec&& other) noexcept {
+  if (this != &other) {
+    destroy();
+    crubit::MemSwap(*this, other);
+  }
+  return *this;
+}
+inline ::rs::Vec<::vec::NonDefault>::Vec(::crubit::UnsafeRelocateTag,
+                                         Vec&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+inline ::rs::Vec<::vec::NonDefault>::Vec() noexcept : storage_{} {
+  init_empty();
+}
+inline ::rs::Vec<::vec::NonDefault>::~Vec() noexcept { destroy(); }
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020Tracked_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020vec_x00000020_x0000003a_x0000003a_x00000020Tracked_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cvec_ugolden_x0000003a_x0000003aTracked_x0000003e(
+    ::rs::Vec<::vec::Tracked> const&, ::rs::Vec<::vec::Tracked>* __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cvec_ugolden_x0000003a_x0000003aTracked_x0000003e(
+    ::rs::Vec<::vec::Tracked>&, ::rs::Vec<::vec::Tracked> const&);
+}
+inline ::rs::Vec<::vec::Tracked>::Vec(const Vec& other) noexcept {
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cvec_ugolden_x0000003a_x0000003aTracked_x0000003e(
+          other, this);
+}
+inline ::rs::Vec<::vec::Tracked>& ::rs::Vec<::vec::Tracked>::operator=(
+    const Vec& other) noexcept {
+  if (this != &other) {
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cvec_ugolden_x0000003a_x0000003aTracked_x0000003e(
+            *this, other);
+  }
+  return *this;
+}
+inline ::rs::Vec<::vec::Tracked>::Vec(Vec&& other) noexcept : storage_{} {
+  ::std::memcpy(storage_, other.storage_, sizeof(storage_));
+  other.init_empty();
+}
+inline ::rs::Vec<::vec::Tracked>& ::rs::Vec<::vec::Tracked>::operator=(
+    Vec&& other) noexcept {
+  if (this != &other) {
+    destroy();
+    crubit::MemSwap(*this, other);
+  }
+  return *this;
+}
+inline ::rs::Vec<::vec::Tracked>::Vec(::crubit::UnsafeRelocateTag,
+                                      Vec&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+inline ::rs::Vec<::vec::Tracked>::Vec() noexcept : storage_{} { init_empty(); }
+inline ::rs::Vec<::vec::Tracked>::~Vec() noexcept { destroy(); }
 #endif
 
 #pragma clang assume_nonnull end

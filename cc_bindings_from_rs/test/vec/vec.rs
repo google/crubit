@@ -61,3 +61,64 @@ pub fn rust_add_elements(v: &mut Vec<i32>) {
     v.push(100);
     v.push(200);
 }
+
+#[derive(Clone, Default)]
+pub struct Tracked {
+    counter: std::sync::Arc<()>,
+}
+
+impl Tracked {
+    pub fn new() -> Self {
+        Self { counter: std::sync::Arc::new(()) }
+    }
+
+    pub fn strong_count(&self) -> usize {
+        std::sync::Arc::strong_count(&self.counter)
+    }
+}
+
+pub fn take_tracked_vec(v: Vec<Tracked>) -> usize {
+    v.len()
+}
+
+#[derive(Clone)]
+pub struct NonDefault {
+    value: i32,
+}
+
+impl NonDefault {
+    pub fn new(value: i32) -> Self {
+        Self { value }
+    }
+
+    pub fn value(&self) -> i32 {
+        self.value
+    }
+}
+
+impl Drop for NonDefault {
+    fn drop(&mut self) {}
+}
+
+pub fn take_non_default_vec(v: Vec<NonDefault>) -> usize {
+    v.len()
+}
+
+#[derive(Default)]
+pub struct MoveOnly {
+    counter: std::sync::Arc<()>,
+}
+
+impl MoveOnly {
+    pub fn new() -> Self {
+        Self { counter: std::sync::Arc::new(()) }
+    }
+
+    pub fn strong_count(&self) -> usize {
+        std::sync::Arc::strong_count(&self.counter)
+    }
+}
+
+pub fn take_move_only_vec(v: Vec<MoveOnly>) -> usize {
+    v.len()
+}

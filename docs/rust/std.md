@@ -168,39 +168,50 @@ rs::SliceRef<const int32_t> slice = v;
 
 ### Modifying a `Vec` from C++
 
-An `rs::Vec<T>` can be constructed empty, from an initializer list, or
-explicitly from a `std::vector<T>` (copying from `const std::vector<T>&` or
-moving elements from `std::vector<T>&&`), and elements can be added, removed,
-and constructed in place from C++:
+An `rs::Vec<T>` can be constructed empty, from an initializer list, from
+`(count)`, from `(count, value)`, or from an iterator range `(first, last)`,
+like a `std::vector<T>`. It can also be constructed explicitly from a
+`std::vector<T>` (copying from `const std::vector<T>&` or moving elements from
+`std::vector<T>&&`). Elements can be added, removed, resized, assigned, and
+constructed in place from C++:
 
 ```c++
 rs::Vec<int32_t> from_init = {1, 2, 3};
+rs::Vec<int32_t> zeroed(3);                 // 3 value-initialized elements.
+rs::Vec<int32_t> filled(3, 0);              // 3 copies of 0.
 
 std::vector<int32_t> src = {1, 2, 3};
+rs::Vec<int32_t> from_range(src.begin(), src.end());
 rs::Vec<int32_t> from_vec(src);             // Copies elements from src.
 rs::Vec<int32_t> moved_vec(std::move(src)); // Moves elements out of src.
 
 rs::Vec<int32_t> v;
-v.reserve(3);         // Total capacity, like std::vector::reserve.
+v.reserve(3);                // Total capacity, like std::vector::reserve.
 v.push_back(1);
 v.push_back(2);
-v.emplace_back(3);    // Constructs in place; returns a T&.
-v.insert(0, 0);       // Inserts at *index* 0, shifting the rest right.
-v.pop_back();         // Removes and destroys the last element.
-v.clear();            // Destroys all elements but keeps the buffer.
+v.emplace_back(3);           // Constructs in place; returns a T&.
+v.insert(0, 0);              // Inserts at *index* 0, shifting the rest right.
+v.append_range(from_init);   // Appends a range (uses memcpy for contiguous trivially copyable T).
+v.resize(6);                 // Grows or shrinks; value-initializes new elements.
+v.assign(4, 42);             // Replaces contents with 4 copies of 42.
+v.pop_back();                // Removes and destroys the last element.
+v.clear();                   // Destroys all elements but keeps the buffer.
 ```
 
 Differences from `std::vector` worth knowing about:
 
 *   `insert(index, value)` takes an index rather than an iterator (as in Rust's
-    `Vec::insert`).
+    `Vec::insert`). To append a range of elements in bulk, use
+    `append_range(range)` instead of range `insert`.
 *   `reserve(new_cap)` has `std::vector::reserve` semantics: it ensures the
     *total* capacity is at least `new_cap`. To request room for `n` *additional*
     elements (Rust's `Vec::reserve(additional)` semantics), use
     `reserve_additional_capacity(n)` instead.
 *   Only the operations listed above are currently supported. In particular,
-    there is no `erase`, `resize`, or range `insert`. For other operations,
-    write a small Rust helper function and call it through its Crubit bindings.
+    there is no `erase` or `shrink_to_fit`, no `std::from_range` constructor,
+    and no allocator-aware constructor (a Rust `Vec<T>` bound by Crubit always
+    uses the global allocator). For other operations, write a small Rust helper
+    function and call it through its Crubit bindings.
 
 ## Availability of generic `rs` specializations
 

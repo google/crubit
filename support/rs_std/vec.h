@@ -7,13 +7,16 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_VEC_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_VEC_H_
 
+#include <algorithm>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <memory>
+#include <ranges>  // NOLINT(build/c++20)
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -96,6 +99,47 @@ class VecBase {
     }
   }
 
+  // Constructs a vector with `count` value-initialized elements.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  //
+  // This is deliberately unconstrained, like `std::vector`'s: a single-argument
+  // constructor is a candidate whenever a `Vec<T>` is copied or moved, and a
+  // `requires` clause naming `T` would then be evaluated even while `T` is
+  // still incomplete.
+  explicit VecBase(size_type count) noexcept : VecBase() {
+    init_empty();
+    resize(count);
+  }
+
+  // Constructs a vector with `count` copies of `value`.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  VecBase(size_type count, const T& value) noexcept
+    requires(::std::is_copy_constructible_v<T>)
+      : VecBase() {
+    init_empty();
+    if (count > 0) {
+      reserve(count);
+      ::std::uninitialized_fill_n(data(), count, value);
+      set_len(count);
+    }
+  }
+
+  // Constructs a vector with the contents of the range `[first, last)`.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  template <typename InputIt>
+    requires(::std::input_iterator<InputIt> &&
+             ::std::is_constructible_v<T, ::std::iter_reference_t<InputIt>>)
+  VecBase(InputIt first, InputIt last) noexcept : VecBase() {
+    init_empty();
+    append_iterator_range(first, last);
+  }
+
   // Returns a pointer to the contiguous element buffer, or a dangling pointer
   // if empty.
   T* data() noexcept {
@@ -123,6 +167,12 @@ class VecBase {
 
   // Returns true if the vector contains no elements.
   [[nodiscard]] bool empty() const noexcept { return size() == 0; }
+
+  // Returns the largest number of elements the vector can hold: like Rust's
+  // `Vec`, an allocation may not exceed `isize::MAX` bytes.
+  ::std::size_t max_size() const noexcept {
+    return static_cast<::std::size_t>(PTRDIFF_MAX) / sizeof(T);
+  }
 
   // Returns a reference to the element at index `index`. Panics if index >=
   // size().
@@ -183,13 +233,23 @@ class VecBase {
   // `std::vector::reserve(n)`, which takes the *total* desired capacity rather
   // than additional elements. For standard C++ total capacity semantics, use
   // `reserve(new_cap)` instead.
+  //
+  // Terminates if the resulting size would exceed `max_size()`.
   void reserve_additional_capacity(::std::size_t additional) {
+    // Checked before adding so that `size() + additional` cannot wrap around.
+    CRUBIT_CHECK(additional <= max_size() - size());
     ::std::size_t needed = size() + additional;
     if (needed <= capacity()) return;
+    // `capacity() <= max_size() <= PTRDIFF_MAX`, so doubling cannot wrap.
     ::std::size_t new_cap = capacity() == 0 ? 4 : capacity() * 2;
+    if (new_cap > max_size()) {
+      new_cap = max_size();
+    }
     if (new_cap < needed) {
       new_cap = needed;
     }
+    // `new_cap <= max_size()`, so `new_cap * sizeof(T)` cannot wrap and is a
+    // valid Rust allocation size.
     ::std::size_t old_cap = capacity();
     T* old_ptr = data();
     T* new_ptr;
@@ -200,6 +260,7 @@ class VecBase {
       new_ptr = reinterpret_cast<T*>(crubit_realloc(
           old_ptr, old_cap * sizeof(T), alignof(T), new_cap * sizeof(T)));
     }
+    CRUBIT_CHECK(new_ptr != nullptr);
     set_ptr(new_ptr);
     set_cap(new_cap);
   }
@@ -249,6 +310,179 @@ class VecBase {
     }
     ::std::construct_at(data() + index, ::std::move(value));
     set_len(size() + 1);
+  }
+
+  // Appends the elements of the range `rg` to the end of the vector.
+  //
+  // The behavior is undefined if `rg` overlaps with `*this` (i.e. refers to
+  // elements inside this vector). Contiguous ranges of trivially copyable `T`
+  // are copied with a single `memcpy`.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  template <typename R>
+  // NOLINTNEXTLINE(build/c++20)
+    requires(::std::ranges::input_range<R> &&
+             // NOLINTNEXTLINE(build/c++20)
+             ::std::is_constructible_v<T, ::std::ranges::range_reference_t<R>>)
+  void append_range(R&& rg) {
+    if constexpr (::std::ranges::sized_range<R>) {  // NOLINT(build/c++20)
+      auto first = ::std::ranges::begin(rg);        // NOLINT(build/c++20)
+      auto last = ::std::ranges::end(rg);           // NOLINT(build/c++20)
+      const auto count = ::std::ranges::size(rg);   // NOLINT(build/c++20)
+      append_sized_range(first, last, static_cast<size_type>(count));
+      // NOLINTNEXTLINE(build/c++20)
+    } else if constexpr (::std::ranges::forward_range<R>) {
+      auto first = ::std::ranges::begin(rg);  // NOLINT(build/c++20)
+      auto last = ::std::ranges::end(rg);     // NOLINT(build/c++20)
+      // NOLINTNEXTLINE(build/c++20)
+      const auto count = ::std::ranges::distance(first, last);
+      append_sized_range(first, last, static_cast<size_type>(count));
+    } else {
+      for (auto&& elem : rg) {
+        emplace_back(::std::forward<decltype(elem)>(elem));
+      }
+    }
+  }
+
+  // Replaces the contents with `count` copies of `value`.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors and assignment
+  // operators do not throw (terminating if they do).
+  void assign(size_type count, const T& value)
+    requires(::std::is_copy_constructible_v<T>)
+  {
+    if (aliases_element(value)) {
+      T copy(value);
+      assign_fill_non_aliasing(count, copy);
+    } else {
+      assign_fill_non_aliasing(count, value);
+    }
+  }
+
+  // Replaces the contents with copies of those in the range `[first, last)`.
+  //
+  // The behavior is undefined if either `first` or `last` is an iterator into
+  // `*this`.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors and assignment
+  // operators do not throw (terminating if they do).
+  template <typename InputIt>
+    requires(::std::input_iterator<InputIt> &&
+             ::std::is_constructible_v<T, ::std::iter_reference_t<InputIt>>)
+  void assign(InputIt first, InputIt last) {
+    if constexpr (::std::forward_iterator<InputIt>) {
+      const size_type count =
+          static_cast<size_type>(::std::distance(first, last));
+      if (count > capacity()) {
+        destroy();
+        append_sized_range(first, last, count);
+        return;
+      }
+      if constexpr (::std::contiguous_iterator<InputIt> &&
+                    ::std::is_trivially_copyable_v<T> &&
+                    ::std::is_same_v<
+                        ::std::remove_const_t<::std::remove_reference_t<
+                            ::std::iter_reference_t<InputIt>>>,
+                        T>) {
+        clear();
+        append_sized_range(first, last, count);
+        return;
+      }
+      if constexpr (::std::is_assignable_v<T&,
+                                           ::std::iter_reference_t<InputIt>>) {
+        const size_type old_size = size();
+        T* dst = data();
+        if (count <= old_size) {
+          for (size_type i = 0; i < count; ++i, ++first, ++dst) {
+            *dst = *first;
+          }
+          ::std::destroy(data() + count, data() + old_size);
+        } else {
+          for (size_type i = 0; i < old_size; ++i, ++first, ++dst) {
+            *dst = *first;
+          }
+          for (; first != last; ++first, ++dst) {
+            ::std::construct_at(dst, *first);
+          }
+        }
+        set_len(count);
+      } else {
+        clear();
+        append_sized_range(first, last, count);
+      }
+    } else {
+      if constexpr (::std::is_assignable_v<T&,
+                                           ::std::iter_reference_t<InputIt>>) {
+        const size_type old_size = size();
+        size_type i = 0;
+        T* dst = data();
+        for (; first != last && i < old_size; ++first, ++dst, ++i) {
+          *dst = *first;
+        }
+        if (first == last) {
+          ::std::destroy(data() + i, data() + old_size);
+          set_len(i);
+          return;
+        }
+      } else {
+        clear();
+      }
+      for (; first != last; ++first) {
+        emplace_back(*first);
+      }
+    }
+  }
+
+  // Resizes the vector to contain `count` elements.
+  //
+  // If `count` is less than `size()`, excess trailing elements are destroyed.
+  // If `count` is greater than `size()`, additional value-initialized elements
+  // are appended.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  void resize(size_type count)
+    requires(::std::is_default_constructible_v<T>)
+  {
+    const size_type old_size = size();
+    if (count < old_size) {
+      ::std::destroy(data() + count, data() + old_size);
+      set_len(count);
+    } else if (count > old_size) {
+      reserve(count);
+      ::std::uninitialized_value_construct_n(data() + old_size,
+                                             count - old_size);
+      set_len(count);
+    }
+  }
+
+  // Resizes the vector to contain `count` elements.
+  //
+  // If `count` is less than `size()`, excess trailing elements are destroyed.
+  // If `count` is greater than `size()`, additional copies of `value` are
+  // appended.
+  //
+  // Like the rest of `rs::Vec`, assumes element constructors do not throw
+  // (terminating if they do).
+  void resize(size_type count, const T& value)
+    requires(::std::is_copy_constructible_v<T>)
+  {
+    const size_type old_size = size();
+    if (count < old_size) {
+      ::std::destroy(data() + count, data() + old_size);
+      set_len(count);
+    } else if (count > old_size) {
+      if (count > capacity() && aliases_element(value)) {
+        T copy(value);
+        reserve(count);
+        ::std::uninitialized_fill_n(data() + old_size, count - old_size, copy);
+      } else {
+        reserve(count);
+        ::std::uninitialized_fill_n(data() + old_size, count - old_size, value);
+      }
+      set_len(count);
+    }
   }
 
   // Destroys all elements in the vector without freeing the allocated buffer.
@@ -304,6 +538,77 @@ class VecBase {
  private:
   Vec<T>& derived() { return *static_cast<Vec<T>*>(this); }
   const Vec<T>& derived() const { return *static_cast<const Vec<T>*>(this); }
+
+  bool aliases_element(const T& value) const noexcept {
+    if (empty()) return false;
+    const T* ptr = ::std::addressof(value);
+    return !::std::less<const T*>{}(ptr, data()) &&
+           ::std::less<const T*>{}(ptr, data() + size());
+  }
+
+  void assign_fill_non_aliasing(size_type count, const T& value) {
+    if (count == 0) {
+      clear();
+      return;
+    }
+    if (count > capacity()) {
+      destroy();
+      reserve(count);
+      ::std::uninitialized_fill_n(data(), count, value);
+      set_len(count);
+      return;
+    }
+    if constexpr (::std::is_copy_assignable_v<T>) {
+      const size_type old_size = size();
+      if (count <= old_size) {
+        ::std::fill_n(data(), count, value);
+        ::std::destroy(data() + count, data() + old_size);
+      } else {
+        ::std::fill_n(data(), old_size, value);
+        ::std::uninitialized_fill_n(data() + old_size, count - old_size, value);
+      }
+      set_len(count);
+    } else {
+      clear();
+      ::std::uninitialized_fill_n(data(), count, value);
+      set_len(count);
+    }
+  }
+
+  template <typename InputIt>
+  void append_iterator_range(InputIt first, InputIt last) {
+    if constexpr (::std::forward_iterator<InputIt>) {
+      append_sized_range(first, last,
+                         static_cast<size_type>(::std::distance(first, last)));
+    } else {
+      for (; first != last; ++first) {
+        emplace_back(*first);
+      }
+    }
+  }
+
+  template <typename It, typename Sent>
+  void append_sized_range(It first, Sent last, size_type count) {
+    if (count == 0) return;
+    reserve_additional_capacity(count);
+    if constexpr (::std::contiguous_iterator<It> &&
+                  ::std::is_trivially_copyable_v<T> &&
+                  ::std::is_same_v<
+                      ::std::remove_const_t<::std::remove_reference_t<
+                          ::std::iter_reference_t<It>>>,
+                      T>) {
+      ::std::memcpy(data() + size(), ::std::to_address(first),
+                    count * sizeof(T));
+      set_len(size() + count);
+    } else {
+      size_type current_len = size();
+      T* base = data();
+      for (; first != last; ++first, ++current_len) {
+        ::std::construct_at(base + current_len, *first);
+      }
+      set_len(current_len);
+    }
+  }
 };
 
 template <typename T>
