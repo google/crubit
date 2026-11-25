@@ -2658,8 +2658,8 @@ pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) 
 
 pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
     if sig.c_variadic() {
-        // TODO(b/254097223): Add support for variadic functions.
-        bail!("C variadic functions are not supported (b/254097223)");
+        // TODO(b/254097940): Add support for variadic functions.
+        bail!("C variadic functions are not supported (b/254097940)");
     }
 
     Ok(())
