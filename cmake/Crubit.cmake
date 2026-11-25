@@ -33,6 +33,53 @@ function(_crubit_source_dir out_var)
   set(${out_var} "${dir}" PARENT_SCOPE)
 endfunction()
 
+# crubit_rust_bindings(<crate> CC_TARGET <target>
+#                      [HEADERS <header>...]
+#                      [FEATURES <feature>...])
+#
+# Generates Rust bindings for the C++ library `<target>` as the Rust crate
+# `<crate>`, and the C++ library `crubit::<crate>` holding the C++ side of the
+# bindings. Use crubit_link_rust_bindings to use the crate from Rust.
+#
+# HEADERS are the public headers to generate bindings for (relative to the
+# current source directory); by default, the target's `HEADERS` file set,
+# which needs CMake 3.23.
+# FEATURES are the Crubit features enabled for the target (default:
+# `supported`); see docs/overview/status.md.
+function(crubit_rust_bindings crate)
+  cmake_parse_arguments(PARSE_ARGV 1 ARG "" "CC_TARGET" "HEADERS;FEATURES")
+  if(NOT ARG_CC_TARGET OR NOT TARGET "${ARG_CC_TARGET}")
+    message(FATAL_ERROR
+      "crubit_rust_bindings(${crate}): CC_TARGET must name a C++ library target")
+  endif()
+  _crubit_init_toolchain()
+  set(tgt "${ARG_CC_TARGET}")
+  get_target_property(aliased ${tgt} ALIASED_TARGET)
+  if(aliased)
+    set(tgt "${aliased}")
+  endif()
+
+  set(headers "")
+  foreach(header IN LISTS ARG_HEADERS)
+    cmake_path(ABSOLUTE_PATH header NORMALIZE)
+    list(APPEND headers "${header}")
+  endforeach()
+  if(NOT ARG_FEATURES)
+    set(ARG_FEATURES supported)
+  endif()
+  # Crubit's `cxx` crate interop is not supported with CMake.
+  list(APPEND ARG_FEATURES no_impl_cxx_extern_type)
+
+  set_target_properties(${tgt} PROPERTIES
+    CRUBIT_CRATE_NAME "${crate}"
+    CRUBIT_HEADERS "${headers}"
+    CRUBIT_FEATURES "${ARG_FEATURES}")
+  # Generate once all targets and their dependencies are known. (Arguments of
+  # deferred calls are evaluated late, so bind `tgt` now.)
+  cmake_language(EVAL CODE
+    "cmake_language(DEFER DIRECTORY [[${CMAKE_SOURCE_DIR}]] CALL _crubit_finalize [[${tgt}]])")
+endfunction()
+
 # crubit_link_rust_bindings(<rust_target> [<crate>...])
 #
 # Makes the bindings crates `<crate>...` (created by crubit_rust_bindings), and
