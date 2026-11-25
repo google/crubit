@@ -595,7 +595,6 @@ cc_library(
         ":cmdline",
         ":ir_from_cc",
         "//common:cc_ffi_types",
-        "//common:status",
         "@llvm-project//llvm:Support",
     ],
 )
