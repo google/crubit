@@ -401,5 +401,43 @@ TEST(PointerNullabilityTest, FieldWithLoopInBetweenDefinitionAndUse) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, WidenPointerWithAndWithoutNullState) {
+  // Tests widening a pointer that has null state with one that doesn't.
+  //
+  // `s.inner.ptr` is never read as an expression, so its `PointerValue` never
+  // gets null state. Record assignments copy that value unchanged into `next`,
+  // then `cur`. Going through `next` means the value first reaches `cur` at
+  // the end of the loop body, so `widen` sees it before `*cur.inner.ptr` can
+  // read it and give it null state. (`ptr` is nested in `Inner` because the
+  // non-const `operator=` would reset direct pointer fields of the destination
+  // to their declared nullability.)
+  //
+  // At the backedge, `cur.inner.ptr` changes from `&x` (with null state) to a
+  // value without null state. `widen` must report this as a change so that the
+  // loop is analyzed again and the dereference of the possibly-null value is
+  // diagnosed.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Inner {
+      int* _Nullable ptr;
+    };
+    struct Outer {
+      Inner inner;
+    };
+
+    void target(Outer s, bool b) {
+      int x = 0;
+      Outer cur;
+      Outer next;
+      cur.inner.ptr = &x;
+      next.inner.ptr = &x;
+      while (b) {
+        (void)*cur.inner.ptr;  // [[unsafe]]
+        cur = next;
+        next = s;
+      }
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
