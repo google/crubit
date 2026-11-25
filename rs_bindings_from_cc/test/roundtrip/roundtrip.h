@@ -6,9 +6,11 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SIMPLE_SIMPLE_FUNCTIONS_H_
 
 #include <cstdint>
+#include <utility>
 
 #include "support/annotations.h"
 #include "support/rs_std/char.h"
+#include "support/rs_std/rs_std.h"
 
 // Tests for round-tripping between:
 // - Rust built-in `char` type
@@ -40,5 +42,40 @@ inline using_test::char_ NextCharViaImport(using_test::char_ c) {
 }
 
 }  // namespace char_test
+
+// Tests for round-tripping Rust stdlib types (`rs::std::string::String`, etc.)
+// from `support/rs_std/rs_std.h`.
+namespace std_test {
+
+struct CRUBIT_MUST_BIND CRUBIT_TRIVIAL_ABI TrivialAbiStructWithString final {
+  rs::std::string::String method_name;
+  std::int32_t id;
+
+  CRUBIT_MUST_BIND std::int32_t GetId() const { return id; }
+  CRUBIT_MUST_BIND rs::std::string::String IntoMethodName() && {
+    return std::move(method_name);
+  }
+};
+
+struct CRUBIT_MUST_BIND NonTrivialAbiStructWithString final {
+  rs::std::string::String method_name;
+  std::int32_t id;
+
+  CRUBIT_MUST_BIND rs::std::string::String IntoMethodName() && {
+    return std::move(method_name);
+  }
+};
+
+CRUBIT_MUST_BIND inline rs::std::string::String EchoString(
+    rs::std::string::String s) {
+  return s;
+}
+
+CRUBIT_MUST_BIND inline TrivialAbiStructWithString MakeStructWithString(
+    rs::std::string::String s, std::int32_t id) {
+  return TrivialAbiStructWithString{std::move(s), id};
+}
+
+}  // namespace std_test
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SIMPLE_SIMPLE_FUNCTIONS_H_
