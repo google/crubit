@@ -21,11 +21,11 @@ and layout-compatible generic containers (such as `std::optional<std::string>`
 and `absl::StatusOr<std::string>`) use the layout-compatible, `!Unpin`
 `cpp_std::string` type.
 
-Both `cpp_std::string` and `cpp_std::string_wrapper` convert to
-`cpp_std::string_view` via `From<&string>` and `From<&string_wrapper>`. In the
-reverse direction, `string_wrapper` implements `From<string_view>`, and `string`
-implements `ctor::CtorNew<string_view>` (and can be cloned in place via
-`ctor::emplace!(ctor::copy(s))`).
+Both `cpp_std::string` and `cpp_std::string_wrapper` borrow as a
+`cpp_std::string_view` via `.as_string_view()` (as well as `From<&string>` and
+`From<&string_wrapper>`). In the reverse direction, `string_wrapper` implements
+`From<string_view>`, and `string` implements `ctor::CtorNew<string_view>` (and
+can be cloned in place via `ctor::emplace!(ctor::copy(s))`).
 
 API: support/cc_std_impl/string.rs
 

@@ -53,6 +53,12 @@ impl string_wrapper {
         self.as_ref()
     }
 
+    /// Borrows the string's bytes as a `string_view`, like C++'s implicit
+    /// `std::string` to `std::string_view` conversion.
+    pub fn as_string_view(&self) -> string_view<'_> {
+        self.as_slice().into()
+    }
+
     pub fn to_vec(&self) -> Vec<u8> {
         self.as_slice().into()
     }
@@ -210,7 +216,7 @@ impl From<&[u8]> for string_wrapper {
 /// `std::string` to `std::string_view` conversion.
 impl<'a> From<&'a string_wrapper> for string_view<'a> {
     fn from(s: &'a string_wrapper) -> Self {
-        s.as_slice().into()
+        s.as_string_view()
     }
 }
 
@@ -531,6 +537,12 @@ impl string {
         self
     }
 
+    /// Borrows the string's bytes as a `string_view`, like C++'s implicit
+    /// `std::string` to `std::string_view` conversion.
+    pub fn as_string_view(&self) -> string_view<'_> {
+        self.as_slice().into()
+    }
+
     /// Returns a mutable slice of the string's bytes.
     ///
     /// Since `string` is `!Unpin`, this requires pinning.
@@ -601,7 +613,7 @@ impl core::convert::AsRef<[u8]> for string {
 /// `std::string` to `std::string_view` conversion.
 impl<'a> From<&'a string> for string_view<'a> {
     fn from(s: &'a string) -> Self {
-        s.as_slice().into()
+        s.as_string_view()
     }
 }
 
