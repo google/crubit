@@ -74,10 +74,11 @@ fn main() -> Result<()> {
     let root = metadata.root_package().ok_or_else(|| anyhow!("Failed to find root package"))?;
 
     let mut build_args = vec![];
-    let mut target_dir = &metadata.target_directory;
+    let target_dir = resolve_target_dir(
+        cli.target_dir.as_deref().unwrap_or(metadata.target_directory.as_path()),
+    )?;
     if let Some(cli_target_dir) = &cli.target_dir {
         build_args.push(format!("--target-dir={}", cli_target_dir));
-        target_dir = cli_target_dir;
     }
     if let Some(manifest_path) = &cli.manifest.manifest_path {
         build_args.push(format!("--manifest-path={}", manifest_path.display()));
@@ -102,7 +103,7 @@ fn main() -> Result<()> {
         build_artifacts,
         root.clone(),
         &metadata,
-        target_dir,
+        &target_dir,
         cli.out_dir.as_deref(),
         target_libdir,
     )?;
@@ -267,40 +268,38 @@ struct BindingGenerationContext {
     target_libdir: Utf8PathBuf,
 }
 
-fn determine_profile_dir(
-    pkg_to_artifact: &HashMap<String, ArtifactInfo>,
-    root: &Package,
+fn resolve_target_dir(target_dir: &Utf8Path) -> Result<Utf8PathBuf> {
+    if target_dir.is_absolute() {
+        return Ok(target_dir.to_owned());
+    }
+    let cwd = env::current_dir()?;
+    let cwd = Utf8PathBuf::try_from(cwd)
+        .map_err(|err| anyhow!("Current directory is not valid UTF-8: {}", err))?;
+    Ok(cwd.join(target_dir))
+}
+
+fn determine_profile_dir_from_path(
+    artifact_path: &Utf8Path,
     target_dir: &Utf8Path,
 ) -> Result<Utf8PathBuf> {
-    let artifact_path = pkg_to_artifact
-        .get(&root.id.repr)
-        .map(|info| info.path.as_path())
-        .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
     let rel_path = artifact_path.strip_prefix(target_dir).map_err(|_| {
         anyhow!("Artifact path '{artifact_path}' is not under target dir '{target_dir}'")
     })?;
-    let mut components = rel_path.components();
-    let first = components
-        .next()
-        .ok_or_else(|| anyhow!("Artifact path '{artifact_path}' has no relative components"))?
-        .as_str();
-
-    // Target triples contain hyphens (e.g. "x86_64-unknown-linux-gnu"),
-    // whereas standard/custom profile names ("debug", "release", etc.) do not.
-    let is_target_triple = first.contains('-') && !["debug", "release"].contains(&first);
-    let mut path = Utf8PathBuf::from(first);
-    if is_target_triple {
-        let second = components
-            .next()
-            .ok_or_else(|| {
-                anyhow!(
-                    "Artifact path '{artifact_path}' missing profile component after target triple"
-                )
-            })?
-            .as_str();
-        path = path.join(second);
+    let components: Vec<&str> = rel_path.components().map(|c| c.as_str()).collect();
+    // Cargo places `.rmeta` artifacts under `<profile>/(deps|build)/...` or
+    // `<target>/<profile>/(deps|build)/...`. Matching `deps`/`build` directly handles both
+    // hyphenated custom profile names (e.g. `my-custom-profile`) and targets configured via
+    // `--target`, custom `.json` specs, `CARGO_BUILD_TARGET`, or `.cargo/config.toml`.
+    match components.as_slice() {
+        [profile, "deps", _] => Ok(Utf8PathBuf::from(profile)),
+        [target, profile, "deps", _] => Ok(Utf8PathBuf::from(target).join(profile)),
+        [profile, "build", _, ..] => Ok(Utf8PathBuf::from(profile)),
+        [target, profile, "build", _, ..] => Ok(Utf8PathBuf::from(target).join(profile)),
+        _ => bail!(
+            "Could not determine profile directory from artifact path '{artifact_path}' \
+             under target dir '{target_dir}'"
+        ),
     }
-    Ok(path)
 }
 
 impl BindingGenerationContext {
@@ -308,14 +307,18 @@ impl BindingGenerationContext {
         build_artifacts: BuildArtifacts,
         root: Package,
         metadata: &Metadata,
-        target_dir: &Utf8PathBuf,
+        target_dir: &Utf8Path,
         out_dir: Option<&Utf8Path>,
         target_libdir: Utf8PathBuf,
     ) -> Result<Self> {
+        let artifact_path = build_artifacts
+            .pkg_to_artifact
+            .get(&root.id.repr)
+            .map(|info| info.path.as_path())
+            .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
         // It's important we check the path of root (and not one of our dependencies) or else we'll
         // get the wrong path.
-        let profile_dir =
-            determine_profile_dir(&build_artifacts.pkg_to_artifact, &root, target_dir)?;
+        let profile_dir = determine_profile_dir_from_path(artifact_path, target_dir)?;
         let dirs = Directories::new(target_dir.to_owned(), profile_dir, out_dir)?;
 
         let resolve = metadata
@@ -763,4 +766,125 @@ fn get_target_libdir(build_args: &[String]) -> Result<Utf8PathBuf> {
     }
     let path = std::str::from_utf8(&output.stdout)?.trim();
     Ok(Utf8PathBuf::from(path))
+}
+
+// These tests are only run in OSS (as are the other subcommand tests).
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test] // allow_core_test
+    fn test_determine_profile_dir_standard_layouts() {
+        let target_dir = Utf8Path::new("/tmp/target");
+        assert_eq!(
+            determine_profile_dir_from_path(
+                Utf8Path::new("/tmp/target/debug/deps/libfoo-1234.rmeta"),
+                target_dir,
+            )
+            .unwrap(),
+            Utf8Path::new("debug")
+        );
+        assert_eq!(
+            determine_profile_dir_from_path(
+                Utf8Path::new("/tmp/target/release/build/foo/1234/out/libfoo-1234.rmeta"),
+                target_dir,
+            )
+            .unwrap(),
+            Utf8Path::new("release")
+        );
+    }
+
+    #[test] // allow_core_test
+    fn test_determine_profile_dir_hyphenated_custom_profile() {
+        let target_dir = Utf8Path::new("/tmp/target");
+        assert_eq!(
+            determine_profile_dir_from_path(
+                Utf8Path::new("/tmp/target/my-custom-profile/deps/libfoo-1234.rmeta"),
+                target_dir,
+            )
+            .unwrap(),
+            Utf8Path::new("my-custom-profile")
+        );
+        assert_eq!(
+            determine_profile_dir_from_path(
+                Utf8Path::new("/tmp/target/my-custom-profile/build/foo/1234/out/libfoo-1234.rmeta"),
+                target_dir,
+            )
+            .unwrap(),
+            Utf8Path::new("my-custom-profile")
+        );
+    }
+
+    #[test] // allow_core_test
+    fn test_determine_profile_dir_with_target() {
+        let target_dir = Utf8Path::new("/tmp/target");
+        // Target triple with a hyphenated custom profile.
+        assert_eq!(
+            determine_profile_dir_from_path(
+                Utf8Path::new(
+                    "/tmp/target/aarch64-unknown-linux-gnu/my-custom-profile/deps/libfoo-1234.rmeta"
+                ),
+                target_dir,
+            )
+            .unwrap(),
+            Utf8Path::new("aarch64-unknown-linux-gnu/my-custom-profile")
+        );
+        // Custom target name (e.g. from a `.json` target spec).
+        assert_eq!(
+            determine_profile_dir_from_path(
+                Utf8Path::new("/tmp/target/my-board/release/deps/libfoo-1234.rmeta"),
+                target_dir,
+            )
+            .unwrap(),
+            Utf8Path::new("my-board/release")
+        );
+        // Custom profile named `deps` under an explicit target triple.
+        assert_eq!(
+            determine_profile_dir_from_path(
+                Utf8Path::new("/tmp/target/aarch64-unknown-linux-gnu/deps/deps/libfoo-1234.rmeta"),
+                target_dir,
+            )
+            .unwrap(),
+            Utf8Path::new("aarch64-unknown-linux-gnu/deps")
+        );
+        // Build-dir layout under a target triple.
+        assert_eq!(
+            determine_profile_dir_from_path(
+                Utf8Path::new(
+                    "/tmp/target/aarch64-unknown-linux-gnu/my-custom-profile/build/foo/1234/out/libfoo-1234.rmeta"
+                ),
+                target_dir,
+            )
+            .unwrap(),
+            Utf8Path::new("aarch64-unknown-linux-gnu/my-custom-profile")
+        );
+    }
+
+    #[test] // allow_core_test
+    fn test_determine_profile_dir_errors() {
+        let target_dir = Utf8Path::new("/tmp/target");
+        assert!(determine_profile_dir_from_path(
+            Utf8Path::new("/other/debug/deps/libfoo-1234.rmeta"),
+            target_dir,
+        )
+        .is_err());
+        assert!(determine_profile_dir_from_path(
+            Utf8Path::new("/tmp/target/aarch64-unknown-linux-gnu"),
+            target_dir,
+        )
+        .is_err());
+        assert!(determine_profile_dir_from_path(
+            Utf8Path::new("/tmp/target/debug/libfoo-1234.rmeta"),
+            target_dir,
+        )
+        .is_err());
+    }
+
+    #[test] // allow_core_test
+    fn test_resolve_target_dir() {
+        assert_eq!(resolve_target_dir(Utf8Path::new("/abs/target")).unwrap(), "/abs/target");
+        let resolved = resolve_target_dir(Utf8Path::new("rel/target")).unwrap();
+        assert!(resolved.is_absolute());
+        assert!(resolved.as_str().ends_with("rel/target"));
+    }
 }
