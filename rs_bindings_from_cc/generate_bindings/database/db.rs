@@ -622,7 +622,7 @@ impl<'db> BindingsGenerator<'db> {
             }
             ir::CcTypeVariant::FuncPointer(_) => "function pointer".to_string(),
             ir::CcTypeVariant::Decl(id) => self.debug_name(*id).to_string(),
-            ir::CcTypeVariant::Error(err) => format!("<error: {}>", err.message),
+            ir::CcTypeVariant::Error(err) => format!("<error: {}>", err.error.message),
             ir::CcTypeVariant::ConstantArray(_) => {
                 let (mut prefix, dims) = peel_constant_array(cc_type);
                 prefix.push_str(&dims);

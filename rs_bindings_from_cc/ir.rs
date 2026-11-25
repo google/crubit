@@ -24,7 +24,7 @@ pub use ir_ffi_support::{
 pub use ir_generated::array_value::{ArrayElements, IntegerElements, Kind as ArrayValueKind};
 pub use ir_generated::bridge_type::callable::{BackingType, FnTrait};
 pub use ir_generated::cc_type::{
-    ConstantArrayType, FuncPointer, PointerType, Variant as CcTypeVariant,
+    ConstantArrayType, ErrorType, FuncPointer, PointerType, Variant as CcTypeVariant,
 };
 pub use ir_generated::constant::{Kind as ConstantValue, MacroKind};
 pub use ir_generated::instance_method_metadata::ReferenceQualification;
@@ -34,14 +34,14 @@ pub use ir_generated::unsupported_item::{
     Kind as UnsupportedItemKind, Path as UnsupportedItemPath,
 };
 pub use ir_generated::{
-    AccessSpecifier, ArrayValue, BaseClass, BridgeType, CallingConv as CcCallingConv, CcType,
-    Comment, Constant, DeclLocation, Enum, Enumerator, ExistingRustType, Field, FloatConstant,
-    FormattedError, Func, FuncParam, GlobalVar, HeaderName, Identifier, IncompleteRecord,
-    InstanceMethodMetadata, IntegerConstant, Item, LifetimeName, MemberFuncSemantic, Namespace,
-    Operator, OwnedPtrConfig, PointerTypeKind, Primitive, Record, RecordType, SafetyAnnotation,
-    SizeAlign, SourceLocation, SpecialMemberFunc, StatusOrOptionalString, TemplateArg,
-    TemplateSpecialization, TraitDerives, TraitImplPolarity, TypeAlias, UnqualifiedIdentifier,
-    UnsupportedItem, UseMod,
+    AccessSpecifier, ArrayValue, BaseClass, Blocker, BridgeType, CallingConv as CcCallingConv,
+    CcType, Comment, Constant, DeclLocation, Enum, Enumerator, ExistingRustType, Field,
+    FloatConstant, FormattedError, Func, FuncParam, GlobalVar, HeaderName, Identifier,
+    IncompleteRecord, InstanceMethodMetadata, IntegerConstant, Item, LifetimeName,
+    MemberFuncSemantic, Namespace, Operator, OwnedPtrConfig, PointerTypeKind, Primitive, Record,
+    RecordType, SafetyAnnotation, SizeAlign, SourceLocation, SpecialMemberFunc,
+    StatusOrOptionalString, TemplateArg, TemplateSpecialization, TraitDerives, TraitImplPolarity,
+    TypeAlias, UnqualifiedIdentifier, UnsupportedItem, UseMod,
 };
 
 /// Common data about all items.

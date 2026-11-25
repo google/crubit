@@ -133,6 +133,16 @@ CcType CcTypeDecl(ItemId id) {
   return result;
 }
 
+CcType CcTypeError(FormattedError error, std::optional<Blocker> blocked_by) {
+  CcType result;
+  auto* error_type = result.mutable_variant()->mutable_error();
+  *error_type->mutable_error() = std::move(error);
+  if (blocked_by.has_value()) {
+    *error_type->mutable_blocked_by() = std::move(*blocked_by);
+  }
+  return result;
+}
+
 CcType PointerTo(CcType pointee_type, std::optional<LifetimeId> lifetime,
                  bool nullable) {
   return PointerOrReferenceTo(

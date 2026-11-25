@@ -74,6 +74,7 @@ CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
 using ffi::AccessSpecifier;
 using ffi::ArrayValue;
 using ffi::BaseClass;
+using ffi::Blocker;
 using ffi::BridgeType;
 using ffi::CallingConv;
 using ffi::CcType;
@@ -123,6 +124,8 @@ using ffi::UseMod;
 
 llvm::StringRef PrimitiveSpelling(Primitive primitive);
 CcType CcTypeDecl(ItemId id);
+CcType CcTypeError(FormattedError error,
+                   std::optional<Blocker> blocked_by = std::nullopt);
 CcType PointerTo(CcType pointee_type, std::optional<LifetimeId> lifetime,
                  bool nullable);
 CcType OwnedPointerTo(CcType pointee_type, std::optional<LifetimeId> lifetime);

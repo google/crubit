@@ -154,6 +154,19 @@ pub(crate) fn schema() -> Schema {
             fmt: Str,
             message: Str,
         }
+        struct Blocker {
+            name: Str,
+            #[optional]
+            unique_name: Str,
+            #[optional]
+            defining_target: BazelLabel,
+        }
+        #[scope("CcType")]
+        struct ErrorType {
+            error: FormattedError,
+            #[optional]
+            blocked_by: Blocker,
+        }
         #[scope("CcType")]
         struct PointerType {
             kind: PointerTypeKind,
@@ -179,7 +192,7 @@ pub(crate) fn schema() -> Schema {
             Pointer(cc_type::PointerType),
             FuncPointer(cc_type::FuncPointer),
             Decl(ItemId),
-            Error(FormattedError),
+            Error(Box(cc_type::ErrorType)),
             ConstantArray(cc_type::ConstantArrayType),
         }
         struct CcType {

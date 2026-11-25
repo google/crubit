@@ -174,3 +174,52 @@ fn test_blocked_by_type_alias() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_blocked_by_error_type_blocker() -> Result<()> {
+    let mut proto = ir_proto_from_cc("void TakesUnowned(int* t);")?;
+    let mut items = proto.top_level_items.get(TESTING_TARGET).expect("target items").clone();
+    let func = items
+        .iter_mut()
+        .find_map(|item| match item {
+            ir::Item::Func(f)
+                if f.rs_name().as_identifier().map(|i| i.identifier()) == Some("TakesUnowned") =>
+            {
+                Some(f)
+            }
+            _ => None,
+        })
+        .expect("TakesUnowned should exist");
+    let mut error_type = ir::ErrorType::default();
+    error_type.error.set_fmt("Unsupported type '$0': $1".into());
+    error_type.error.set_message("Unsupported type 'Unowned<int>': unknown target".into());
+    let mut blocker = ir::Blocker::default();
+    blocker.set_name("Unowned".into());
+    blocker.set_unique_name("c:@ST>1#T@Unowned".into());
+    blocker.set_defining_target("//_unknown_target:test/unowned.h".into());
+    error_type.set_blocked_by(blocker);
+    let mut pointee = ir::CcType::default();
+    pointee.set_variant(ir::CcTypeVariant::Error(ir::FfiRc::new(error_type)));
+    let mut updated_func = (**func).clone();
+    if let ir::CcTypeVariant::Pointer(ptr) = updated_func.params_mut()[0].type_mut().variant_mut() {
+        ptr.set_pointee_type(pointee);
+    } else {
+        panic!("expected pointer parameter");
+    }
+    *func = ir::FfiRc::new(updated_func);
+    proto.top_level_items.insert(TESTING_TARGET.into(), items);
+
+    let entries = parse_report(&generate_error_report_json_for_test(make_test_ir(&proto)?)?);
+    expect_that!(
+        errors_and_blockers(find_entry(&entries, "TakesUnowned")),
+        elements_are![(
+            starts_with("Parameter #0 is not supported:"),
+            some(eq(&Blocker {
+                name: "Unowned".into(),
+                unique_name: Some("c:@ST>1#T@Unowned".into()),
+                defining_target: Some("//_unknown_target:test/unowned.h".into()),
+            }))
+        )]
+    );
+    Ok(())
+}

@@ -1711,7 +1711,7 @@ std::vector<crubit::ffi::Field> CXXRecordDeclImporter::ImportFields(
           // may avoid the need to include supporting types in the generated
           // code (e.g. avoiding extra template instantiations).  See also
           // b/226580208 and <internal link>.
-          return CcType(FormattedError::Static(
+          return CcTypeError(FormattedError::Static(
               "Types of non-public C++ fields can be elided away"));
       }
     }();
@@ -1983,7 +1983,8 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
     // TODO(b/468093766): Fail in the ordinary Record handling logic, not here.
     CcType char_type = cc_type_of_arg(0);
     if (char_type.variant().has_error()) {
-      return crubit::InternalError(char_type.variant().error().message());
+      return crubit::InternalError(
+          char_type.variant().error().error().message());
     }
   }
   // Add builtin bridge types here as needed.

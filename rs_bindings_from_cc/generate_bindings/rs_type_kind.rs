@@ -13,6 +13,7 @@ use database::BindingsGenerator;
 use ir::GenericItem;
 use ir::{CcType, CcTypeVariant, PointerTypeKind};
 use std::rc::Rc;
+use std::sync::Arc;
 
 fn pointee_is_string_view(db: &BindingsGenerator<'_>, ty: &CcType) -> bool {
     match ty.variant() {
@@ -406,11 +407,23 @@ fn rs_type_kind_with_lifetime_elision_impl(
             })
         }
         CcTypeVariant::Error(e) => {
-            let e = error_report::FormattedError::new(
-                e.fmt.to_string().into(),
-                e.message.to_string().into(),
-            );
-            Err(e.into())
+            let err: Error = error_report::FormattedError::new(
+                e.error.fmt.to_string().into(),
+                e.error.message.to_string().into(),
+            )
+            .into();
+            let err = match e.blocked_by() {
+                Some(blocker) => error_report::blocked_by(
+                    error_report::Blocker {
+                        name: Arc::from(blocker.name()),
+                        unique_name: blocker.unique_name().map(Arc::from),
+                        defining_target: blocker.defining_target().map(|t| Arc::from(t.as_str())),
+                    },
+                    err,
+                ),
+                None => err,
+            };
+            Err(err)
         }
     }
 }

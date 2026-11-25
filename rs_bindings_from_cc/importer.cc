@@ -3417,26 +3417,37 @@ std::optional<CcType> Importer::CheckTemplateCrubitEnabled(
   if (IsCrubitEnabledForTarget(target)) {
     return std::nullopt;
   }
+  Blocker blocker;
+  blocker.set_name(resolved_decl->getQualifiedNameAsString());
+  if (std::string usr = GetUniqueName(*resolved_decl); !usr.empty()) {
+    blocker.set_unique_name(usr);
+  }
+  blocker.set_defining_target(target.value());
+
   if (std::optional<llvm::StringRef> header = HeaderOfUnknownTarget(target);
       header.has_value()) {
-    return CcType(FormattedError::Substitute(
-        "crubit.rs/errors/unknown_target: Failed to complete template "
-        "specialization type $0:\n"
-        "the template is defined in\n"
-        "  $1\n"
-        "which is not a public header of any Crubit-enabled target that\n"
-        "  $2\n"
-        "depends on directly. Either enable Crubit on the library that "
-        "provides the header,\n"
-        "add that library as a direct dependency (and `#include` the "
-        "header directly),\n"
-        "or move the template to a public header.",
-        type_string, *header, invocation_.target_.value()));
+    return CcTypeError(
+        FormattedError::Substitute(
+            "crubit.rs/errors/unknown_target: Failed to complete template "
+            "specialization type $0:\n"
+            "the template is defined in\n"
+            "  $1\n"
+            "which is not a public header of any Crubit-enabled target that\n"
+            "  $2\n"
+            "depends on directly. Either enable Crubit on the library that "
+            "provides the header,\n"
+            "add that library as a direct dependency (and `#include` the "
+            "header directly),\n"
+            "or move the template to a public header.",
+            type_string, *header, invocation_.target_.value()),
+        std::move(blocker));
   }
-  return CcType(FormattedError::Substitute(
-      "Failed to complete template specialization type $0: template "
-      "belongs to target $1, which does not support Crubit.",
-      type_string, target.value()));
+  return CcTypeError(
+      FormattedError::Substitute(
+          "Failed to complete template specialization type $0: template "
+          "belongs to target $1, which does not support Crubit.",
+          type_string, target.value()),
+      std::move(blocker));
 }
 
 CcType Importer::ConvertClassTemplateSpecializationDecl(
@@ -3457,7 +3468,7 @@ CcType Importer::ConvertClassTemplateSpecializationDecl(
   if (std::optional<std::string> instantiation_errors =
           CheckSpecializationInstantiable(&specialization_decl);
       instantiation_errors.has_value()) {
-    return CcType(FormattedError::Substitute(
+    return CcTypeError(FormattedError::Substitute(
         "Failed to complete template specialization type $0: Diagnostics "
         "emitted:\n$1",
         type_string, *instantiation_errors));
@@ -3495,7 +3506,7 @@ CcType Importer::ConvertClassTemplateSpecializationDecl(
   llvm::Error import_status =
       CheckImportStatus(GetDeclItem(&specialization_decl));
   if (import_status) {
-    return CcType(FormattedError::Substitute(
+    return CcTypeError(FormattedError::Substitute(
         "Failed to create bindings for template specialization type $0: $1",
         type_string, llvm::toString(std::move(import_status))));
   }
@@ -3512,7 +3523,7 @@ CcType Importer::ConvertTemplateSpecializationType(
       clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
           type.getAsCXXRecordDecl());
   if (!specialization_decl) {
-    return CcType(FormattedError::Substitute(
+    return CcTypeError(FormattedError::Substitute(
         "Template specialization '$0' without an associated record decl "
         "is not supported.",
         type_string));
@@ -3595,11 +3606,18 @@ CcType Importer::WithAsWrittenTemplateArgs(
       // source, so dropping it would produce bindings that disagree with the
       // header.
       if (has_explicit_lifetimes) {
-        return CcType(FormattedError::Substitute(
-            "Failed to convert a template argument of '$0', which carries "
-            "an explicit lifetime: $1",
-            clang::QualType(&type, 0).getAsString(),
-            converted_arg.variant().error().message()));
+        const auto& inner = converted_arg.variant().error();
+        std::optional<Blocker> blocker;
+        if (inner.has_blocked_by()) {
+          blocker = inner.blocked_by();
+        }
+        return CcTypeError(
+            FormattedError::Substitute(
+                "Failed to convert a template argument of '$0', which carries "
+                "an explicit lifetime: $1",
+                clang::QualType(&type, 0).getAsString(),
+                inner.error().message()),
+            std::move(blocker));
       }
       // Otherwise, fall back to the decl's arguments. They were converted
       // successfully when the specialization was imported, so this only loses
@@ -3616,7 +3634,7 @@ CcType Importer::WithAsWrittenTemplateArgs(
 
 CcType Importer::ConvertTypeDecl(clang::NamedDecl* _Nonnull decl) {
   if (!EnsureSuccessfullyImported(decl)) {
-    return CcType(FormattedError::Substitute(
+    return CcTypeError(FormattedError::Substitute(
         "No generated bindings found for '$0'", decl->getNameAsString()));
   }
 
@@ -4139,23 +4157,29 @@ CcType Importer::ConvertQualType(
   // FormattedError variant". That's a bit ridiculous! But the remaining uses
   // of Status are a bit tricky and don't fit in a first draft.
   if (!type) {
-    return CcType(FormattedError::Substitute("Unsupported type '$0': $1",
-                                             type_string,
-                                             llvm::toString(type.takeError())));
+    return CcTypeError(
+        FormattedError::Substitute("Unsupported type '$0': $1", type_string,
+                                   llvm::toString(type.takeError())));
   }
   if (type->variant().has_error()) {
     // TODO(jeanpierreda): The most-specific type should go at the start, and
     // be something we can aggregate by somehow.
     // TODO(jeanpierreda): This produces pretty verbose errors.
-    return CcType(
+    const auto& inner = type->variant().error();
+    std::optional<Blocker> blocker;
+    if (inner.has_blocked_by()) {
+      blocker = inner.blocked_by();
+    }
+    return CcTypeError(
         FormattedError::Substitute("Unsupported type '$0': $1", type_string,
-                                   type->variant().error().message()));
+                                   inner.error().message()),
+        std::move(blocker));
   }
 
   // Handle cv-qualification.
   type->set_is_const(qual_type.isConstQualified());
   if (qual_type.isVolatileQualified()) {
-    return CcType(FormattedError::PrefixedStrCat(
+    return CcTypeError(FormattedError::PrefixedStrCat(
         "Unsupported `volatile` qualifier", type_string));
   }
 

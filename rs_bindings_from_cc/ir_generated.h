@@ -27,6 +27,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI LifetimeName;
 struct CRUBIT_FFI_TRIVIAL_ABI SourceLocation;
 namespace decl_location { struct CRUBIT_FFI_TRIVIAL_ABI ByteRange; }
 struct CRUBIT_FFI_TRIVIAL_ABI DeclLocation;
+struct CRUBIT_FFI_TRIVIAL_ABI Blocker;
+namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI ErrorType; }
 namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI PointerType; }
 namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI FuncPointer; }
 namespace cc_type { struct CRUBIT_FFI_TRIVIAL_ABI ConstantArrayType; }
@@ -285,6 +287,39 @@ struct CRUBIT_FFI_TRIVIAL_ABI DeclLocation {
   ::crubit::ffi::decl_location::ByteRange name_range_{};
 };
 
+struct CRUBIT_FFI_TRIVIAL_ABI Blocker {
+  std::string_view name() const { return name_.AsView(); }
+  void set_name(std::string_view value) { name_ = FfiString(value); }
+  bool has_unique_name() const { return (has_bits_ & 0x1ULL) != 0; }
+  void clear_unique_name() { has_bits_ &= ~0x1ULL; unique_name_ = {}; }
+  std::string_view unique_name() const { return unique_name_.AsView(); }
+  void set_unique_name(std::string_view value) { has_bits_ |= 0x1ULL; unique_name_ = FfiString(value); }
+  bool has_defining_target() const { return (has_bits_ & 0x2ULL) != 0; }
+  void clear_defining_target() { has_bits_ &= ~0x2ULL; defining_target_ = {}; }
+  std::string_view defining_target() const { return defining_target_.AsView(); }
+  void set_defining_target(std::string_view value) { has_bits_ |= 0x2ULL; defining_target_ = FfiString(value); }
+  friend bool operator==(const Blocker&, const Blocker&) = default;
+  uint64_t has_bits_ = 0;
+  FfiString name_{};
+  FfiString unique_name_{};
+  FfiString defining_target_{};
+};
+
+namespace cc_type {
+struct CRUBIT_FFI_TRIVIAL_ABI ErrorType {
+  const ::crubit::ffi::FormattedError& error() const { return error_; }
+  ::crubit::ffi::FormattedError* mutable_error() { return &error_; }
+  bool has_blocked_by() const { return (has_bits_ & 0x1ULL) != 0; }
+  void clear_blocked_by() { has_bits_ &= ~0x1ULL; blocked_by_ = {}; }
+  const ::crubit::ffi::Blocker& blocked_by() const { return blocked_by_; }
+  ::crubit::ffi::Blocker* mutable_blocked_by() { has_bits_ |= 0x1ULL; return &blocked_by_; }
+  friend bool operator==(const ErrorType&, const ErrorType&) = default;
+  uint64_t has_bits_ = 0;
+  ::crubit::ffi::FormattedError error_{};
+  ::crubit::ffi::Blocker blocked_by_{};
+};
+}  // namespace cc_type
+
 namespace cc_type {
 struct CRUBIT_FFI_TRIVIAL_ABI PointerType {
   PointerType();
@@ -384,7 +419,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Variant {
   // NOLINTNEXTLINE(google-explicit-constructor)
   Variant(::crubit::ffi::cc_type::FuncPointer value) : tag_(kFuncPointer), payload_(kFuncPointer) { new (&payload_.func_pointer_) ::crubit::ffi::cc_type::FuncPointer(std::move(value)); }
   // NOLINTNEXTLINE(google-explicit-constructor)
-  Variant(::crubit::ffi::FormattedError value) : tag_(kError), payload_(kError) { new (&payload_.error_) ::crubit::ffi::FormattedError(std::move(value)); }
+  Variant(::crubit::ffi::cc_type::ErrorType value) : tag_(kError), payload_(kError) { new (&payload_.error_) FfiRc<::crubit::ffi::cc_type::ErrorType>(std::move(value)); }
   // NOLINTNEXTLINE(google-explicit-constructor)
   Variant(::crubit::ffi::cc_type::ConstantArrayType value) : tag_(kConstantArray), payload_(kConstantArray) { new (&payload_.constant_array_) ::crubit::ffi::cc_type::ConstantArrayType(std::move(value)); }
   void Clear() {
@@ -420,14 +455,14 @@ struct CRUBIT_FFI_TRIVIAL_ABI Variant {
   uint64_t decl() const { return has_decl() ? payload_.decl_ : static_cast<uint64_t>(0); }
   void set_decl(uint64_t value) { Destroy(); tag_ = kDecl; payload_.decl_ = value; }
   bool has_error() const { return tag_ == kError; }
-  const ::crubit::ffi::FormattedError& error() const { return has_error() ? payload_.error_ : DefaultValue<::crubit::ffi::FormattedError>(); }
-  ::crubit::ffi::FormattedError* mutable_error() {
+  const ::crubit::ffi::cc_type::ErrorType& error() const { return has_error() ? payload_.error_.get_or_default() : DefaultValue<::crubit::ffi::cc_type::ErrorType>(); }
+  ::crubit::ffi::cc_type::ErrorType* mutable_error() {
     if (!has_error()) {
       Destroy();
       tag_ = kError;
-      new (&payload_.error_) ::crubit::ffi::FormattedError();
+      new (&payload_.error_) FfiRc<::crubit::ffi::cc_type::ErrorType>();
     }
-    return &payload_.error_;
+    return &payload_.error_.get_or_init();
   }
   bool has_constant_array() const { return tag_ == kConstantArray; }
   const ::crubit::ffi::cc_type::ConstantArrayType& constant_array() const { return has_constant_array() ? payload_.constant_array_ : DefaultValue<::crubit::ffi::cc_type::ConstantArrayType>(); }
@@ -472,7 +507,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Variant {
       case kPointer: new (&payload_.pointer_) ::crubit::ffi::cc_type::PointerType(other.payload_.pointer_); break;
       case kFuncPointer: new (&payload_.func_pointer_) ::crubit::ffi::cc_type::FuncPointer(other.payload_.func_pointer_); break;
       case kDecl: new (&payload_.decl_) uint64_t(other.payload_.decl_); break;
-      case kError: new (&payload_.error_) ::crubit::ffi::FormattedError(other.payload_.error_); break;
+      case kError: new (&payload_.error_) FfiRc<::crubit::ffi::cc_type::ErrorType>(other.payload_.error_); break;
       case kConstantArray: new (&payload_.constant_array_) ::crubit::ffi::cc_type::ConstantArrayType(other.payload_.constant_array_); break;
       default: CRUBIT_CHECK(false);
     }
@@ -485,7 +520,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Variant {
       case kPointer: new (&payload_.pointer_) ::crubit::ffi::cc_type::PointerType(std::move(other.payload_.pointer_)); break;
       case kFuncPointer: new (&payload_.func_pointer_) ::crubit::ffi::cc_type::FuncPointer(std::move(other.payload_.func_pointer_)); break;
       case kDecl: new (&payload_.decl_) uint64_t(std::move(other.payload_.decl_)); break;
-      case kError: new (&payload_.error_) ::crubit::ffi::FormattedError(std::move(other.payload_.error_)); break;
+      case kError: new (&payload_.error_) FfiRc<::crubit::ffi::cc_type::ErrorType>(std::move(other.payload_.error_)); break;
       case kConstantArray: new (&payload_.constant_array_) ::crubit::ffi::cc_type::ConstantArrayType(std::move(other.payload_.constant_array_)); break;
       default: CRUBIT_CHECK(false);
     }
@@ -503,13 +538,14 @@ struct CRUBIT_FFI_TRIVIAL_ABI Variant {
     ::crubit::ffi::cc_type::PointerType pointer_;
     ::crubit::ffi::cc_type::FuncPointer func_pointer_;
     uint64_t decl_;
-    ::crubit::ffi::FormattedError error_;
+    FfiRc<::crubit::ffi::cc_type::ErrorType> error_;
     ::crubit::ffi::cc_type::ConstantArrayType constant_array_;
   } payload_;
 };
 }  // namespace cc_type
 
 struct CRUBIT_FFI_TRIVIAL_ABI CcType {
+  using ErrorType = ::crubit::ffi::cc_type::ErrorType;
   using PointerType = ::crubit::ffi::cc_type::PointerType;
   using FuncPointer = ::crubit::ffi::cc_type::FuncPointer;
   using ConstantArrayType = ::crubit::ffi::cc_type::ConstantArrayType;
@@ -3413,6 +3449,36 @@ static_assert(
   sizeof(size_t) != 8 ||
   offsetof(DeclLocation, name_range_) ==
     56);
+static_assert(std::is_standard_layout_v<Blocker>);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(Blocker) == 56 &&
+    alignof(Blocker) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Blocker, name_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Blocker, unique_name_) ==
+    24);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(Blocker, defining_target_) ==
+    40);
+static_assert(std::is_standard_layout_v<cc_type::ErrorType>);
+static_assert(
+  sizeof(size_t) != 8 ||
+  (sizeof(cc_type::ErrorType) == 96 &&
+    alignof(cc_type::ErrorType) == 8));
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::ErrorType, error_) ==
+    8);
+static_assert(
+  sizeof(size_t) != 8 ||
+  offsetof(cc_type::ErrorType, blocked_by_) ==
+    40);
 inline cc_type::PointerType::PointerType() = default;
 inline cc_type::PointerType::PointerType(const PointerType&) = default;
 inline cc_type::PointerType::PointerType(PointerType&&) noexcept = default;

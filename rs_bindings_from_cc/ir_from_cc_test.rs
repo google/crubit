@@ -3009,10 +3009,13 @@ fn test_fully_instantiated_template_in_private_field() -> Result<()> {
                 fields: [Field {
                     rust_identifier: Some("private_field_"), ...
                     type_: CcType {
-                        variant: Error(
-                            FormattedError {
+                        variant: Error(ErrorType {
+                            error: FormattedError {
                                 fmt: "Types of non-public C++ fields can be elided away",
-                                ... }),
+                                ...
+                            },
+                            ...
+                        }),
                         ...
                     }, ...
                     access: Private,
@@ -3999,9 +4002,12 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
                   cpp_identifier: Some("my_field"),
                   doc_comment: Some("Doc comment for `my_field`."),
                   type_: CcType {
-                      variant: Error(FormattedError {
-                          fmt: "Unsupported type '$0': $1",
-                          message: "Unsupported type 'Self': No generated bindings found for 'Self'",
+                      variant: Error(ErrorType {
+                          error: FormattedError {
+                              fmt: "Unsupported type '$0': $1",
+                              message: "Unsupported type 'Self': No generated bindings found for 'Self'",
+                          },
+                          blocked_by: None,
                       }), ... },
                   access: Public,
                   offset: 0,
@@ -8697,7 +8703,7 @@ fn test_non_primitive_non_enum_arrays_rejected() {
             panic!("expected CcTypeVariant::Error for {field_name}, got {:?}", field.type_());
         };
         expect_that!(
-            err.message.as_ref(),
+            err.error.message.as_ref(),
             googletest::matchers::contains_substring(
                 "C-style arrays of non-primitive, non-enum types are not yet supported"
             )

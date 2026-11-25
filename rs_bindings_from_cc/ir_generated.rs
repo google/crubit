@@ -33,6 +33,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, base_record_id, $($arg:tt)*) => { $msg.set_base_record_id($($arg)*) };
     ($msg:ident, begin, $($arg:tt)*) => { $msg.set_begin($($arg)*) };
     ($msg:ident, bits, $($arg:tt)*) => { $msg.set_bits($($arg)*) };
+    ($msg:ident, blocked_by, $($arg:tt)*) => { $msg.set_blocked_by($($arg)*) };
     ($msg:ident, bool_value, $($arg:tt)*) => { $msg.set_bool_value($($arg)*) };
     ($msg:ident, bridge, $($arg:tt)*) => { $msg.set_bridge($($arg)*) };
     ($msg:ident, bridge_type, $($arg:tt)*) => { $msg.set_bridge_type($($arg)*) };
@@ -817,6 +818,88 @@ mod __defs {
         assert!(core::mem::align_of::<FormattedError>() == 8);
         assert!(core::mem::offset_of!(FormattedError, fmt) == 0);
         assert!(core::mem::offset_of!(FormattedError, message) == 16);
+    };
+
+    #[repr(C)]
+    #[derive(Clone, PartialEq, Eq, Hash)]
+    pub struct Blocker {
+        pub has_bits: u64,
+        pub name: FfiString,
+        pub unique_name: FfiString,
+        pub defining_target: BazelLabel,
+    }
+
+    impl core::fmt::Debug for Blocker {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            f.debug_struct("Blocker")
+                .field("name", &self.name)
+                .field("unique_name", &self.unique_name())
+                .field("defining_target", &self.defining_target())
+                .finish()
+        }
+    }
+
+    impl FfiDefault for Blocker {
+        const EMPTY_REF: &'static Self = &Self::EMPTY;
+    }
+    impl Default for Blocker {
+        fn default() -> Self {
+            Self::EMPTY
+        }
+    }
+
+    impl Blocker {
+        pub const EMPTY: Self = Self {
+            has_bits: 0,
+            name: FfiString::EMPTY,
+            unique_name: FfiString::EMPTY,
+            defining_target: BazelLabel::EMPTY,
+        };
+        pub fn name(&self) -> &str {
+            self.name.as_str()
+        }
+        pub fn has_unique_name(&self) -> bool {
+            (self.has_bits & 0x1) != 0
+        }
+        pub fn clear_unique_name(&mut self) {
+            self.has_bits &= !0x1;
+            self.unique_name = FfiString::EMPTY;
+        }
+        pub fn unique_name(&self) -> Option<&str> {
+            self.has_unique_name().then(|| self.unique_name.as_str())
+        }
+        pub fn has_defining_target(&self) -> bool {
+            (self.has_bits & 0x2) != 0
+        }
+        pub fn clear_defining_target(&mut self) {
+            self.has_bits &= !0x2;
+            self.defining_target = BazelLabel::EMPTY;
+        }
+        pub fn defining_target(&self) -> Option<&BazelLabel> {
+            self.has_defining_target().then(|| &self.defining_target)
+        }
+        pub fn set_name(&mut self, val: FfiString) -> &mut FfiString {
+            self.name = val;
+            &mut self.name
+        }
+        pub fn set_unique_name(&mut self, val: FfiString) -> &mut FfiString {
+            self.has_bits |= 0x1;
+            self.unique_name = val;
+            &mut self.unique_name
+        }
+        pub fn set_defining_target(&mut self, val: BazelLabel) -> &mut BazelLabel {
+            self.has_bits |= 0x2;
+            self.defining_target = val;
+            &mut self.defining_target
+        }
+    }
+    #[cfg(target_pointer_width = "64")]
+    const _: () = {
+        assert!(core::mem::size_of::<Blocker>() == 56);
+        assert!(core::mem::align_of::<Blocker>() == 8);
+        assert!(core::mem::offset_of!(Blocker, name) == 8);
+        assert!(core::mem::offset_of!(Blocker, unique_name) == 24);
+        assert!(core::mem::offset_of!(Blocker, defining_target) == 40);
     };
 
     #[repr(C)]
@@ -6381,6 +6464,69 @@ mod __defs {
 
         #[repr(C)]
         #[derive(Clone, PartialEq, Eq, Hash)]
+        pub struct ErrorType {
+            pub has_bits: u64,
+            pub error: super::FormattedError,
+            pub blocked_by: super::Blocker,
+        }
+
+        impl core::fmt::Debug for ErrorType {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.debug_struct("ErrorType")
+                    .field("error", &self.error)
+                    .field("blocked_by", &self.blocked_by())
+                    .finish()
+            }
+        }
+
+        impl super::FfiDefault for ErrorType {
+            const EMPTY_REF: &'static Self = &Self::EMPTY;
+        }
+        impl Default for ErrorType {
+            fn default() -> Self {
+                Self::EMPTY
+            }
+        }
+
+        impl ErrorType {
+            pub const EMPTY: Self = Self {
+                has_bits: 0,
+                error: super::FormattedError::EMPTY,
+                blocked_by: super::Blocker::EMPTY,
+            };
+            pub fn error(&self) -> &super::FormattedError {
+                &self.error
+            }
+            pub fn has_blocked_by(&self) -> bool {
+                (self.has_bits & 0x1) != 0
+            }
+            pub fn clear_blocked_by(&mut self) {
+                self.has_bits &= !0x1;
+                self.blocked_by = super::Blocker::EMPTY;
+            }
+            pub fn blocked_by(&self) -> Option<&super::Blocker> {
+                self.has_blocked_by().then(|| &self.blocked_by)
+            }
+            pub fn set_error(&mut self, val: super::FormattedError) -> &mut super::FormattedError {
+                self.error = val;
+                &mut self.error
+            }
+            pub fn set_blocked_by(&mut self, val: super::Blocker) -> &mut super::Blocker {
+                self.has_bits |= 0x1;
+                self.blocked_by = val;
+                &mut self.blocked_by
+            }
+        }
+        #[cfg(target_pointer_width = "64")]
+        const _: () = {
+            assert!(core::mem::size_of::<ErrorType>() == 96);
+            assert!(core::mem::align_of::<ErrorType>() == 8);
+            assert!(core::mem::offset_of!(ErrorType, error) == 8);
+            assert!(core::mem::offset_of!(ErrorType, blocked_by) == 40);
+        };
+
+        #[repr(C)]
+        #[derive(Clone, PartialEq, Eq, Hash)]
         pub struct PointerType {
             pub has_bits: u64,
             pub kind: super::PointerTypeKind,
@@ -6564,7 +6710,7 @@ mod __defs {
             Pointer(super::cc_type::PointerType) = 1,
             FuncPointer(super::cc_type::FuncPointer) = 2,
             Decl(ItemId) = 3,
-            Error(super::FormattedError) = 4,
+            Error(FfiRc<super::cc_type::ErrorType>) = 4,
             ConstantArray(super::cc_type::ConstantArrayType) = 5,
         }
 
@@ -6603,12 +6749,12 @@ mod __defs {
                 };
                 inner
             }
-            pub fn set_error(&mut self, val: super::FormattedError) -> &mut super::FormattedError {
-                *self = Self::Error(val);
+            pub fn set_error(&mut self, val: super::cc_type::ErrorType) -> &mut super::cc_type::ErrorType {
+                *self = Self::Error(FfiRc::new(val));
                 let Self::Error(ref mut inner) = *self else {
                     unreachable!()
                 };
-                inner
+                inner.make_mut()
             }
             pub fn set_constant_array(&mut self, val: super::cc_type::ConstantArrayType) -> &mut super::cc_type::ConstantArrayType {
                 *self = Self::ConstantArray(val);
