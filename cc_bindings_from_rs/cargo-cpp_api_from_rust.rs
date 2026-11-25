@@ -97,7 +97,8 @@ fn main() -> Result<()> {
     build_args.extend(cli.build_args.clone());
 
     let build_artifacts = build_crate_and_stream_artifacts(&build_args)?;
-    let target_libdir = get_target_libdir(&build_args)?;
+    let toolchain_paths = get_toolchain_paths(&build_args)?;
+    let target = resolve_target(&cli.build_args, &toolchain_paths.target_libdir);
 
     let ctx = BindingGenerationContext::new(
         build_artifacts,
@@ -105,7 +106,8 @@ fn main() -> Result<()> {
         &metadata,
         &target_dir,
         cli.out_dir.as_deref(),
-        target_libdir,
+        toolchain_paths,
+        target,
     )?;
     let lib_rs_content = ctx.generate_bindings()?;
 
@@ -258,6 +260,12 @@ struct CrateBindingInfo<'a> {
     stdlib_externs: &'a [(String, Utf8PathBuf)],
 }
 
+#[derive(Debug, PartialEq, Eq)]
+struct ToolchainPaths {
+    target_libdir: Utf8PathBuf,
+    sysroot: Utf8PathBuf,
+}
+
 struct BindingGenerationContext {
     pkg_to_artifact: HashMap<String, ArtifactInfo>,
     dep_dirs: Vec<Utf8PathBuf>,
@@ -265,7 +273,8 @@ struct BindingGenerationContext {
     ordered: Vec<PackageId>,
     dirs: Directories,
     resolve: Resolve,
-    target_libdir: Utf8PathBuf,
+    toolchain_paths: ToolchainPaths,
+    target: Option<String>,
 }
 
 fn resolve_target_dir(target_dir: &Utf8Path) -> Result<Utf8PathBuf> {
@@ -309,7 +318,8 @@ impl BindingGenerationContext {
         metadata: &Metadata,
         target_dir: &Utf8Path,
         out_dir: Option<&Utf8Path>,
-        target_libdir: Utf8PathBuf,
+        toolchain_paths: ToolchainPaths,
+        target: Option<String>,
     ) -> Result<Self> {
         let artifact_path = build_artifacts
             .pkg_to_artifact
@@ -347,7 +357,8 @@ impl BindingGenerationContext {
             ordered,
             dirs,
             resolve: resolve.clone(),
-            target_libdir,
+            toolchain_paths,
+            target,
         })
     }
 
@@ -412,8 +423,12 @@ impl BindingGenerationContext {
             format!("--source-crate-name={}", info.crate_name),
             format!("--h-out={}", intermediate_h),
             format!("--rs-out={}", intermediate_rs),
+            format!("--sysroot={}", self.toolchain_paths.sysroot),
             format!("--extern={}={}", info.crate_name, info.artifact_path),
         ];
+        if let Some(target) = &self.target {
+            current_args.push(format!("--target={}", target));
+        }
 
         if !self.dep_dirs.contains(deps_dir) && deps_dir.exists() {
             current_args.push(format!("-Ldependency={}", deps_dir));
@@ -508,7 +523,7 @@ impl BindingGenerationContext {
         fs::create_dir_all(&self.dirs.host_deps_dir)?;
 
         // 1. Locate standard library crates and generate bindings for them first.
-        let stdlib_crates = Self::find_stdlib_rmetas(&self.target_libdir)?;
+        let stdlib_crates = Self::find_stdlib_rmetas(&self.toolchain_paths.target_libdir)?;
         let has_std = stdlib_crates.iter().any(|(name, _)| name == "std");
         let no_std = if has_std { "" } else { "#![no_std]\n" };
         let mut lib_rs_content = format!(
@@ -743,34 +758,153 @@ fn cargo_bin() -> &'static ffi::OsStr {
     CARGO_BIN.get_or_init(|| env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
 }
 
-fn get_target_libdir(build_args: &[String]) -> Result<Utf8PathBuf> {
+fn parse_toolchain_paths(stdout: &str) -> Result<ToolchainPaths> {
+    let mut lines = stdout.lines().map(str::trim).filter(|l| !l.is_empty());
+    let target_libdir = lines
+        .next()
+        .ok_or_else(|| anyhow!("Missing target-libdir line from cargo rustc output"))?;
+    let sysroot =
+        lines.next().ok_or_else(|| anyhow!("Missing sysroot line from cargo rustc output"))?;
+    Ok(ToolchainPaths {
+        target_libdir: Utf8PathBuf::from(target_libdir),
+        sysroot: Utf8PathBuf::from(sysroot),
+    })
+}
+
+fn target_from_libdir(target_libdir: &Utf8Path) -> Option<String> {
+    let mut rev = target_libdir.components().rev();
+    if rev.next()?.as_str() != "lib" {
+        return None;
+    }
+    let triple = rev.next()?.as_str();
+    if rev.next()?.as_str() != "rustlib" {
+        return None;
+    }
+    Some(triple.to_string())
+}
+
+fn extract_target_arg(build_args: &[String]) -> Option<String> {
+    // Stop at any inner `--` separator so rustc arguments are not parsed as Cargo flags.
+    let mut iter = build_args.iter().take_while(|arg| arg.as_str() != "--");
+    while let Some(arg) = iter.next() {
+        if let Some(val) = arg.strip_prefix("--target=") {
+            return Some(val.to_string());
+        } else if arg == "--target"
+            && let Some(val) = iter.next()
+        {
+            return Some(val.clone());
+        }
+    }
+    None
+}
+
+fn resolve_target(build_args: &[String], target_libdir: &Utf8Path) -> Option<String> {
+    extract_target_arg(build_args)
+        .or_else(|| env::var("CARGO_BUILD_TARGET").ok().filter(|s| !s.is_empty()))
+        .or_else(|| target_from_libdir(target_libdir))
+}
+
+fn get_toolchain_paths(build_args: &[String]) -> Result<ToolchainPaths> {
     let mut cmd = Command::new(cargo_bin());
     cmd.arg("rustc");
     cmd.args(build_args);
 
-    if build_args.contains(&"--".to_string()) {
-        cmd.arg("--print");
-        cmd.arg("target-libdir");
-    } else {
+    if !build_args.iter().any(|s| s == "--") {
         cmd.arg("--");
-        cmd.arg("--print");
-        cmd.arg("target-libdir");
     }
+    cmd.args(["--print", "target-libdir", "--print", "sysroot"]);
 
     let output = cmd.output().map_err(|err| anyhow!("Failed to run cargo rustc: {}", err))?;
     if !output.status.success() {
         bail!(
-            "Failed to get target-libdir from cargo rustc: {}",
+            "Failed to get target-libdir and sysroot from cargo rustc: {}",
             String::from_utf8_lossy(&output.stderr)
         );
     }
-    let path = std::str::from_utf8(&output.stdout)?.trim();
-    Ok(Utf8PathBuf::from(path))
+    let stdout = std::str::from_utf8(&output.stdout)?;
+    parse_toolchain_paths(stdout)
 }
 
-// These tests are only run in OSS (as are the other subcommand tests).
+// These tests are only run in OSS.
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    #[test] // allow_core_test
+    fn test_parse_toolchain_paths() {
+        let paths =
+            parse_toolchain_paths("/sysroot/lib/rustlib/aarch64-unknown-linux-gnu/lib\n/sysroot\n")
+                .unwrap();
+        assert_eq!(
+            paths,
+            ToolchainPaths {
+                target_libdir: Utf8PathBuf::from(
+                    "/sysroot/lib/rustlib/aarch64-unknown-linux-gnu/lib"
+                ),
+                sysroot: Utf8PathBuf::from("/sysroot"),
+            }
+        );
+
+        assert!(parse_toolchain_paths("").is_err());
+        assert!(parse_toolchain_paths("/only/target_libdir\n").is_err());
+    }
+
+    #[test] // allow_core_test
+    fn test_target_from_libdir() {
+        assert_eq!(
+            target_from_libdir(Utf8Path::new("/sysroot/lib/rustlib/aarch64-unknown-linux-gnu/lib"))
+                .as_deref(),
+            Some("aarch64-unknown-linux-gnu")
+        );
+        assert_eq!(target_from_libdir(Utf8Path::new("/unexpected/path")), None);
+    }
+
+    #[test] // allow_core_test
+    fn test_resolve_target_prefers_explicit_flag() {
+        let libdir = Utf8Path::new("/sysroot/lib/rustlib/my-board/lib");
+        let explicit = vec!["--target=targets/my-board.json".to_string()];
+        assert_eq!(resolve_target(&explicit, libdir).as_deref(), Some("targets/my-board.json"));
+
+        let split = vec!["--target".to_string(), "aarch64-unknown-linux-gnu".to_string()];
+        assert_eq!(resolve_target(&split, libdir).as_deref(), Some("aarch64-unknown-linux-gnu"));
+
+        let after_bare_opt =
+            vec!["--package".to_string(), "--target=aarch64-unknown-linux-gnu".to_string()];
+        assert_eq!(
+            extract_target_arg(&after_bare_opt).as_deref(),
+            Some("aarch64-unknown-linux-gnu")
+        );
+
+        // Falls back to the triple inside `target-libdir` when `--target` is not set (e.g.
+        // configured via `.cargo/config.toml`).
+        let rustc_only =
+            vec!["--".to_string(), "--target".to_string(), "ignored-rustc-arg".to_string()];
+        assert_eq!(extract_target_arg(&rustc_only), None);
+        assert_eq!(
+            target_from_libdir(Utf8Path::new("/sysroot/lib/rustlib/thumbv7em-none-eabihf/lib"))
+                .as_deref(),
+            Some("thumbv7em-none-eabihf")
+        );
+    }
+
+    #[test] // allow_core_test
+    fn test_cmdline_accepts_sysroot_and_target() {
+        let args = vec![
+            "cpp_api_from_rust".to_string(),
+            "--crubit-support-path-format=<support/{header}>".to_string(),
+            "--enable-rmeta-interface".to_string(),
+            "--source-crate-name=foo".to_string(),
+            "--h-out=foo.h".to_string(),
+            "--rs-out=foo.rs".to_string(),
+            "--sysroot=/path/to/sysroot".to_string(),
+            "--target=aarch64-unknown-linux-gnu".to_string(),
+            "--extern=foo=libfoo.rmeta".to_string(),
+        ];
+        let cmdline = Cmdline::new(&args).unwrap();
+        assert_eq!(cmdline.sysroot.as_deref(), Some("/path/to/sysroot"));
+        assert_eq!(cmdline.target.as_deref(), Some("aarch64-unknown-linux-gnu"));
+    }
+
     use super::*;
 
     #[test] // allow_core_test
