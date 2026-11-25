@@ -126,6 +126,10 @@ def multiplatform_rust_test(name, **kwargs):
     # Note: we use `rust_test` rather than `crubit_rust_test` because we want unit tests to
     # run using the current build platform, not the platform built with the updated version
     # of crubit.
+    # Test binaries are compiled as a single codegen unit, so optimizing them dominates their
+    # compile time. The tests spend their runtime in their (still optimized) dependencies, so
+    # skip optimizing the test crate itself.
+    kwargs["rustc_flags"] = kwargs.get("rustc_flags", []) + ["-Copt-level=0"]
     rust_test(
         name = base_test_name,
         **kwargs

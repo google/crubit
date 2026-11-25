@@ -60,7 +60,7 @@ TEST(BridgeTest, RoundtripStuff) {
   EXPECT_EQ(value, original);
 }
 
-struct [[clang::trivial_abi]] DynamicTrivialAbi {
+struct DynamicTrivialAbi {
   explicit DynamicTrivialAbi(int v) : value(v) {}
   DynamicTrivialAbi(DynamicTrivialAbi&&) = default;
   virtual ~DynamicTrivialAbi() = default;
