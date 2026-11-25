@@ -2038,8 +2038,8 @@ void Importer::ImportMacroConstants() {
               {macro_constant->var_decl, macro_constant->is_typed});
           continue;
         }
-        error = FormattedError::Substitute(
-            "the type of the macro, `$0`, doesn't have bindings",
+        error = FormattedError::Formatv(
+            "the type of the macro, `{0}`, doesn't have bindings",
             type.getUnqualifiedType().getAsString());
       } else {
         error = std::get<FormattedError>(std::move(result));
@@ -2573,8 +2573,8 @@ _Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
     }
     std::unique_ptr<crubit::ffi::Item> item = ImportUnsupportedItem(
         *decl, std::nullopt,
-        {FormattedError::Substitute(
-            "Not bound because of CRUBIT_DO_NOT_BIND:$0", reason_bullets)},
+        {FormattedError::Formatv("Not bound because of CRUBIT_DO_NOT_BIND:{0}",
+                                 reason_bullets)},
         /*is_hard_error=*/false);
     item->mutable_unsupported_item()->set_must_bind(false);
     for (const std::string& reason : do_not_bind_reasons) {
@@ -3419,13 +3419,13 @@ std::optional<CcType> Importer::CheckTemplateCrubitEnabled(
   if (std::optional<llvm::StringRef> header = HeaderOfUnknownTarget(target);
       header.has_value()) {
     return CcTypeError(
-        FormattedError::Substitute(
+        FormattedError::Formatv(
             "crubit.rs/errors/unknown_target: Failed to complete template "
-            "specialization type $0:\n"
+            "specialization type {0}:\n"
             "the template is defined in\n"
-            "  $1\n"
+            "  {1}\n"
             "which is not a public header of any Crubit-enabled target that\n"
-            "  $2\n"
+            "  {2}\n"
             "depends on directly. Either enable Crubit on the library that "
             "provides the header,\n"
             "add that library as a direct dependency (and `#include` the "
@@ -3435,9 +3435,9 @@ std::optional<CcType> Importer::CheckTemplateCrubitEnabled(
         std::move(blocker));
   }
   return CcTypeError(
-      FormattedError::Substitute(
-          "Failed to complete template specialization type $0: template "
-          "belongs to target $1, which does not support Crubit.",
+      FormattedError::Formatv(
+          "Failed to complete template specialization type {0}: template "
+          "belongs to target {1}, which does not support Crubit.",
           type_string, target.value()),
       std::move(blocker));
 }
@@ -3460,9 +3460,9 @@ CcType Importer::ConvertClassTemplateSpecializationDecl(
   if (std::optional<std::string> instantiation_errors =
           CheckSpecializationInstantiable(&specialization_decl);
       instantiation_errors.has_value()) {
-    return CcTypeError(FormattedError::Substitute(
-        "Failed to complete template specialization type $0: Diagnostics "
-        "emitted:\n$1",
+    return CcTypeError(FormattedError::Formatv(
+        "Failed to complete template specialization type {0}: Diagnostics "
+        "emitted:\n{1}",
         type_string, *instantiation_errors));
   }
 
@@ -3498,8 +3498,8 @@ CcType Importer::ConvertClassTemplateSpecializationDecl(
   llvm::Error import_status =
       CheckImportStatus(GetDeclItem(&specialization_decl));
   if (import_status) {
-    return CcTypeError(FormattedError::Substitute(
-        "Failed to create bindings for template specialization type $0: $1",
+    return CcTypeError(FormattedError::Formatv(
+        "Failed to create bindings for template specialization type {0}: {1}",
         type_string, llvm::toString(std::move(import_status))));
   }
 
@@ -3515,8 +3515,8 @@ CcType Importer::ConvertTemplateSpecializationType(
       clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
           type.getAsCXXRecordDecl());
   if (!specialization_decl) {
-    return CcTypeError(FormattedError::Substitute(
-        "Template specialization '$0' without an associated record decl "
+    return CcTypeError(FormattedError::Formatv(
+        "Template specialization '{0}' without an associated record decl "
         "is not supported.",
         type_string));
   }
@@ -3604,9 +3604,9 @@ CcType Importer::WithAsWrittenTemplateArgs(
           blocker = inner.blocked_by();
         }
         return CcTypeError(
-            FormattedError::Substitute(
-                "Failed to convert a template argument of '$0', which carries "
-                "an explicit lifetime: $1",
+            FormattedError::Formatv(
+                "Failed to convert a template argument of '{0}', which carries "
+                "an explicit lifetime: {1}",
                 clang::QualType(&type, 0).getAsString(),
                 inner.error().message()),
             std::move(blocker));
@@ -3626,8 +3626,8 @@ CcType Importer::WithAsWrittenTemplateArgs(
 
 CcType Importer::ConvertTypeDecl(clang::NamedDecl* _Nonnull decl) {
   if (!EnsureSuccessfullyImported(decl)) {
-    return CcTypeError(FormattedError::Substitute(
-        "No generated bindings found for '$0'", decl->getNameAsString()));
+    return CcTypeError(FormattedError::Formatv(
+        "No generated bindings found for '{0}'", decl->getNameAsString()));
   }
 
   return CcTypeDecl(GenerateItemId(*decl));
@@ -4150,8 +4150,8 @@ CcType Importer::ConvertQualType(
   // of Status are a bit tricky and don't fit in a first draft.
   if (!type) {
     return CcTypeError(
-        FormattedError::Substitute("Unsupported type '$0': $1", type_string,
-                                   llvm::toString(type.takeError())));
+        FormattedError::Formatv("Unsupported type '{0}': {1}", type_string,
+                                llvm::toString(type.takeError())));
   }
   if (type->variant().has_error()) {
     // TODO(jeanpierreda): The most-specific type should go at the start, and
@@ -4163,8 +4163,8 @@ CcType Importer::ConvertQualType(
       blocker = inner.blocked_by();
     }
     return CcTypeError(
-        FormattedError::Substitute("Unsupported type '$0': $1", type_string,
-                                   inner.error().message()),
+        FormattedError::Formatv("Unsupported type '{0}': {1}", type_string,
+                                inner.error().message()),
         std::move(blocker));
   }
 

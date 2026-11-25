@@ -105,13 +105,13 @@ std::optional<FormattedError> ExpandObjectLikeMacro(
     if (expanding.empty()) {
       return FormattedError::Static("function-like macros are not supported");
     }
-    return FormattedError::Substitute(
-        "`$0` is a function-like macro, which is not supported",
+    return FormattedError::Formatv(
+        "`{0}` is a function-like macro, which is not supported",
         name.getName().str());
   }
   if (macro_info.isBuiltinMacro()) {
-    return FormattedError::Substitute(
-        "`$0` is a builtin macro, which is not supported",
+    return FormattedError::Formatv(
+        "`{0}` is a builtin macro, which is not supported",
         name.getName().str());
   }
   if (expanding.size() >= kMaxExpansionDepth) {
@@ -329,8 +329,8 @@ std::variant<MacroConstant, FormattedError> SynthesizeMacroConstant(
        diagnostics.GetDiagnostics()) {
     if (diagnostic.diagnostic_level >= clang::DiagnosticsEngine::Error &&
         !diagnostic_ids.isWarningOrExtension(diagnostic.diagnostic_id)) {
-      return FormattedError::Substitute(
-          "the macro is not a valid C++ expression: $0",
+      return FormattedError::Formatv(
+          "the macro is not a valid C++ expression: {0}",
           diagnostic.diagnostic.str().str());
     }
   }
@@ -357,8 +357,8 @@ std::variant<MacroConstant, FormattedError> SynthesizeMacroConstant(
     clang::APValue value;
     if (!expr->isCXX11ConstantExpr(ast_context, value) ||
         !(value.isInt() || value.isFloat())) {
-      return FormattedError::Substitute(
-          "the macro is not a C++ constant expression: $0",
+      return FormattedError::Formatv(
+          "the macro is not a C++ constant expression: {0}",
           ExplainNonConstantExpression(sema, *expr));
     }
     // NaN can be a constant expression (e.g. `__builtin_nan("")`), but NaN
@@ -368,8 +368,8 @@ std::variant<MacroConstant, FormattedError> SynthesizeMacroConstant(
           "macro constants that evaluate to NaN are not supported");
     }
   } else {
-    return FormattedError::Substitute(
-        "macro constants of type `$0` are not supported", type.getAsString());
+    return FormattedError::Formatv(
+        "macro constants of type `{0}` are not supported", type.getAsString());
   }
 
   // Make the initializer span the whole macro definition (rather than, say,

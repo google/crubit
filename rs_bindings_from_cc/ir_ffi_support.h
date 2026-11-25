@@ -32,6 +32,7 @@
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit::ffi {
@@ -810,23 +811,11 @@ class CRUBIT_FFI_TRIVIAL_ABI FormattedError final {
     return FormattedError(prefix, message);
   }
 
-  // Returns a FormattedError with `$0`..`$9` placeholders replaced by `args`.
+  // Returns a FormattedError formatted with `llvm::formatv()`.
   template <size_t N, typename... Ts>
-  static FormattedError Substitute(const char (&format)[N], Ts&&... args) {
-    if constexpr (sizeof...(args) == 0) {
-      return FormattedError(format, SubstituteImpl(format, {}));
-    } else {
-      auto to_string = [](const auto& arg) {
-        std::string s;
-        llvm::raw_string_ostream os(s);
-        os << arg;
-        return s;
-      };
-      std::string str_args[] = {to_string(args)...};
-      return FormattedError(
-          format, SubstituteImpl(format, llvm::ArrayRef<std::string>(
-                                             str_args, sizeof...(args))));
-    }
+  static FormattedError Formatv(const char (&format)[N], Ts&&... args) {
+    return FormattedError(
+        format, llvm::formatv(format, std::forward<Ts>(args)...).str());
   }
 
   // Extracts a format string from a status payload, if present.
@@ -840,9 +829,6 @@ class CRUBIT_FFI_TRIVIAL_ABI FormattedError final {
  private:
   FormattedError(llvm::StringRef fmt, llvm::StringRef message)
       : fmt_(fmt), message_(message) {}
-
-  static std::string SubstituteImpl(llvm::StringRef format,
-                                    llvm::ArrayRef<std::string> args);
 
   FfiString fmt_{};
   FfiString message_{};

@@ -172,9 +172,9 @@ void CollectUnsafeAttr(const clang::Decl& decl, Errors& errors, bool is_safe,
   }
   if (is_safe) {
     errors.Add(
-        FormattedError::Substitute("Function is annotated with both `$0` and "
-                                   "`CRUBIT_OVERRIDE_UNSAFE(false)`",
-                                   attrs.begin()->getSpelling()));
+        FormattedError::Formatv("Function is annotated with both `{0}` and "
+                                "`CRUBIT_OVERRIDE_UNSAFE(false)`",
+                                attrs.begin()->getSpelling()));
     return;
   }
   safety = SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
@@ -818,8 +818,8 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
     std::vector<std::string> field_names;
     CollectExplicitInitFieldNames(*constructor_decl->getParent(), "",
                                   field_names);
-    return unsupported(FormattedError::Substitute(
-        "Cannot be default-constructed: fields $0 require explicit "
+    return unsupported(FormattedError::Formatv(
+        "Cannot be default-constructed: fields {0} require explicit "
         "initialization.",
         [&]() {
           std::string out;
