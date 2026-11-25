@@ -148,7 +148,8 @@ fn rs_type_kind_with_lifetime_elision_impl(
                     .target_crubit_features(db.ir().current_target())
                     .contains(crubit_feature::CrubitFeature::ProtoReferences);
 
-            // TODO(b/464492052): Support bridge types by pointer/reference.
+            // Non-layout-compatible bridge types convert by value across FFI and are not supported
+            // as pointee or referent types (except proto lvalue references handled above).
             if !is_proto_lvalue_ref
                 && let RsTypeKind::BridgeType { bridge_type, original_type } = pointee.unalias()
                 && !matches!(
