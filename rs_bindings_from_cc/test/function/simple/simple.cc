@@ -38,3 +38,11 @@ int multiply_with_keyword_named_parameters(int self, int crate, int super) {
 
 int (*get_pointer_to_multiply_function())(int, int) { return multiply; }
 int (&get_reference_to_multiply_function())(int, int) { return multiply; }
+
+int noinline_multiply(int x, int y) { return x * y; }
+
+NonMovableWithNoInline::NonMovableWithNoInline(int value) : value_(value) {}
+
+NonMovableWithNoInline::~NonMovableWithNoInline() { value_ = 0; }
+
+int NonMovableWithNoInline::value() const { return value_; }

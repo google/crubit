@@ -1310,6 +1310,7 @@ std::unique_ptr<crubit::ffi::Item> FunctionDeclImporter::Import(
                    clang::isa<clang::ReinitializesAttr>(attr) ||
                    clang::isa<clang::UnusedAttr>(attr) ||
                    clang::isa<clang::AlwaysInlineAttr>(attr) ||
+                   clang::isa<clang::NoInlineAttr>(attr) ||
                    clang::isa<clang::AssertCapabilityAttr>(attr) ||
                    clang::isa<clang::AcquireCapabilityAttr>(attr) ||
                    clang::isa<clang::TryAcquireCapabilityAttr>(attr) ||

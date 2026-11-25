@@ -38,6 +38,21 @@ CRUBIT_MUST_BIND inline int apply_binary_op(int x, int y, int (*op)(int, int)) {
   return op(x, y);
 }
 
+CRUBIT_MUST_BIND __attribute__((noinline)) int noinline_multiply(int x, int y);
+
+class CRUBIT_MUST_BIND NonMovableWithNoInline final {
+ public:
+  explicit __attribute__((noinline)) NonMovableWithNoInline(int value);
+  NonMovableWithNoInline(const NonMovableWithNoInline&) = delete;
+  NonMovableWithNoInline& operator=(const NonMovableWithNoInline&) = delete;
+  __attribute__((noinline)) ~NonMovableWithNoInline();
+
+  CRUBIT_MUST_BIND __attribute__((noinline)) int value() const;
+
+ private:
+  int value_;
+};
+
 // TODO(b/217419782): Add testcases for pointers to functions that take or
 // return takes/returns non-trivially-movable types by value. In particular,
 // some function signatures might require going through a C++ thunk - such
