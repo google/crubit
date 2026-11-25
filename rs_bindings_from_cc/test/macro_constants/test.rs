@@ -48,6 +48,29 @@ fn test_values_match_cc() {
         macro_constants::LONG_STRING_CONSTANT!().len(),
         macro_constants::LongStringConstantLength() as usize
     );
+    // The floating-point values must be bitwise identical. Untyped macros need a type to call
+    // methods on them.
+    expect_eq!(
+        f64::to_bits(macro_constants::DOUBLE_CONSTANT!()),
+        macro_constants::DoubleConstant().to_bits()
+    );
+    expect_eq!(
+        macro_constants::FLOAT_CONSTANT!().to_bits(),
+        macro_constants::FloatConstant().to_bits()
+    );
+    expect_eq!(
+        macro_constants::INFINITE_CONSTANT!().to_bits(),
+        macro_constants::InfiniteConstant().to_bits()
+    );
+    // Values in exponent notation must be exact, too.
+    expect_eq!(
+        f64::to_bits(macro_constants::LARGE_DOUBLE_CONSTANT!()),
+        macro_constants::LargeDoubleConstant().to_bits()
+    );
+    expect_eq!(
+        macro_constants::TINY_FLOAT_CONSTANT!().to_bits(),
+        macro_constants::TinyFloatConstant().to_bits()
+    );
 }
 
 #[gtest]
@@ -146,6 +169,13 @@ fn test_literal_types() {
     assert_type::<u32>(CHAR32_LITERAL!());
     assert_type::<bool>(TRUE_LITERAL!());
     assert_type::<bool>(FALSE_LITERAL!());
+    // An `f` suffix makes a floating-point macro typed, and infinities are always typed.
+    assert_type::<f32>(FLOAT_CONSTANT!());
+    assert_type::<f32>(TINY_FLOAT_CONSTANT!());
+    assert_type::<f64>(INFINITE_CONSTANT!());
+    // Untyped floating-point macros can be used as either type.
+    let _: f32 = DOUBLE_CONSTANT!();
+    let _: f64 = DOUBLE_CONSTANT!();
     #[cfg(all(target_pointer_width = "64", not(windows)))]
     {
         // `long` is 64 bits.

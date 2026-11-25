@@ -15,7 +15,7 @@ use flagset::FlagSet;
 use heck::ToSnakeCase;
 use ir::{
     BazelLabel, CcCallingConv, FfiRc, FloatConstant, GenericItem, IntegerConstant, Item, ItemId,
-    Namespace, RecordType, UnqualifiedIdentifier,
+    Namespace, Primitive, RecordType, UnqualifiedIdentifier,
 };
 use proc_macro2::{Ident, Literal, Spacing, TokenStream, TokenTree};
 use quote::format_ident;
@@ -531,6 +531,55 @@ pub fn integer_constant_to_token_stream(
             }
         }
     })
+}
+
+/// Returns the tokens for the value of a floating-point macro constant of type `underlying_type`,
+/// which must be `f32` or `f64`.
+///
+/// Unlike `float_constant_to_token_stream`, the value is a literal, so that untyped macros can be
+/// used as either `f32` or `f64`. If `typed` is true, a finite value is a suffixed literal (e.g.
+/// `1.5f32`). Otherwise, it's an unsuffixed literal (e.g. `1.5`). Infinities are always typed
+/// (e.g. `f64::INFINITY`), since they have no literal. NaN isn't supported.
+pub fn float_literal_tokens(
+    db: &crate::BindingsGenerator<'_>,
+    float_constant: FloatConstant,
+    underlying_type: &RsTypeKind,
+    typed: bool,
+) -> Result<TokenStream> {
+    let bits = float_constant.bits();
+    // `Debug` uses the shortest representation that round-trips, with exponent notation for very
+    // large or small magnitudes (e.g. `1e300`).
+    let (type_name, is_nan, is_infinite, is_positive, text) = match *underlying_type.unalias() {
+        RsTypeKind::Primitive(Primitive::Float) => {
+            let v = f32::from_bits(u32::try_from(bits)?);
+            ("f32", v.is_nan(), v.is_infinite(), v > 0.0, format!("{v:?}"))
+        }
+        RsTypeKind::Primitive(Primitive::Double) => {
+            let v = f64::from_bits(bits);
+            ("f64", v.is_nan(), v.is_infinite(), v > 0.0, format!("{v:?}"))
+        }
+        _ => bail!(
+            "float_literal_tokens called with a non-floating-point underlying type:\n  {}",
+            underlying_type.display(db),
+        ),
+    };
+    ensure!(!is_nan, "NaN macro constants are not supported");
+    let type_ident = Ident::new(type_name, proc_macro2::Span::call_site());
+    if is_infinite {
+        return Ok(if is_positive {
+            quote! { #type_ident::INFINITY }
+        } else {
+            quote! { #type_ident::NEG_INFINITY }
+        });
+    }
+    // Negative numbers are a negation operator applied to a literal.
+    let (minus, text) = match text.strip_prefix('-') {
+        Some(text) => (quote! {-}, text),
+        None => (quote! {}, text.as_str()),
+    };
+    let text = if typed { format!("{text}{type_name}") } else { text.to_string() };
+    let literal: Literal = text.parse().map_err(|_| anyhow!("invalid float literal: {text}"))?;
+    Ok(quote! { #minus #literal })
 }
 
 pub fn float_constant_to_token_stream(

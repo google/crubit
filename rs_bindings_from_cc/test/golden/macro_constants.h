@@ -146,6 +146,31 @@ struct SizeofLaterDeclaredStruct {
   int field;
 };
 
+// Floating-point constants.
+#define DOUBLE_CONSTANT 1.5
+#define FLOAT_CONSTANT 2.5f
+#define NEGATIVE_DOUBLE_CONSTANT -0.25
+#define EXPONENT_CONSTANT 1e10
+#define DOUBLE_EXPRESSION (DOUBLE_CONSTANT * 2 + INT_CONSTANT)
+#define FLOAT_CAST ((float)1 / 3)
+#define FLOAT_TO_INT_CAST ((int)DOUBLE_CONSTANT)
+#define DOUBLE_CAST ((double)1 / 3)
+typedef float MacroFloat;
+#define TYPEDEF_FLOAT_CAST ((MacroFloat)1.5)
+// A `long double` value that is converted to `double` is supported.
+#define LONG_DOUBLE_CAST ((double)(long double)1)
+#define NEGATIVE_ZERO_CONSTANT -0.0
+// Non-finite values are supported, too.
+#define INFINITE_CONSTANT __builtin_inf()
+#define NEGATIVE_INFINITE_CONSTANT (-__builtin_inff())
+#define OVERFLOWING_DOUBLE_CONSTANT 1e999
+// Values of very large or small magnitude use exponent notation.
+#define LARGE_DOUBLE_CONSTANT 1e300
+#define NEGATIVE_LARGE_DOUBLE_CONSTANT -1.5e20
+#define SMALL_DOUBLE_CONSTANT 1e-300
+#define SUBNORMAL_DOUBLE_CONSTANT 5e-324
+#define LARGE_FLOAT_CONSTANT 3e38f
+
 // String constants.
 #define STRING_CONSTANT "hello"
 #define CONCATENATED_STRING_CONSTANT \
@@ -176,7 +201,6 @@ typedef int UnescapableNamespaceInt;
 // include guard of this header isn't reported.)
 #define EMPTY_MACRO
 #define FUNCTION_LIKE_MACRO(x) ((x) + 1)
-#define FLOAT_CONSTANT 1.5
 #define WIDE_STRING_CONSTANT L"wide"
 #define UTF16_STRING_CONSTANT u"utf16"
 #define UTF32_STRING_CONSTANT U"utf32"
@@ -184,8 +208,15 @@ typedef int UnescapableNamespaceInt;
   "a"                                     \
   L"b"
 #define USER_DEFINED_STRING_LITERAL "x"_s
+#define LONG_DOUBLE_CONSTANT 1.5L
+// NaN isn't supported: `(0.0 / 0.0)` isn't a constant expression in C++, and
+// NaN values (e.g. from `__builtin_nan`) aren't bound either.
+#define NAN_CONSTANT (0.0 / 0.0)
+#define BUILTIN_NAN_CONSTANT __builtin_nan("")
 #define NOT_A_NUMBER 1.2.3
 #define DIVISION_BY_ZERO (1 / 0)
+// Floating-point division by zero isn't a C++ constant expression either.
+#define FLOAT_DIVISION_BY_ZERO (1.0 / 0.0)
 #define OVERFLOW_CONSTANT (2147483647 + 1)
 #define SELF_REFERENTIAL (SELF_REFERENTIAL + 1)
 // A macro whose name is already declared: the constant would conflict with the

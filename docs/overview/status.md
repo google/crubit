@@ -73,23 +73,25 @@ Crubit generates Rust bindings for everyday C++ APIs:
     [explicit lifetime annotations](../cpp/references_and_lifetimes.md).
 *   Type aliases, forward-declared types, and concrete class template
     specializations such as `MyTemplate<int>`.
-*   Object-like macros which expand to an integral or string constant
-    expression, such as `#define FOO 4`, `#define BAR (FOO + kBar)`, or
-    `#define NAME "foo"`, with the `macro_constants` feature. They are bound as
-    `macro_rules!`, so `FOO` is used as `FOO!()`.
+*   Object-like macros which expand to an integral, floating-point, or string
+    constant expression, such as `#define FOO 4`, `#define BAR (FOO + kBar)`,
+    `#define RATIO 1.5`, or `#define NAME "foo"`, with the `macro_constants`
+    feature. They are bound as `macro_rules!`, so `FOO` is used as `FOO!()`.
     *   String macros (ordinary or UTF-8 string literals) expand to a string
         literal (`&'static str`), or to a byte string literal
         (`&'static [u8; N]`) if the string isn't valid UTF-8.
     *   If the macro (or a macro that it refers to) contains a literal with a
-        suffix (e.g. `42u` or `1L`), or a `u'x'` or `U'x'` character literal,
-        `FOO!()` has the type of the C++ constant, e.g. `::ffi_11::c_uint`.
+        suffix (e.g. `42u`, `1L`, or `2.5f`), a `u'x'` or `U'x'` character
+        literal, or a cast (e.g. `(uint32_t)1`), `FOO!()` has the type of the
+        C++ constant, e.g. `::ffi_11::c_uint` or `f32`. Infinite values (e.g.
+        `__builtin_inf()`) are always typed, e.g. `f64::INFINITY`.
     *   Otherwise, `FOO!()` is an untyped literal, which can be used as any
-        integer type, e.g. as an `i64` or `usize`, or as an array length. Values
-        that don't fit the type are silently truncated, because rustc doesn't
-        report overflowing literals from another crate's macros. To use it as an
-        `ffi_11` type which isn't a primitive type (e.g. `c_char`, or
-        `c_longlong` on Linux), convert it, e.g. with
-        `ffi_11::new_c_longlong(FOO!())`.
+        integer (or, for floating-point macros, any floating-point) type, e.g.
+        as an `i64` or `usize`, or as an array length. Values that don't fit the
+        type are silently truncated, because rustc doesn't report overflowing
+        literals from another crate's macros. To use it as an `ffi_11` type
+        which isn't a primitive type (e.g. `c_char`, or `c_longlong` on Linux),
+        convert it, e.g. with `ffi_11::new_c_longlong(FOO!())`.
     *   Other macros of the target (e.g. function-like macros, or macros that
         aren't constant expressions) are reported in the generated bindings,
         e.g. as ``error: macro `FOO` could not be bound``, followed by the
@@ -101,8 +103,8 @@ Not yet supported: automatic overload resolution (b/213280424), virtual dispatch
 and overriding C++ methods from Rust (b/313733992), checking that C++ code
 actually honors the elided or annotated lifetimes, C++ templates with generic
 (non-concrete) type parameters (see [Generics and
-Templates](limits.md#generics)), non-type `using` aliases, constants of other
-types (e.g. floating-point or class types), and macros other than constants.
+Templates](limits.md#generics)), non-type `using` aliases, constants of class or
+pointer type, `long double` constants, and macros other than constants.
 
 ## C++ bindings for Rust libraries
 

@@ -338,8 +338,8 @@ std::variant<MacroConstant, FormattedError> SynthesizeMacroConstant(
     return FormattedError::Static("the macro is not a single C++ expression");
   }
 
-  // Only integral (including boolean and character) and (narrow or UTF-8)
-  // string constants are supported.
+  // Only integral (including boolean and character), `float`, `double`, and
+  // (narrow or UTF-8) string constants are supported.
   clang::QualType type = expr->getType();
   if (const auto* string_literal =
           llvm::dyn_cast<clang::StringLiteral>(expr->IgnoreParens())) {
@@ -348,11 +348,24 @@ std::variant<MacroConstant, FormattedError> SynthesizeMacroConstant(
           "only ordinary and UTF-8 string literals are supported in macro "
           "constants");
     }
-  } else if (IsSupportedIntegralType(type)) {
-    if (!expr->getIntegerConstantExpr(ast_context).has_value()) {
+  } else if (IsSupportedIntegralType(type) || type->isFloat32Type() ||
+             type->isDoubleType()) {
+    // The macro is only bound if it is a constant expression by the rules of
+    // C++, like the initializer of a `constexpr` variable. E.g. `(1.0 / 0.0)`
+    // isn't, although Clang can fold it as an extension. NaN results aren't
+    // constant expressions either.
+    clang::APValue value;
+    if (!expr->isCXX11ConstantExpr(ast_context, value) ||
+        !(value.isInt() || value.isFloat())) {
       return FormattedError::Substitute(
           "the macro is not a C++ constant expression: $0",
           ExplainNonConstantExpression(sema, *expr));
+    }
+    // NaN can be a constant expression (e.g. `__builtin_nan("")`), but NaN
+    // payloads can't be expressed as Rust literals.
+    if (value.isFloat() && value.getFloat().isNaN()) {
+      return FormattedError::Static(
+          "macro constants that evaluate to NaN are not supported");
     }
   } else {
     return FormattedError::Substitute(

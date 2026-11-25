@@ -28,6 +28,11 @@
 #define CAST_CONSTANT ((uint8_t)0x1FF)
 #define STATIC_CAST_CONSTANT (static_cast<std::int64_t>(INT_CONSTANT) << 40)
 #define CAST_FROM_UNEXPANDED_DEP_MACRO UNEXPANDED_CAST_HELPER
+#define DOUBLE_CONSTANT (INT_CONSTANT / 3.0)
+#define FLOAT_CONSTANT (0.1f + 0.2f)
+#define INFINITE_CONSTANT (-__builtin_inf())
+#define LARGE_DOUBLE_CONSTANT 1.234e300
+#define TINY_FLOAT_CONSTANT 1.5e-40f
 // A string that is longer than the maximum number of elements of array
 // constants, to check that strings are neither limited nor evaluated element by
 // element.
@@ -80,6 +85,11 @@ inline bool BoolConstant() { return BOOL_CONSTANT; }
 inline char CharConstant() { return CHAR_CONSTANT; }
 inline uint8_t CastConstant() { return CAST_CONSTANT; }
 inline int64_t StaticCastConstant() { return STATIC_CAST_CONSTANT; }
+inline double DoubleConstant() { return DOUBLE_CONSTANT; }
+inline float FloatConstant() { return FLOAT_CONSTANT; }
+inline double InfiniteConstant() { return INFINITE_CONSTANT; }
+inline double LargeDoubleConstant() { return LARGE_DOUBLE_CONSTANT; }
+inline float TinyFloatConstant() { return TINY_FLOAT_CONSTANT; }
 inline int StringConstantLength() { return sizeof(STRING_CONSTANT) - 1; }
 inline int LongStringConstantLength() {
   return sizeof(LONG_STRING_CONSTANT) - 1;

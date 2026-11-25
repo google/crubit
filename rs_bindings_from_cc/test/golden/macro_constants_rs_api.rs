@@ -664,6 +664,149 @@ impl Default for SizeofLaterDeclaredStruct {
     }
 }
 
+// Floating-point constants.
+
+#[macro_export]
+macro_rules! DOUBLE_CONSTANT {
+    () => {
+        1.5
+    };
+}
+
+#[macro_export]
+macro_rules! FLOAT_CONSTANT {
+    () => {
+        2.5f32
+    };
+}
+
+#[macro_export]
+macro_rules! NEGATIVE_DOUBLE_CONSTANT {
+    () => {
+        -0.25
+    };
+}
+
+#[macro_export]
+macro_rules! EXPONENT_CONSTANT {
+    () => {
+        10000000000.0
+    };
+}
+
+#[macro_export]
+macro_rules! DOUBLE_EXPRESSION {
+    () => {
+        7.0
+    };
+}
+
+#[macro_export]
+macro_rules! FLOAT_CAST {
+    () => {
+        0.33333334f32
+    };
+}
+
+#[macro_export]
+macro_rules! FLOAT_TO_INT_CAST {
+    () => {
+        ::ffi_11::new_c_int(1)
+    };
+}
+
+#[macro_export]
+macro_rules! DOUBLE_CAST {
+    () => {
+        0.3333333333333333f64
+    };
+}
+
+pub type MacroFloat = f32;
+
+#[macro_export]
+macro_rules! TYPEDEF_FLOAT_CAST {
+    () => {
+        1.5f32
+    };
+}
+
+// A `long double` value that is converted to `double` is supported.
+
+#[macro_export]
+macro_rules! LONG_DOUBLE_CAST {
+    () => {
+        1.0f64
+    };
+}
+
+#[macro_export]
+macro_rules! NEGATIVE_ZERO_CONSTANT {
+    () => {
+        -0.0
+    };
+}
+
+// Non-finite values are supported, too.
+
+#[macro_export]
+macro_rules! INFINITE_CONSTANT {
+    () => {
+        f64::INFINITY
+    };
+}
+
+#[macro_export]
+macro_rules! NEGATIVE_INFINITE_CONSTANT {
+    () => {
+        f32::NEG_INFINITY
+    };
+}
+
+#[macro_export]
+macro_rules! OVERFLOWING_DOUBLE_CONSTANT {
+    () => {
+        f64::INFINITY
+    };
+}
+
+// Values of very large or small magnitude use exponent notation.
+
+#[macro_export]
+macro_rules! LARGE_DOUBLE_CONSTANT {
+    () => {
+        1e300
+    };
+}
+
+#[macro_export]
+macro_rules! NEGATIVE_LARGE_DOUBLE_CONSTANT {
+    () => {
+        -1.5e20
+    };
+}
+
+#[macro_export]
+macro_rules! SMALL_DOUBLE_CONSTANT {
+    () => {
+        1e-300
+    };
+}
+
+#[macro_export]
+macro_rules! SUBNORMAL_DOUBLE_CONSTANT {
+    () => {
+        5e-324
+    };
+}
+
+#[macro_export]
+macro_rules! LARGE_FLOAT_CONSTANT {
+    () => {
+        3e38f32
+    };
+}
+
 // String constants.
 
 #[macro_export]
@@ -754,9 +897,6 @@ pub const kAlreadyDeclared: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
 // error: macro `FUNCTION_LIKE_MACRO` could not be bound
 //   function-like macros are not supported
 
-// error: macro `FLOAT_CONSTANT` could not be bound
-//   macro constants of type `double` are not supported
-
 // error: macro `WIDE_STRING_CONSTANT` could not be bound
 //   only ordinary and UTF-8 string literals are supported in macro constants
 
@@ -772,10 +912,27 @@ pub const kAlreadyDeclared: ::ffi_11::c_int = ::ffi_11::new_c_int(1);
 // error: macro `USER_DEFINED_STRING_LITERAL` could not be bound
 //   the macro is not a valid C++ expression: no matching literal operator for call to 'operator""_s' with arguments of types 'const char *' and '__size_t' (aka 'unsigned long'), and no matching literal operator template
 
+// error: macro `LONG_DOUBLE_CONSTANT` could not be bound
+//   macro constants of type `long double` are not supported
+
+// NaN isn't supported: `(0.0 / 0.0)` isn't a constant expression in C++, and
+// NaN values (e.g. from `__builtin_nan`) aren't bound either.
+
+// error: macro `NAN_CONSTANT` could not be bound
+//   the macro is not a C++ constant expression: division by zero
+
+// error: macro `BUILTIN_NAN_CONSTANT` could not be bound
+//   macro constants that evaluate to NaN are not supported
+
 // error: macro `NOT_A_NUMBER` could not be bound
 //   the macro is not a valid C++ expression: invalid suffix '.3' on floating constant
 
 // error: macro `DIVISION_BY_ZERO` could not be bound
+//   the macro is not a C++ constant expression: division by zero
+
+// Floating-point division by zero isn't a C++ constant expression either.
+
+// error: macro `FLOAT_DIVISION_BY_ZERO` could not be bound
 //   the macro is not a C++ constant expression: division by zero
 
 // error: macro `OVERFLOW_CONSTANT` could not be bound

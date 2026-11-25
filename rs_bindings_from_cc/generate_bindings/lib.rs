@@ -15,9 +15,9 @@ use crubit_abi_type::{
     CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens, FullyQualifiedPath,
 };
 use database::code_snippet::{
-    self, float_constant_to_token_stream, integer_constant_to_token_stream, integer_literal_tokens,
-    ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, DeprecatedAttr, Feature,
-    GeneratedItem, ThunkImpl,
+    self, float_constant_to_token_stream, float_literal_tokens, integer_constant_to_token_stream,
+    integer_literal_tokens, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes,
+    DeprecatedAttr, Feature, GeneratedItem, ThunkImpl,
 };
 use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::intern;
@@ -274,8 +274,9 @@ fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiS
 /// unsuffixed literal, which can be used as any Rust integer type. Otherwise, it expands to a value
 /// of the constant's type.
 ///
-/// String macros expand to a string literal, or to a byte string literal if the string isn't valid
-/// UTF-8.
+/// Floating-point macros are bound the same way, except that infinities always have the
+/// constant's type (e.g. `f64::INFINITY`). String macros expand to a string literal, or to a byte
+/// string literal if the string isn't valid UTF-8.
 fn generate_macro_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiSnippets> {
     // `has_bindings` also checks this, so that the error is reported instead of being fatal.
     let ident = try_make_rs_ident(constant.rs_name().as_str())
@@ -298,7 +299,23 @@ fn generate_macro_constant(db: &BindingsGenerator, constant: &Constant) -> Resul
                 ..Default::default()
             });
         }
-        _ => bail!("macro constants must be integers or strings"),
+        ConstantValue::Float(value) => {
+            let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
+            let value = float_literal_tokens(
+                db,
+                *value,
+                &type_,
+                constant.macro_kind() == MacroKind::TypedMacro,
+            )?;
+            return Ok(ApiSnippets {
+                generated_items: HashMap::from([(
+                    constant.id(),
+                    GeneratedItem::MacroConstant { ident, value },
+                )]),
+                ..Default::default()
+            });
+        }
+        _ => bail!("macro constants must be integers, floating-point numbers, or strings"),
     };
     let type_ = db.rs_type_kind(constant.type_().unwrap().clone())?;
     let value_tokens = if constant.macro_kind() == MacroKind::UntypedMacro || type_.is_bool() {
