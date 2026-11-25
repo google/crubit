@@ -155,14 +155,11 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
     }
 }
 
-#[rustversion::before(2026-11-23)]
 fn run_full_analysis(tcx: TyCtxt<'_>) {
-    tcx.ensure_ok().analysis(());
-}
-
-#[rustversion::since(2026-11-23)]
-fn run_full_analysis(tcx: TyCtxt<'_>) {
-    rustc_interface::passes::full_analysis(tcx);
+    rustversion::select! {
+        before(2026-11-23) => tcx.ensure_ok().analysis(()),
+        _ => rustc_interface::passes::full_analysis(tcx),
+    }
 }
 
 /// A non-generic implementation of `run_compiler_for_testing`.

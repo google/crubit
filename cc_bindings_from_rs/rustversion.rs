@@ -25,9 +25,9 @@
 //!
 //! ```
 //! rustversion::select! {
-//!     since(2026-09-27) => { use new_module::Item; }
-//!     since(2026-08-09) => { use mid_module::Item; }
-//!     _ => { use old_module::Item; }
+//!     before(2026-08-09) => { use old_module::Item; }
+//!     before(2026-09-27) => { use mid_module::Item; }
+//!     _ => { use new_module::Item; }
 //! }
 //! ```
 //!
