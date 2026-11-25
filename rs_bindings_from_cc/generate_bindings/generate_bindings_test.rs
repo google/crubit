@@ -9,8 +9,8 @@ use database::rs_snippet::{
     interpolate_spelled_rust_type, interpolate_spelled_rust_type_with_lifetimes, Mutability,
     RsTypeKind,
 };
-use googletest::matchers::{contains_substring, not};
-use googletest::{expect_eq, expect_that, gtest};
+use googletest::matchers::{all, contains_substring, not};
+use googletest::{expect_death, expect_eq, expect_that, gtest};
 use ir::{BazelLabel, IR};
 use ir_matchers::assert_ir_matches;
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func, DEPENDENCY_TARGET};
@@ -726,6 +726,25 @@ fn test_find_decl_error_names_item_instead_of_address() -> Result<()> {
     let message = format!("{err:#}");
     expect_that!(message, contains_substring("`SomeStruct` doesn't refer to a"));
     expect_that!(message, not(contains_substring("ItemId")));
+    Ok(())
+}
+
+#[gtest]
+fn test_find_untyped_decl_panic_does_not_dump_ir() -> Result<()> {
+    let proto = ir_proto_from_cc("struct SomeStruct {};")?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let missing_id = ir::ItemId::new_for_testing(999_999);
+
+    expect_death!(
+        db.find_untyped_decl(missing_id),
+        all!(
+            contains_substring("Couldn't find decl_id"),
+            not(contains_substring("SomeStruct")),
+            not(contains_substring("TreeIR")),
+        )
+    );
     Ok(())
 }
 
