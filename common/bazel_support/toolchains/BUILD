@@ -70,6 +70,18 @@ _NON_PROD_PLATFORMS = {
         "@platforms//cpu:arm64",
         "@platforms//os:macos",
     ],
+    "chromeos_x86_64": [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:chromiumos",
+    ],
+    "chromeos_aarch64": [
+        "@platforms//cpu:aarch64",
+        "@platforms//os:chromiumos",
+    ],
+    "chromeos_armv7a": [
+        "@platforms//cpu:armv7",
+        "@platforms//os:chromiumos",
+    ],
 }
 
 # cc_bindings_from_rs
