@@ -18,14 +18,13 @@ fn test_run_compiler_for_testing_panic_when_test_input_triggers_analysis_errors(
     })
 }
 
-// TODO(b/390671870): when rejecting warnings is fixed, enable this test.
-/*#[test]
+#[test]
 #[should_panic(expected = "Test input compilation failed while linting")]
 fn test_run_compiler_for_testing_panic_when_test_input_triggers_warnings() {
     run_compiler_for_testing("pub fn foo(unused_parameter: i32) {}", |_tcx| {
         panic!("This part shouldn't execute")
     })
-}*/
+}
 
 #[test]
 fn test_run_compiler_for_testing_nightly_features_ok_in_test_input() {

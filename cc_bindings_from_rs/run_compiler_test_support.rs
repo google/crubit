@@ -219,7 +219,7 @@ fn run_compiler_for_testing_impl(
         let krate = catch_unwind(AssertUnwindSafe(|| rustc_interface::passes::parse(sess)))
             .expect("Test input compilation failed while parsing");
 
-        let result = rustc_interface::create_and_enter_global_ctxt(compiler, krate, |tcx| {
+        rustc_interface::create_and_enter_global_ctxt(compiler, krate, |tcx| {
             if sess.dcx().has_errors().is_some() {
                 sess.dcx().fatal("Compilation failed, aborting");
             }
@@ -229,14 +229,13 @@ fn run_compiler_for_testing_impl(
             // have triggered full analysis).
             catch_unwind(AssertUnwindSafe(|| run_full_analysis(tcx)))
                 .expect("Test input compilation failed while analyzing");
+            // `analysis` might succeed even if there are some lint / warning errors.
+            // Detecting these requires explicitly checking before invoking `callback`.
+            if tcx.dcx().has_errors().is_some() {
+                panic!("Test input compilation failed while linting");
+            }
             callback(tcx)
-        });
-
-        // TODO(b/390671870): somehow this is failing to reject warnings.
-        if let Some(_error_guaranteed) = compiler.sess.dcx().has_errors() {
-            panic!("Test input compilation failed while linting")
-        }
-        result
+        })
     });
 }
 
