@@ -562,6 +562,7 @@ alias(
 
 cpp_api_from_rust_toolchain_bindings(
     name = "rs_core",
+    compatible_with = ["//buildenv/target:non_prod"],
     cpp_namespace = "rs::core",
     crate_name = "core",
     # Prefer //support/rs:rs_core.
@@ -574,6 +575,7 @@ cpp_api_from_rust_toolchain_bindings(
 
 cpp_api_from_rust_toolchain_bindings(
     name = "rs_alloc",
+    compatible_with = ["//buildenv/target:non_prod"],
     cpp_namespace = "rs::alloc",
     crate_name = "alloc",
     # Prefer //support/rs:rs_alloc.
@@ -587,6 +589,7 @@ cpp_api_from_rust_toolchain_bindings(
 
 cpp_api_from_rust_toolchain_bindings(
     name = "rs_std",
+    compatible_with = ["//buildenv/target:non_prod"],
     cpp_namespace = "rs::std",
     crate_name = "std",
     # Prefer //support/rs:rs_std.

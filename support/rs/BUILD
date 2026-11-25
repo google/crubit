@@ -343,18 +343,21 @@ cc_library(
 alias(
     name = "rs_alloc",
     actual = "//support/rs_std:rs_alloc",
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 )
 
 alias(
     name = "rs_core",
     actual = "//support/rs_std:rs_core",
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 )
 
 alias(
     name = "rs_std",
     actual = "//support/rs_std:rs_std",
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 )
 
