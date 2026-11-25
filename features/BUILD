@@ -251,20 +251,6 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-# A feature set mapping `std::unique_ptr` and `std::shared_ptr` by nullability (crubit.rs-nullable):
-# a smart pointer known to be non-null (`absl_nonnull`, or unannotated under
-# `ABSL_POINTERS_DEFAULT_NONNULL`) is a bare Rust `Ptr`, and any other is `cc_std::std::Nullable<Ptr>`.
-# In the other direction, a bare Rust `Ptr` is spelled `Ptr crubit_nonnull` in C++.
-#
-# Visible only to Crubit itself, and to targets migrated early (crubit.rs-nullable), until it becomes
-# the default.
-crubit_feature_hint(
-    name = "nonnull_smart_pointers",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + ["nonnull_smart_pointers"],
-    visibility = ["//:__subpackages__"],
-)
-
 # A feature set enabling `::cxx::ExternType` implementations for records.
 crubit_feature_hint(
     name = "impl_cxx_extern_type",

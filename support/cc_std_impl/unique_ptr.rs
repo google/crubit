@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::std::{Allocator, NonNull, StableNullness, TryDeref, TryDerefPin};
+use crate::std::Allocator;
 use core::fmt::{Debug, Formatter, Result};
 use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut};
@@ -249,32 +249,6 @@ impl<T: Unpin> unique_ptr<T> {
     }
 }
 
-// SAFETY: `self.ptr` is a plain pointer field with no interior mutability, so it can only change
-// through a `&mut unique_ptr<T>` or a C++ move.
-unsafe impl<T: Sized> StableNullness for unique_ptr<T> {
-    fn is_null(&self) -> bool {
-        self.ptr.is_null()
-    }
-}
-
-impl<T: Sized> TryDeref for unique_ptr<T> {
-    type Target = T;
-
-    unsafe fn deref_unchecked(&self) -> &Self::Target {
-        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `unique_ptr` invariants
-        // it points to a valid, exclusively owned `T`.
-        unsafe { &*self.ptr }
-    }
-}
-
-impl<T: Sized> TryDerefPin for unique_ptr<T> {
-    unsafe fn deref_pin_unchecked(&mut self) -> Pin<&mut Self::Target> {
-        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `unique_ptr` invariants
-        // it points to a valid, exclusively owned `T`. The pointee is pinned.
-        unsafe { Pin::new_unchecked(&mut *(self.ptr as *mut T)) }
-    }
-}
-
 /// Dereferences the `unique_ptr`.
 ///
 /// # Panics
@@ -351,18 +325,6 @@ impl<T: Debug> Debug for unique_ptr<T> {
         } else {
             f.pad("null")
         }
-    }
-}
-
-impl<T> From<NonNull<unique_ptr<T>>> for unique_ptr<T> {
-    fn from(value: NonNull<unique_ptr<T>>) -> Self {
-        NonNull::into_inner(value)
-    }
-}
-
-impl<'a, T> From<&'a NonNull<unique_ptr<T>>> for &'a unique_ptr<T> {
-    fn from(value: &'a NonNull<unique_ptr<T>>) -> Self {
-        NonNull::as_inner(value)
     }
 }
 
@@ -516,32 +478,6 @@ impl<T: Delete> From<unique_ptr<T>> for virtual_unique_ptr<T> {
     }
 }
 
-// SAFETY: `self.ptr` is a plain pointer field with no interior mutability, so it can only change
-// through a `&mut virtual_unique_ptr<T>` or a C++ move.
-unsafe impl<T: Delete> StableNullness for virtual_unique_ptr<T> {
-    fn is_null(&self) -> bool {
-        self.ptr.is_null()
-    }
-}
-
-impl<T: Delete> TryDeref for virtual_unique_ptr<T> {
-    type Target = T;
-
-    unsafe fn deref_unchecked(&self) -> &Self::Target {
-        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `virtual_unique_ptr`
-        // invariants it points to a valid, exclusively owned `T`.
-        unsafe { &*self.ptr }
-    }
-}
-
-impl<T: Delete> TryDerefPin for virtual_unique_ptr<T> {
-    unsafe fn deref_pin_unchecked(&mut self) -> Pin<&mut Self::Target> {
-        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `virtual_unique_ptr`
-        // invariants it points to a valid, exclusively owned `T`. The pointee is pinned.
-        unsafe { Pin::new_unchecked(&mut *(self.ptr as *mut T)) }
-    }
-}
-
 /// Dereferences the `virtual_unique_ptr`.
 ///
 /// # Panics
@@ -597,17 +533,5 @@ impl<T: Delete + Debug> Debug for virtual_unique_ptr<T> {
         } else {
             f.pad("null")
         }
-    }
-}
-
-impl<T: Delete> From<NonNull<virtual_unique_ptr<T>>> for virtual_unique_ptr<T> {
-    fn from(value: NonNull<virtual_unique_ptr<T>>) -> Self {
-        NonNull::into_inner(value)
-    }
-}
-
-impl<'a, T: Delete> From<&'a NonNull<virtual_unique_ptr<T>>> for &'a virtual_unique_ptr<T> {
-    fn from(value: &'a NonNull<virtual_unique_ptr<T>>) -> Self {
-        NonNull::as_inner(value)
     }
 }

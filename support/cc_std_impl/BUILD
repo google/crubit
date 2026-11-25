@@ -22,7 +22,6 @@ _CRUBIT_INTERNAL_HELPER_HEADERS = [
 
 _MANUALLY_BRIDGED_TYPES = [
     "allocator.rs",
-    "non_null.rs",
     "nullable.rs",
     "optional.rs",
     "shared_ptr.rs",

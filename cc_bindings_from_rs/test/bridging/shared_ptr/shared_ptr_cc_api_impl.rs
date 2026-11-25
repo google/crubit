@@ -30,16 +30,6 @@ unsafe extern "C" fn __crubit_thunk_consume_ushared_uptr(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_roundtrip_unonnull_ushared_uptr(
-    val: *mut ::cc_std::std::NonNull<::cc_std::std::shared_ptr<i32>>,
-    __ret_ptr: *mut ::cc_std::std::NonNull<::cc_std::std::shared_ptr<i32>>,
-) -> () {
-    unsafe {
-        let val = val.read();
-        __ret_ptr.write(::shared_ptr_golden::roundtrip_nonnull_shared_ptr(val));
-    }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_roundtrip_ushared_uptr(
     val: *mut ::cc_std::std::shared_ptr<i32>,
     __ret_ptr: *mut ::cc_std::std::shared_ptr<i32>,

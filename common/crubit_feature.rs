@@ -87,13 +87,6 @@ flagset::flags! {
         /// Generate bindings for generic types (templates).
         Generics,
 
-        /// Map `std::unique_ptr` and `std::shared_ptr` by nullability (crubit.rs-nullable): a smart
-        /// pointer known to be non-null (`absl_nonnull`, or unannotated under
-        /// `ABSL_POINTERS_DEFAULT_NONNULL`) is a bare Rust `Ptr`, and any other is
-        /// `cc_std::std::Nullable<Ptr>`. In the other direction, a bare Rust `Ptr` is spelled
-        /// `Ptr crubit_nonnull` in C++.
-        NonnullSmartPointers,
-
         /// Generate `::cxx::ExternType` implementations for records.
         /// This is automatically enabled by `Supported` and `Types`.
         ImplCxxExternType,
@@ -190,7 +183,6 @@ impl CrubitFeature {
             Self::OoCasting => "oo_casting",
             Self::ProtoReferences => "proto_references",
             Self::Generics => "generics",
-            Self::NonnullSmartPointers => "nonnull_smart_pointers",
             Self::ImplCxxExternType => "impl_cxx_extern_type",
             Self::NoImplCxxExternType => "no_impl_cxx_extern_type",
             Self::EnumApiV2 => "enum_api_v2",
@@ -243,7 +235,6 @@ impl CrubitFeature {
             Self::OoCasting => "//features:oo_casting",
             Self::ProtoReferences => "//features:proto_references",
             Self::Generics => "//features:generics",
-            Self::NonnullSmartPointers => "//features:nonnull_smart_pointers",
             Self::ImplCxxExternType => "//features:impl_cxx_extern_type",
             Self::NoImplCxxExternType => "//features:no_impl_cxx_extern_type",
             Self::EnumApiV2 => "//features:enum_api_v2",
@@ -284,7 +275,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::ProtoReferences
                 - CrubitFeature::ForwardDeclarations
                 - CrubitFeature::Generics
-                - CrubitFeature::NonnullSmartPointers
                 // Out of `all` until existing `E::MakeV` callers are migrated.
                 - CrubitFeature::EnumApiV2
                 // Out of `all` until callers expecting pointers from iterators are migrated.
@@ -328,7 +318,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"oo_casting" => CrubitFeature::OoCasting.into(),
         b"proto_references" => CrubitFeature::ProtoReferences.into(),
         b"generics" => CrubitFeature::Generics.into(),
-        b"nonnull_smart_pointers" => CrubitFeature::NonnullSmartPointers.into(),
         b"impl_cxx_extern_type" => CrubitFeature::ImplCxxExternType.into(),
         b"no_impl_cxx_extern_type" => CrubitFeature::NoImplCxxExternType.into(),
         b"enum_api_v2" => CrubitFeature::EnumApiV2.into(),

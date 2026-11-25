@@ -41,7 +41,7 @@ rust_library(
     srcs = [
         "unique_ptr.rs",
     ],
-    aspect_hints = ["//features:nonnull_smart_pointers"],
+    aspect_hints = ["//features:supported"],
     edition = "2024",
     proc_macro_deps = ["//support:crubit_annotate"],
     deps = [
@@ -71,8 +71,6 @@ crubit_cc_test(
     ],
 )
 
-# Deliberately does not enable `nonnull_smart_pointers`, to test that the `Nullable` bridge is not
-# gated on it.
 rust_library(
     name = "nullable",
     testonly = 1,

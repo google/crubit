@@ -128,7 +128,7 @@ cc_library(
         "nonnull_smart_pointer_lib.h",
     ],
     aspect_hints = [
-        "//features:nonnull_smart_pointers",
+        "//features:supported",
     ],
     deps = [
         ":common",
