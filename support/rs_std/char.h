@@ -34,9 +34,15 @@ inline void CharArgumentMustBeUnicodeCodePoint() {}
 // therefore don't need to be named the same as ordinary C++ names. See:
 // https://google.github.io/styleguide/cppguide.html#Exceptions_to_Naming_Rules
 
-// `rs_std::char_` is a C++ representation of the `char` type from Rust.
-// `rust_builtin_type_abi_assumptions.md` documents the ABI compatibility of
-// these types.
+// `rs::char_` is a C++ representation of the `char` type from Rust.
+//
+// Rust guarantees that `char` has the same size, alignment, and function call
+// ABI as `u32` on all platforms:
+// https://doc.rust-lang.org/std/primitive.char.html#validity-and-layout.
+// `rs::char_` wraps `std::uint32_t` with standard layout so it is
+// layout-compatible with Rust `char` (see
+// `rust_builtin_type_abi_assumptions.md` for details on why it is passed
+// indirectly across FFI).
 class CRUBIT_INTERNAL_RUST_TYPE("char") char_ final {
  public:
   // Creates a default `char_` - one that represents ASCII NUL character.
@@ -159,7 +165,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") char_ final {
   explicit constexpr char_(::std::uint32_t value, UnsafePromiseUnicode)
       : value_(value) {}
 
-  // See "layout tests" comments in `char_test.cc` for explanation why
+  // See "Layout assertions" comments in `char_test.cc` for explanation why
   // `char32_t` is not used.
   ::std::uint32_t value_ = '\0';
 };

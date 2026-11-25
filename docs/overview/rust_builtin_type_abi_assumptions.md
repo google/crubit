@@ -10,34 +10,34 @@ below.
 
 ## Rust built-in `char` type
 
-`extern “C”` thunks generated in `..._cc_api_impl.rs` can take `char` arguments
-(and can return `char` values). (Note that this section talks about the Rust
-`char` type which is different from the C++ `char` type.)
+(Note that this section talks about the Rust `char` type, which is different
+from the C++ `char` type.)
 
-[Rust documentation
-says](https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#char)
-that “Rust char is 32-bit wide” and
-[that](https://doc.rust-lang.org/reference/type-layout.html)
-`size_of::<char>() == 4` . Additionally, [Rust documentation
+[The Rust standard library documentation for
+`char`](https://doc.rust-lang.org/std/primitive.char.html#validity-and-layout)
+guarantees that "`char` is guaranteed to have the same size, alignment, and
+function call ABI as `u32` on all platforms". Additionally, [the Rust Reference
 describes](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
-some invalid bit patterns that may result in undefined behavior: “a value in a
-`char` which is a surrogate or above `char::MAX`”.
+the invalid bit patterns that result in undefined behavior: "a value in a `char`
+which is a surrogate or above `char::MAX`".
 
-Rust does *not* directly document the alignment of `char`, although it does
-[say](https://doc.rust-lang.org/reference/type-layout.html) that “most
-primitives are generally aligned to their size”. Furthermore Rust does *not*
-guarantee a particular ABI (e.g. whether `char` value can be passed in a
-general-purpose register VS in a vector register VS has to be passed by
-pointer). `cc_bindings_from_rs` assumes that Rust `char` has the same alignment
-and ABI as `uint32_t` (and therefore the same ABI as `rs::char_` from
-`crubit/support/rs/char.h`).
+Crubit maps Rust `char` to `rs::char_` (defined in `crubit/support/rs/char.h`),
+a standard-layout C++ class wrapping a single `std::uint32_t` field and
+enforcing the Unicode scalar value invariant. Because Rust `char` is guaranteed
+to have the same layout as `u32` (which matches `std::uint32_t`), `rs::char_`
+has the same size, alignment, and memory representation as Rust `char` (verified
+on the C++ side by `static_assert`s in `support/rs_std/char_test.cc`).
 
-The assumptions are verified by assertions that verify the properties of the
-target architecture when `cc_bindings_from_rs` runs (`layout.align()`,
-`layout.size()`, and `layout.abi()` assertions in `format_type.rs`). Similar
-assertions are verified on C++ side in `support/rs_std/char_test.cc`. These
-assertions seem unlikely to fail, but if they do, then hopefully `char_` can
-just be tweaked to wrap another of the C++ integer types.
+Note that although Rust `char` has the same function call ABI as `u32`, a C++
+class wrapping `std::uint32_t` (`rs::char_`) does *not* have the same function
+call ABI as a scalar `std::uint32_t` on all platforms (for example, MSVC x64 and
+32-bit System V i386 return `rs::char_` indirectly via a hidden pointer rather
+than in a register). Crubit therefore passes and returns `char` / `rs::char_`
+indirectly by pointer in `extern "C"` thunks rather than assuming by-value ABI
+compatibility between `char` and `rs::char_`. `rustc`'s `improper_ctypes` lint
+still warns on `char` in `extern "C"` declarations (including behind pointers),
+so generated bindings keep `#![allow(improper_ctypes)]` /
+`#![allow(improper_ctypes_definitions)]`.
 
 ## Rust built-in `[T]` slice type
 

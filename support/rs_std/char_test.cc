@@ -31,30 +31,28 @@ static_assert(std::is_trivially_copy_assignable_v<rs_std::char_>);
 static_assert(std::is_trivially_move_constructible_v<rs_std::char_>);
 static_assert(std::is_trivially_move_assignable_v<rs_std::char_>);
 
-// ABI^H^H^HLayout assertions.
+// Layout assertions.
 //
-// https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#char
-// documents that "Rust char is 32-bit wide and represents an unicode scalar
-// value".
+// https://doc.rust-lang.org/std/primitive.char.html#validity-and-layout
+// guarantees that "`char` is guaranteed to have the same size, alignment, and
+// function call ABI as `u32` on all platforms", and represents a Unicode scalar
+// value.
 //
 // We don't map Rust's `char` to C++ `char32_t` because
 // https://en.cppreference.com/w/cpp/language/types#char32_t points out that the
 // builtin `char32_t` type "has the same size, signedness, and alignment as
 // std::uint_least32_t" (and therefore it is not guaranteed to be exactly
-// 32-bits wide as required for ABI-compatibility with Rust).
+// 32 bits wide as required for layout compatibility with Rust `char`).
 //
-// Equivalent layout and ABI assertion are also checked on Rust side in
-// `format_ty_for_cc` in `cc_bindings_from_rs/bindings.rs` via `layout.align()`
-// and `layout.size()`.  It seems that there is no way to check `layout.abi()`
-// on C++ side, but we can at least say that under the System V ABI a struct
-// with a single field (i.e. the `char_` struct) has the same ABI
-// classification as the field (as long as the field is smaller than "eight
-// eightbytes" and the struct is trivial as verified via `static_assert`s
-// above).  In other words, under System V ABI we expect `char_` to be of
-// INTEGER class - the same as verified by the `layout.abi()` assertion in
-// `bindings.rs`.
+// Note that although Rust `char` has the same function call ABI as `u32`, a
+// C++ class wrapping `uint32_t` (`rs::char_`) does not necessarily share the
+// scalar function call ABI of `uint32_t` on all platforms (e.g., MSVC x64 and
+// 32-bit System V i386), so Crubit passes `rs::char_` indirectly by pointer
+// across FFI and only relies on layout compatibility.
 static_assert(sizeof(rs_std::char_) == 4);
 static_assert(alignof(rs_std::char_) == 4);
+static_assert(sizeof(rs_std::char_) == sizeof(uint32_t));
+static_assert(alignof(rs_std::char_) == alignof(uint32_t));
 static_assert(std::is_standard_layout_v<rs_std::char_>);
 
 // This test covers the following case from

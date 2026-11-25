@@ -1101,32 +1101,14 @@ fn format_ty_for_cc_impl<'tcx>(
         ty::TyKind::Float(ty::FloatTy::F32) => keyword(db.tokens().float.clone()),
         ty::TyKind::Float(ty::FloatTy::F64) => keyword(db.tokens().double.clone()),
 
-        // ABI compatibility and other details are described in the doc comments in
-        // `crubit/support/rs_std/char.h` and `crubit/support/rs_std/char_test.cc` (search for
-        // "Layout tests").
-        ty::TyKind::Char => {
-            // Asserting that the target architecture meets the assumption from Crubit's
-            // `rust_builtin_type_abi_assumptions.md` - we assume that Rust's `char` has the
-            // same ABI as `u32`.
-            let layout = tcx
-                .layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
-                .expect("`layout_of` is expected to succeed for the builtin `char` type")
-                .layout;
-            assert_eq!(4, layout.align().bytes());
-            assert_eq!(4, layout.size().bytes());
-            assert!(matches!(
-                layout.backend_repr(),
-                BackendRepr::Scalar(Scalar::Initialized {
-                    value: Primitive::Int(Integer::I32, /* signedness = */ false),
-                    ..
-                })
-            ));
-
-            FormattedCcType::non_pointer(CcSnippet::with_include(
-                quote! { ::rs::char_ },
-                db.support_header("rs/char.h"),
-            ))
-        }
+        // https://doc.rust-lang.org/std/primitive.char.html#validity-and-layout guarantees that
+        // `char` has the same size, alignment, and function call ABI as `u32` on all platforms.
+        // Layout compatibility with `rs::char_` is described in `crubit/support/rs_std/char.h`
+        // and verified in `crubit/support/rs_std/char_test.cc`.
+        ty::TyKind::Char => FormattedCcType::non_pointer(CcSnippet::with_include(
+            quote! { ::rs::char_ },
+            db.support_header("rs/char.h"),
+        )),
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
         // documents that "Rust's signed and unsigned fixed-width integer types {i,u}{8,16,32,64}
