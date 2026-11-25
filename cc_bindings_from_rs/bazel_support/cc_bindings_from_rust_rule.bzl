@@ -109,28 +109,35 @@ def _target_name_to_include_guard(label):
         for c in (label.package + "/" + label.name).upper().elems()
     ])
 
-def _rustc_lib_env(ctx):
-    """Returns an environment that sets the dylib search path to include rustc libraries.
+def _get_dirname(file):
+    return file.dirname
 
-    This is needed in bazel where rustc_private dynamically links against librustc_driver.
-    Internally, we statically link against the compiler so this isn't an issue.  If the path to
-    rustc's libraries cannot be determined this returns an empty dictionary.
+def _add_rustc_lib_env(ctx, tool_args):
+    """Configures `LD_LIBRARY_PATH` via process_wrapper `--subst` for `rustc_lib`.
+
+    Needed in Bazel where `rustc_private` dynamically links against `librustc_driver`
+    (statically linked internally). Passing the directory via `--subst` lets Bazel path
+    mapping rewrite it instead of baking an output-root path into the action environment.
 
     Args:
       ctx: The rule context.
+      tool_args: `Args` object for process_wrapper flags before `--`.
 
     Returns:
-      A dictionary of environment variables to set.
+      A dictionary of environment variables to merge into the action environment.
     """
     rust_toolchain = ctx.toolchains["@rules_rust//rust:toolchain_type"]
-    if rust_toolchain == None:
+    rustc_lib = rust_toolchain.rustc_lib.to_list() if rust_toolchain != None else []
+    if not rustc_lib:
         return {}
-    rustc_lib = rust_toolchain.rustc_lib.to_list()
-    if len(rustc_lib) <= 0:
-        return {}
-    return {
-        "LD_LIBRARY_PATH": rustc_lib[0].dirname,
-    }
+    tool_args.add_all(
+        [rustc_lib[0]],
+        before_each = "--subst",
+        format_each = "rustc_lib_dir=%s",
+        map_each = _get_dirname,
+        expand_directories = False,
+    )
+    return {"LD_LIBRARY_PATH": "${rustc_lib_dir}"}
 
 def _get_crate_dirname(crate):
     """A helper macro for getting the directory name of the current crate's output path.
@@ -147,46 +154,62 @@ def _get_crate_dirname(crate):
         return crate.dep.output.dirname
     return crate.output.dirname
 
-def _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info):
-    """Returns a struct containing the crubit supported rustc args for the bindings crate.
-
-    Crubit supports a subset of rustc arguments. This function filters down to those arguments while
-    keeping the other arguments we use from the rules_rust (process_wrapper flags, rustc path, etc.).
+def _build_crubit_rustc_args(ctx, toolchain, original_args = None, dep_info = None):
+    """Builds the subset of rustc arguments supported by `cc_bindings_from_rs`.
 
     Args:
       ctx: The rule context.
-      original_args: The original arguments from construct_arguments.
-      toolchain: The rust toolchain.
-      dep_info: The dep info.
+      toolchain: The Rust toolchain.
+      original_args: Optional arguments from `construct_arguments` (for crate targets).
+      dep_info: Optional `DepInfo` whose direct and transitive crates provide `-Ldependency=`.
+
     Returns:
-      A struct containing our filtered arguments.
+      A struct with `process_wrapper_flags`, `rustc_flags`, and `supports_path_mapping`.
     """
     rustc_flags = ctx.actions.args()
-    rustc_flags.add_all(toolchain.rust_std_paths, before_each = "-L", format_each = "%s")
-    rustc_flags.add(toolchain.target_flag_value, format = "--target=%s")
-    crates = depset(
-        transitive = [
-            dep_info.direct_crates,
-            dep_info.transitive_crates,
-        ],
-    )
     rustc_flags.add_all(
-        crates,
-        map_each = _get_crate_dirname,
+        toolchain.rust_std,
+        before_each = "-L",
+        map_each = _get_dirname,
         uniquify = True,
-        format_each = "-Ldependency=%s",
+    )
+    rustc_flags.add(toolchain.target_flag_value, format = "--target=%s")
+    if dep_info != None:
+        crates = depset(
+            transitive = [
+                dep_info.direct_crates,
+                dep_info.transitive_crates,
+            ],
+        )
+        rustc_flags.add_all(
+            crates,
+            map_each = _get_crate_dirname,
+            uniquify = True,
+            format_each = "-Ldependency=%s",
+        )
+    supports_path_mapping = (
+        getattr(original_args, "supports_path_mapping", False) if original_args != None else True
     )
     if toolchain._toolchain_generated_sysroot:
-        rustc_flags.add(toolchain.sysroot, format = "--sysroot=%s")
-    args = struct(
-        process_wrapper_flags = original_args.process_wrapper_flags,
-        rustc_path = original_args.rustc_path,
+        sysroot_anchor = getattr(toolchain, "sysroot_anchor", None)
+        if sysroot_anchor != None:
+            rustc_flags.add_all(
+                [sysroot_anchor],
+                map_each = _get_dirname,
+                format_each = "--sysroot=%s",
+            )
+        else:
+            rustc_flags.add(toolchain.sysroot, format = "--sysroot=%s")
+            supports_path_mapping = False
+    return struct(
+        process_wrapper_flags = (
+            original_args.process_wrapper_flags if original_args != None else ctx.actions.args()
+        ),
         rustc_flags = rustc_flags,
-        all = [original_args.process_wrapper_flags, original_args.rustc_path, rustc_flags],
+        supports_path_mapping = supports_path_mapping,
     )
-    return args
 
-def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, is_golden_test_override = None, target_denied_features = []):
+def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, is_golden_test_override = None, target_denied_features = [], ignore_symbols_from_files = []):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
@@ -205,6 +228,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
       self_rmeta: The rmeta file for the current crate.
       is_golden_test_override: Overrides value of `--is-golden-test` flag instead of checking for the transition.
       target_denied_features: Features denied for this target by `SUPPORTED_FEATURE_DENYLISTS`, overriding `--default-features`.
+      ignore_symbols_from_files: List of Files whose symbols should be ignored (passed via `--ignore-symbols-from-files`).
 
     Returns:
       A tuple of (GeneratedBindingsInfo, features, current_config, output_depset).
@@ -266,7 +290,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         error_report_output = ctx.actions.declare_file(basename + "_cc_api_error_report.json")
         crubit_args.add(
             "--error-report-out",
-            error_report_output.path,
+            error_report_output,
         )
         outputs.append(error_report_output)
     current_config = config.get("self", None)
@@ -281,11 +305,16 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         if flag.startswith("--source-crate-name="):
             self_crate_name = flag.removeprefix("--source-crate-name=")
         crubit_args.add(flag)
+    if ignore_symbols_from_files:
+        crubit_args.add_all(
+            ignore_symbols_from_files,
+            format_each = "--ignore-symbols-from-files=%s",
+        )
     if self_crate_name == None:
         self_crate_name = crate_name
         crubit_args.add("--source-crate-name", self_crate_name)
         if self_rmeta != None:
-            crubit_args.add("--extern={}={}".format(self_crate_name, self_rmeta.path))
+            crubit_args.add(self_rmeta, format = "--extern=" + self_crate_name + "=%s")
 
     crubit_args.add("--enable-rmeta-interface")
     crubit_args.add("--portable-abi-compatible")
@@ -305,13 +334,24 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         )
     else:
         toolchain = toolchain.cc_bindings_from_rs_toolchain_info
+        tool_args = ctx.actions.args()
+        action_env = rustc_env | verbose_log_env | _add_rustc_lib_env(ctx, tool_args)
+        tool_args.add("--", toolchain.binary)
+        out_dir_prefix = ctx.bin_dir.path.split("/")[0] + "/"
+        supports_path_mapping = (
+            args.supports_path_mapping and
+            not any([
+                out_dir_prefix in v
+                for v in action_env.values()
+            ])
+        )
         ctx.actions.run(
             outputs = outputs,
             inputs = depset(
                 [f for f in [ctx.file._rustfmt_cfg, self_rmeta] if f != None],
                 transitive = [inputs],
             ),
-            env = rustc_env | verbose_log_env | _rustc_lib_env(ctx),
+            env = action_env,
             tools = [toolchain.binary, ctx.executable._rustfmt, ctx.executable._clang_format],
             executable = ctx.executable._process_wrapper,
             mnemonic = "CcBindingsFromRust",
@@ -322,7 +362,8 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
             # That said, if we passed arguments to crubit via environment variables or via flags that
             # can be interleaved with rustc flags in any order, and if we used toolchain.binary
             # as the tool_path for construct_arguments, then this could be `args.all` instead.
-            arguments = [args.process_wrapper_flags, "--", toolchain.binary.path, crubit_args, args.rustc_flags],
+            arguments = [args.process_wrapper_flags, tool_args, crubit_args, args.rustc_flags],
+            execution_requirements = {"supports-path-mapping": ""} if supports_path_mapping else None,
             toolchain = "//cc_bindings_from_rs/bazel_support:toolchain_type",
         )
 
@@ -495,7 +536,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         use_json_output = False,
         skip_expanding_rustc_env = True,
     )
-    args = _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info)
+    args = _build_crubit_rustc_args(ctx, toolchain, original_args = original_args, dep_info = dep_info)
 
     if target[CrateInfo].metadata != None:
         rmeta = target[CrateInfo].metadata
@@ -507,17 +548,17 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     target_denied_features = find_denied_crubit_features(target, ctx)
     cli_flags = collect_cc_bindings_from_rust_cli_flags(target, ctx)
 
-    ignore_symbols_from_files = depset(transitive = [
-        dep[RustBindingsFromCcInfo].additional_rust_srcs
-        for dep in getattr(ctx.rule.attr, "deps", []) + getattr(ctx.rule.attr, "cc_deps", [])
-        if RustBindingsFromCcInfo in dep
-    ])
-    for file in ignore_symbols_from_files.to_list():
+    ignore_symbols_from_files = [
+        file
+        for file in depset(transitive = [
+            dep[RustBindingsFromCcInfo].additional_rust_srcs
+            for dep in getattr(ctx.rule.attr, "deps", []) + getattr(ctx.rule.attr, "cc_deps", [])
+            if RustBindingsFromCcInfo in dep
+        ]).to_list()
         # These are internal to Crubit and we want them receive bindings despite being in additional
         # sources.
-        if "cc_std_impl" in file.path or "cc_std_impl" in file.short_path:
-            continue
-        cli_flags.append("--ignore-symbols-from-files=" + file.path)
+        if "cc_std_impl" not in file.path and "cc_std_impl" not in file.short_path
+    ]
     stdlib_info = ctx.attr._stdlib_bindings[CcBindingsFromRustInfo]
     stdlib_bindings_infos = [stdlib_info] + stdlib_info.transitive_infos.to_list()
     dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr) + stdlib_bindings_infos
@@ -545,6 +586,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         proto_crate_renames = proto_crate_renames,
         self_rmeta = rmeta,
         target_denied_features = target_denied_features,
+        ignore_symbols_from_files = ignore_symbols_from_files,
     )
 
     dep_variant_info = _compile_rs_out_file(ctx, ctx.rule.attr, bindings_info.rust_file, target[CrateInfo].name, [target])
@@ -793,22 +835,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
         lint_files = [],
     )
 
-    rustc_flags = ctx.actions.args()
-    rustc_flags.add_all(toolchain.rust_std_paths, before_each = "-L", format_each = "%s")
-    rustc_flags.add(toolchain.target_flag_value, format = "--target=%s")
-
-    # Ensure the sysroot is set for the target platform
-    if toolchain._toolchain_generated_sysroot:
-        rustc_flags.add(toolchain.sysroot, format = "--sysroot=%s")
-
-    process_wrapper_flags = ctx.actions.args()
-    rustc_path = ctx.actions.args()
-    args = struct(
-        process_wrapper_flags = process_wrapper_flags,
-        rustc_path = rustc_path,
-        rustc_flags = rustc_flags,
-        all = [process_wrapper_flags, rustc_path, rustc_flags],
-    )
+    args = _build_crubit_rustc_args(ctx, toolchain)
 
     env = {
         "CARGO_PKG_NAME": crate_name,

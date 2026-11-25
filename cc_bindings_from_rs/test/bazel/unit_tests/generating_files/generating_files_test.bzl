@@ -199,6 +199,41 @@ def _cmdline_flags_test_impl(ctx):
 
 cmdline_flags_test = crubit_make_analysis_test(_cmdline_flags_test_impl)
 
+def _path_mapping_test_impl(ctx):
+    env = analysistest.begin(ctx)
+
+    bindings_action = _find_action_by_mnemonic(env, "CcBindingsFromRust")
+    asserts.true(
+        env,
+        "supports-path-mapping" in bindings_action.execution_info,
+        "Expected supports-path-mapping in CcBindingsFromRust execution_info, got {}.".format(
+            bindings_action.execution_info,
+        ),
+    )
+    out_dir_prefix = analysistest.target_bin_dir_path(env).split("/")[0] + "/"
+    for key, val in bindings_action.env.items():
+        asserts.false(
+            env,
+            out_dir_prefix in val,
+            "Expected no raw output-root path in CcBindingsFromRust env[{}], got {}.".format(key, val),
+        )
+    if "LD_LIBRARY_PATH" in bindings_action.env:
+        asserts.equals(
+            env,
+            "${rustc_lib_dir}",
+            bindings_action.env["LD_LIBRARY_PATH"],
+            "Expected LD_LIBRARY_PATH to use process_wrapper placeholder",
+        )
+        asserts.true(
+            env,
+            _has_arg_with_prefix(bindings_action.argv, "rustc_lib_dir="),
+            "Expected --subst rustc_lib_dir=... in argv, got {}.".format(bindings_action.argv),
+        )
+
+    return analysistest.end(env)
+
+path_mapping_test = crubit_make_analysis_test(_path_mapping_test_impl)
+
 def _tests():
     rust_library(
         name = "rusty_lib",
@@ -223,6 +258,11 @@ def _tests():
         target_under_test = ":rusty_lib_bindings",
     )
 
+    path_mapping_test(
+        name = "path_mapping_test",
+        target_under_test = ":rusty_lib_bindings",
+    )
+
 def generating_files_test(name):
     """Sets up generating_files_test test suite.
 
@@ -235,5 +275,6 @@ def generating_files_test(name):
         tests = [
             ":header_generation_test",
             ":cmdline_flags_test",
+            ":path_mapping_test",
         ],
     )
