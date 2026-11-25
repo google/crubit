@@ -363,30 +363,61 @@ impl BindingGenerationContext {
     }
 
     fn find_stdlib_rmetas(lib_dir: &Utf8Path) -> Result<Vec<(String, Utf8PathBuf)>> {
-        let libs = ["core", "alloc", "std", "proc_macro"];
-        let mut rmetas = vec![(String::default(), Utf8PathBuf::default()); 4];
         // This order is important because we rely on it to determine what standard library
-        // crates depend on each other. std depends on core and alloc, alloc depends on core, etc.
+        // crates depend on each other: `std` depends on `core` and `alloc`, `alloc` depends on
+        // `core`, etc.
+        let libs = ["core", "alloc", "std", "proc_macro"];
+        let mut rmetas: [Option<Utf8PathBuf>; 4] = Default::default();
+        let mut rlibs: [Option<Utf8PathBuf>; 4] = Default::default();
+
+        let mut paths = Vec::new();
         for entry in std::fs::read_dir(lib_dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            let Some(ext) = path.extension() else {
+            paths.push(entry?.path());
+        }
+        paths.sort();
+
+        for path in paths {
+            let Some(ext) = path.extension().and_then(|s| s.to_str()) else {
                 continue;
             };
-            if ext != "rmeta" {
-                continue;
-            }
+            let target_slot = match ext {
+                "rmeta" => &mut rmetas,
+                "rlib" => &mut rlibs,
+                _ => continue,
+            };
             let Some(file_name) = path.file_name().and_then(|s| s.to_str()) else {
                 continue;
             };
             for (i, lib) in libs.iter().enumerate() {
-                if file_name.starts_with(&format!("lib{}-", lib)) {
-                    rmetas[i] = (lib.to_string(), Utf8PathBuf::from_path_buf(path).unwrap());
+                if file_name.starts_with(&format!("lib{lib}-")) {
+                    target_slot[i] = Some(
+                        Utf8PathBuf::from_path_buf(path)
+                            .map_err(|p| anyhow!("Non-UTF-8 stdlib path: {}", p.display()))?,
+                    );
                     break;
                 }
             }
         }
-        Ok(rmetas)
+        Ok(libs
+            .into_iter()
+            .zip(rmetas.into_iter().zip(rlibs))
+            .filter_map(|(lib, (rmeta, rlib))| rmeta.or(rlib).map(|p| (lib.to_string(), p)))
+            .collect())
+    }
+
+    fn stdlib_prelude(stdlib_crates: &[(String, Utf8PathBuf)]) -> String {
+        let has_crate = |name: &str| stdlib_crates.iter().any(|(crate_name, _)| crate_name == name);
+        let mut content = String::from("\n");
+        if !has_crate("std") {
+            content.push_str("#![no_std]\n");
+        }
+        for crate_name in ["alloc", "core", "proc_macro"] {
+            if has_crate(crate_name) {
+                content.push_str(&format!("extern crate {crate_name};\n"));
+            }
+        }
+        content.push('\n');
+        content
     }
 
     fn generate_crate_bindings(
@@ -524,16 +555,7 @@ impl BindingGenerationContext {
 
         // 1. Locate standard library crates and generate bindings for them first.
         let stdlib_crates = Self::find_stdlib_rmetas(&self.toolchain_paths.target_libdir)?;
-        let has_std = stdlib_crates.iter().any(|(name, _)| name == "std");
-        let no_std = if has_std { "" } else { "#![no_std]\n" };
-        let mut lib_rs_content = format!(
-            r#"
-{no_std}extern crate alloc;
-extern crate core;
-extern crate proc_macro;
-
-"#
-        );
+        let mut lib_rs_content = Self::stdlib_prelude(&stdlib_crates);
         let mut stdlib_externs = Vec::new();
         for (crate_name, rmeta_path) in &stdlib_crates {
             let rs_crate_name = format!("{}_cc_api", crate_name.replace('-', "_"));
@@ -905,8 +927,6 @@ mod tests {
         assert_eq!(cmdline.target.as_deref(), Some("aarch64-unknown-linux-gnu"));
     }
 
-    use super::*;
-
     #[test] // allow_core_test
     fn test_determine_profile_dir_standard_layouts() {
         let target_dir = Utf8Path::new("/tmp/target");
@@ -1020,5 +1040,85 @@ mod tests {
         let resolved = resolve_target_dir(Utf8Path::new("rel/target")).unwrap();
         assert!(resolved.is_absolute());
         assert!(resolved.as_str().ends_with("rel/target"));
+    }
+
+    fn write_placeholder_files(dir: &std::path::Path, names: &[&str]) {
+        for name in names {
+            fs::write(dir.join(name), b"").unwrap();
+        }
+    }
+
+    #[test] // allow_core_test
+    fn test_find_stdlib_rmetas_prefers_rmeta_and_falls_back_to_rlib() {
+        let tmp = tempfile::tempdir().unwrap();
+        let lib_dir = Utf8PathBuf::try_from(tmp.path().to_path_buf()).unwrap();
+        write_placeholder_files(
+            tmp.path(),
+            &[
+                "libstd-4444.rlib",
+                "libcore-1111.rlib",
+                "libcore-1111.rmeta",
+                "liballoc-2222.rmeta",
+                "libproc_macro-3333.rlib",
+                "liblibc-5555.rlib",
+                "libcore_extra-6666.rmeta",
+                "libstd-4444.so",
+            ],
+        );
+
+        let found = BindingGenerationContext::find_stdlib_rmetas(&lib_dir).unwrap();
+        let summary: Vec<(&str, &str)> =
+            found.iter().map(|(name, p)| (name.as_str(), p.file_name().unwrap())).collect();
+        assert_eq!(
+            summary,
+            vec![
+                ("core", "libcore-1111.rmeta"),
+                ("alloc", "liballoc-2222.rmeta"),
+                ("std", "libstd-4444.rlib"),
+                ("proc_macro", "libproc_macro-3333.rlib"),
+            ]
+        );
+    }
+
+    #[test] // allow_core_test
+    fn test_find_stdlib_rmetas_omits_absent_crates() {
+        let tmp = tempfile::tempdir().unwrap();
+        let lib_dir = Utf8PathBuf::try_from(tmp.path().to_path_buf()).unwrap();
+        write_placeholder_files(
+            tmp.path(),
+            &["libcore-1111.rlib", "libcompiler_builtins-9999.rlib"],
+        );
+
+        let found = BindingGenerationContext::find_stdlib_rmetas(&lib_dir).unwrap();
+        assert_eq!(found, vec![("core".to_string(), lib_dir.join("libcore-1111.rlib"))]);
+    }
+
+    #[test] // allow_core_test
+    fn test_stdlib_prelude_matches_present_crates() {
+        let full = vec![
+            ("core".to_string(), Utf8PathBuf::from("libcore.rlib")),
+            ("alloc".to_string(), Utf8PathBuf::from("liballoc.rlib")),
+            ("std".to_string(), Utf8PathBuf::from("libstd.rlib")),
+            ("proc_macro".to_string(), Utf8PathBuf::from("libproc_macro.rlib")),
+        ];
+        assert_eq!(
+            BindingGenerationContext::stdlib_prelude(&full),
+            "\nextern crate alloc;\nextern crate core;\nextern crate proc_macro;\n\n"
+        );
+
+        let core_and_alloc = vec![
+            ("core".to_string(), Utf8PathBuf::from("libcore.rlib")),
+            ("alloc".to_string(), Utf8PathBuf::from("liballoc.rlib")),
+        ];
+        assert_eq!(
+            BindingGenerationContext::stdlib_prelude(&core_and_alloc),
+            "\n#![no_std]\nextern crate alloc;\nextern crate core;\n\n"
+        );
+
+        let core_only = vec![("core".to_string(), Utf8PathBuf::from("libcore.rlib"))];
+        assert_eq!(
+            BindingGenerationContext::stdlib_prelude(&core_only),
+            "\n#![no_std]\nextern crate core;\n\n"
+        );
     }
 }
