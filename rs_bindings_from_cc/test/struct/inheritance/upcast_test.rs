@@ -49,6 +49,80 @@ fn test_virtual_upcast() {
 }
 
 #[gtest]
+fn test_virtual_base_with_derived_fields_layout_and_upcast() {
+    use upcast::virtual_inheritance::*;
+
+    let canary_before: u64 = 0xDEAD_BEEF_CAFE_BABE;
+    let derived = emplace!(DerivedWithFieldAndVirtualBase::ctor_new((7i8, 999i64)));
+    let canary_after: u64 = 0x0123_4567_89AB_CDEF;
+
+    assert_eq!(derived.derived_field, 7i8);
+    assert_eq!(derived.read_base_value(), 999);
+
+    derived.increment_counter();
+    assert_eq!(derived.get_counter(), 1);
+
+    let vbase_ptr: *const VirtualBaseWithData =
+        unsafe { (&*derived as *const DerivedWithFieldAndVirtualBase).virtual_upcast() };
+    assert_eq!(vbase_ptr as usize, derived.base_address());
+    assert_eq!(unsafe { (*vbase_ptr).base_value }, 999);
+    unsafe { (*vbase_ptr).increment_counter() };
+    assert_eq!(derived.get_counter(), 2);
+
+    assert_eq!(core::hint::black_box(canary_before), 0xDEAD_BEEF_CAFE_BABE);
+    assert_eq!(core::hint::black_box(canary_after), 0x0123_4567_89AB_CDEF);
+}
+
+#[gtest]
+fn test_diamond_virtual_inheritance_with_fields() {
+    use upcast::virtual_inheritance::*;
+
+    let canary_before: u64 = 0x1111_2222_3333_4444;
+    let diamond = emplace!(DiamondFinal::ctor_new((111, 222, 33i8, 4444i64)));
+    let canary_after: u64 = 0x5555_6666_7777_8888;
+
+    assert_eq!(diamond.final_field, 33i8);
+
+    let left: &DiamondLeft = unsafe { (&*diamond).upcast() };
+    assert_eq!(left as *const _ as usize, diamond.left_address());
+    assert_eq!(left.left_field, 111);
+
+    let right: &DiamondRight = unsafe { (&*diamond).upcast() };
+    assert_eq!(right as *const _ as usize, diamond.right_address());
+    assert_eq!(right.right_field, 222);
+
+    let vbase_from_final: *const VirtualBaseWithData =
+        unsafe { (&*diamond as *const DiamondFinal).virtual_upcast() };
+    let vbase_from_left: *const VirtualBaseWithData =
+        unsafe { (left as *const DiamondLeft).virtual_upcast() };
+    let vbase_from_right: *const VirtualBaseWithData =
+        unsafe { (right as *const DiamondRight).virtual_upcast() };
+    assert_eq!(vbase_from_final as usize, diamond.vbase_address());
+    assert_eq!(vbase_from_left as usize, diamond.vbase_address());
+    assert_eq!(vbase_from_right as usize, diamond.vbase_address());
+    assert_eq!(unsafe { (*vbase_from_final).base_value }, 4444);
+
+    assert_eq!(core::hint::black_box(canary_before), 0x1111_2222_3333_4444);
+    assert_eq!(core::hint::black_box(canary_after), 0x5555_6666_7777_8888);
+}
+
+#[gtest]
+fn test_overaligned_virtual_base_with_derived_field() {
+    use upcast::virtual_inheritance::*;
+
+    assert_eq!(core::mem::align_of::<DerivedFromOveralignedVirtualBase>(), 32);
+    let derived = emplace!(DerivedFromOveralignedVirtualBase::ctor_new(()));
+    assert_eq!((&*derived as *const _ as usize) % 32, 0);
+    assert_eq!(derived.derived_field, 5i8);
+
+    let vbase_ptr: *const OveralignedVirtualBase =
+        unsafe { (&*derived as *const DerivedFromOveralignedVirtualBase).virtual_upcast() };
+    assert_eq!(vbase_ptr as usize, derived.base_address());
+    assert_eq!((vbase_ptr as usize) % 32, 0);
+    assert_eq!(unsafe { (*vbase_ptr).data }, 77);
+}
+
+#[gtest]
 fn test_upcast_thunk_name_uniqueness() {
     let derived = emplace!(another_namespace::VirtualBase2::ctor_new(()));
     let derived = &*derived;

@@ -30,6 +30,10 @@ class VirtualBase2 : public virtual Base1 {};
 class VirtualDerived : public virtual VirtualBase1,
                        public virtual VirtualBase2 {};
 
+struct VirtualDerivedWithField : public virtual Base1 {
+  char derived_1;
+};
+
 class MyAbstractClass {
   virtual void PureVirtualMethod() = 0;
   virtual ~MyAbstractClass();

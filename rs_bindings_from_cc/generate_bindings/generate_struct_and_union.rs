@@ -823,7 +823,11 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
             .any(|f| db.field_rs_type_kind_for_layout(&record, f).is_ok_and(|k| !k.is_unpin()));
 
     // Adjust the struct to also include base class subobjects, vtables, etc.
-    let head_padding_bytes = if let Some(first_field) = record.fields().first() {
+    let head_padding_bytes = if let Some(first_field) = fields_with_bounds.first() {
+        first_field.offset / 8
+    } else if let Some(first_field) = record.fields().first()
+        && !record.has_virtual_bases()
+    {
         first_field.offset() / 8
     } else {
         record.size_align().size()
@@ -846,6 +850,24 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
     let allow_direct_init = record.is_aggregate() || record.is_union();
     let head_padding =
         if head_padding_bytes > 0 || !allow_direct_init { Some(head_padding_bytes) } else { None };
+    // Virtual base class subobjects are laid out after the direct non-static data
+    // members. When the last emitted field has a known end (so it was not already
+    // stretched to `record.size_align().size()` as an opaque blob), cover the
+    // trailing virtual base subobjects and padding explicitly.
+    let tail_padding = if record.has_virtual_bases()
+        && let Some(last_field) = fields_with_bounds.last()
+        && let Some(last_field_end) = last_field.end
+    {
+        let fields_end_bytes = last_field_end.div_ceil(8);
+        let tail_padding_bytes = record
+            .size_align()
+            .size()
+            .checked_sub(fields_end_bytes)
+            .expect("end of last field cannot exceed record size");
+        (tail_padding_bytes > 0).then_some(tail_padding_bytes)
+    } else {
+        None
+    };
     let unrepresented = unrepresented_subobjects(&record, head_padding_bytes, &field_definitions);
 
     api_snippets.cc_details.push(cc_struct_layout_assertion(db, &record)?);
@@ -1201,6 +1223,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         id: record.id(),
         head_padding,
         field_definitions,
+        tail_padding,
         send: send_sync_impl(
             db,
             &record,

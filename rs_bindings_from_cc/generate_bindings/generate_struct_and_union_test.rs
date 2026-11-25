@@ -3404,3 +3404,127 @@ fn test_c_array_feature_gating() -> Result<()> {
 
     Ok(())
 }
+
+#[gtest]
+fn test_virtual_base_subobject_layout() -> Result<()> {
+    let no_unique_address_attr = test_platform().no_unique_address_attr();
+    let rs_api = generate_bindings_tokens_from_cc(&format!(
+        r#"
+        struct VirtualBase {{
+            __INT64_TYPE__ x;
+        }};
+        struct SmallVirtualBase {{
+            __INT32_TYPE__ x;
+        }};
+        struct Empty {{}};
+        struct DerivedWithField : virtual VirtualBase {{
+            char derived_field;
+        }};
+        struct DerivedSmallVBase : virtual SmallVirtualBase {{
+            __INT32_TYPE__ derived_field;
+        }};
+        struct DerivedBitfield : virtual VirtualBase {{
+            int b : 3;
+        }};
+        struct DerivedOnlyEmptyField : virtual VirtualBase {{
+            {no_unique_address_attr} Empty empty_field;
+        }};
+        struct DerivedEmptyBeforeRegularField : virtual VirtualBase {{
+            {no_unique_address_attr} Empty empty_field;
+            __INT32_TYPE__ derived_field;
+        }};
+        "#
+    ))?
+    .rs_api;
+
+    let ptr_size = test_platform().pointer_size();
+    let head = Literal::usize_unsuffixed(ptr_size);
+    let vbase_offset = (ptr_size + 1).next_multiple_of(8);
+    let total_size = vbase_offset + 8;
+    let tail = Literal::usize_unsuffixed(total_size - (ptr_size + 1));
+    let total_size_lit = Literal::usize_unsuffixed(total_size);
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[repr(C, align(8))]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DerivedWithField")]
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+            pub struct DerivedWithField {
+                __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #head],
+                pub derived_field: ::ffi_11::c_char,
+                __trailing_non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #tail],
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            assert!(::core::mem::size_of::<crate::DerivedWithField>() == #total_size_lit);
+            assert!(::core::mem::align_of::<crate::DerivedWithField>() == 8);
+        }
+    );
+
+    // Even when `SmallVirtualBase` fits inside the 8-byte alignment rounding of `DerivedSmallVBase`
+    // under the Itanium ABI (`8 + 4 + 4 == 16`), explicit `Cell` bytes must be emitted for it
+    // rather than leaving the virtual base subobject in implicit Rust struct padding.
+    let small_tail =
+        Literal::usize_unsuffixed(if test_platform().uses_msvc_cxx_abi() && ptr_size == 8 {
+            12
+        } else {
+            4
+        });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct DerivedSmallVBase {
+                __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #head],
+                pub derived_field: ::ffi_11::c_int,
+                __trailing_non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #small_tail],
+            }
+        }
+    );
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct DerivedBitfield {
+                __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #head],
+                #[doc = " * `b` : 3 bits."]
+                __bitfields0: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
+                __trailing_non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #tail],
+            }
+        }
+    );
+
+    let only_empty_size =
+        Literal::usize_unsuffixed(if test_platform().uses_msvc_cxx_abi() && ptr_size == 8 {
+            24
+        } else {
+            16
+        });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct DerivedOnlyEmptyField {
+                __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #only_empty_size],
+            }
+        }
+    );
+
+    let after_int_vbase_offset = (ptr_size + 4).next_multiple_of(8);
+    let empty_before_reg_tail =
+        Literal::usize_unsuffixed(after_int_vbase_offset + 8 - (ptr_size + 4));
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct DerivedEmptyBeforeRegularField {
+                __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #head],
+                pub derived_field: ::ffi_11::c_int,
+                __trailing_non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #empty_before_reg_tail],
+            }
+        }
+    );
+
+    Ok(())
+}
