@@ -51,6 +51,35 @@ fn test_disable_thread_safety_warnings() -> Result<()> {
     Ok(())
 }
 
+/// Generated headers are passed to Crubit by their `bazel-out/<config>/bin/` execroot path, but
+/// the `#include` in `rs_api_impl` must be workspace-relative to work under Bazel path mapping.
+#[gtest]
+fn test_rs_api_impl_includes_public_headers_without_output_dir_prefix() -> Result<()> {
+    let mut proto = ir_proto_from_cc("inline void foo() {}")?;
+    proto.set_public_headers(
+        [
+            "bazel-out/k8-fastbuild/bin/foo/bar/generated.h",
+            "bazel-out/k8-opt-exec-ST-abc123/genfiles/foo/bar/generated_too.h",
+            "foo/bar/source.h",
+            "bazel-out/not/an/output_dir.h",
+        ]
+        .into_iter()
+        .map(ir::HeaderName::from_str)
+        .collect(),
+    );
+    let rs_api_impl = generate_bindings_tokens_for_test(make_test_ir(&proto)?)?.rs_api_impl;
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            __HASH_TOKEN__ include "foo/bar/generated.h"
+            __HASH_TOKEN__ include "foo/bar/generated_too.h"
+            __HASH_TOKEN__ include "foo/bar/source.h"
+            __HASH_TOKEN__ include "bazel-out/not/an/output_dir.h"
+        }
+    );
+    Ok(())
+}
+
 #[gtest]
 fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } =

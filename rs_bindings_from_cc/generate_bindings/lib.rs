@@ -1628,10 +1628,33 @@ fn generate_rs_api_impl_includes(
     // first - e.g. `config.h`).
     let ir_includes = ir
         .public_headers()
-        .map(|hdr| CcInclude::user_header(intern!(db.interner(), "{}", hdr.name())))
+        .map(|hdr| {
+            CcInclude::user_header(intern!(
+                db.interner(),
+                "{}",
+                strip_output_dir_prefix(hdr.name())
+            ))
+        })
         .collect_vec();
 
     CppIncludes { internal_includes, ir_includes }
+}
+
+/// Strips the `bazel-out/<config>/{bin,genfiles}/` prefix from the path of a generated
+/// header, so that the `#include` emitted into the `_rust_api_impl.cc` is workspace-relative.
+///
+/// Generated headers are passed to `rs_bindings_from_cc` by their execroot path, which embeds the
+/// build configuration. Including them by that path breaks the compile of `_rust_api_impl.cc`
+/// under Bazel path mapping (https://github.com/bazelbuild/bazel/discussions/22658), whereas the
+/// workspace-relative path is always resolvable through the `-iquote` output directory flags.
+fn strip_output_dir_prefix(path: &str) -> &str {
+    let Some(rest) = path.strip_prefix("bazel-out/") else {
+        return path;
+    };
+    let Some((_config, subpath)) = rest.split_once('/') else {
+        return path;
+    };
+    subpath.strip_prefix("bin/").or_else(|| subpath.strip_prefix("genfiles/")).unwrap_or(path)
 }
 
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
