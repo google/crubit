@@ -36,6 +36,7 @@ load(
     "@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
     "bindings_attrs",
     "generate_and_compile_bindings",
+    "get_alias_owner_label",
     "make_aliasable_dep_info",
 )
 
@@ -270,8 +271,7 @@ def _get_additional_aliases(aspect_ctx):
         if AdditionalRustSrcsProviderInfo in hint:
             provider = hint[AdditionalRustSrcsProviderInfo]
             if hasattr(provider, "aliases") and provider.aliases:
-                for label, alias_name in provider.aliases.items():
-                    aliases[struct(label = label)] = alias_name
+                aliases.update(provider.aliases)
     return aliases
 
 def _get_cpp_deps(aspect_ctx):
@@ -529,19 +529,14 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     ]
 
     if use_label_encoded_names_for_deps:
-        # Use label-encoded crate names for each direct dependency of the cc_library
-        # by default. These are already set up as extra_named_deps below, but here
-        # we need to still use some fully qualified name to avoid crate naming
-        # collisions, since, by default, each dependency is presented under its
-        # crate_info.name unless overridden by `aliases`.
-        for dep in all_deps:
-            if RustBindingsFromCcInfo in dep:
-                if struct(label = dep.label) not in aliases:
-                    aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
+        aliased_owners = {
+            get_alias_owner_label(k): True
+            for k in aliases
+        }
 
         # Collect dependencies of manual bindings attached to this target.
         # The Rust sources of manual bindings expect their dependencies to be
-        # available as under their regular (non-mangled) names, e.g.,:
+        # available under their regular (non-mangled) names, e.g.,:
         #
         #   rust_api_from_cpp(srcs = ["bar.rs], deps = ["//rust/crate:foo"])
         #   # bar.rs
@@ -550,23 +545,38 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         # If two such distinct dependencies share a name, there is an ambiguity
         # and we don't make that name available.
         #
-        # Note that it's possible that a dependency is present both here and as
-        # a direct dependency of the cc_library (handled in the code block above).
-        # In that case, we still present the dependency under its regular
-        # non-mangled name, so that its available to manual bindings.
+        # Because `rules_rust` defaults any unaliased dependency to `crate_info.name`,
+        # skipping label-encoded mangling for direct C++ dependencies that also appear
+        # unambiguously in `extra_deps` exposes them under their regular non-mangled name
+        # (while generated bindings still access them via `extra_named_deps`).
         name_counts = {}
         for dep in extra_deps:
             if dep.crate_info:
                 name = dep.crate_info.name
                 name_counts[name] = name_counts.get(name, 0) + 1
 
-        for dep in extra_deps:
-            if dep.crate_info:
-                name = dep.crate_info.name
-                if name_counts[name] == 1:
-                    label = dep.crate_info.owner
-                    if struct(label = label) not in aliases:
-                        aliases[struct(label = label)] = name
+        unmangled_extra_dep_owners = {
+            dep.crate_info.owner: True
+            for dep in extra_deps
+            if dep.crate_info and name_counts[dep.crate_info.name] == 1
+        }
+
+        # Use label-encoded crate names for each direct dependency of the cc_library
+        # by default. These are already set up as extra_named_deps below, but here
+        # we need to still use some fully qualified name to avoid crate naming
+        # collisions, since, by default, each dependency is presented under its
+        # crate_info.name unless overridden by `aliases`.
+        for dep in all_deps:
+            if RustBindingsFromCcInfo in dep:
+                dep_variant = dep[RustBindingsFromCcInfo].dep_variant_info
+                owner = dep_variant.crate_info.owner if (dep_variant and dep_variant.crate_info) else dep.label
+                if (
+                    owner not in aliased_owners and
+                    dep.label not in aliased_owners and
+                    owner not in unmangled_extra_dep_owners and
+                    dep.label not in unmangled_extra_dep_owners
+                ):
+                    aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
 
     compilation_context = target[CcInfo].compilation_context
     if cpp_deps or extra_cpp_srcs:

@@ -128,18 +128,6 @@ def make_additional_rust_srcs_provider(
     )
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
-    aliases = {}
-    for target, alias_name in ctx.attr.aliases.items():
-        # Handle two cases for aliases keys:
-        # 1. rust_library or rust_api_from_cpp target: provides CrateInfo, we resolve it to the
-        #    owner of the CrateInfo (which is the C++ target being bound).
-        # 2. cc_library target: does not always provide CrateInfo, we use its label directly.
-        if CrateInfo in target:
-            label = target[CrateInfo].owner
-        else:
-            label = target.label
-        aliases[label] = alias_name
-
     if ctx.attr.warn_on_raw_cc_deps:
         for dep in ctx.attr.deps:
             if CcInfo in dep and CrateInfo not in dep:
@@ -173,7 +161,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.cpp_deps,
         ctx.attr.unstable_rust_features,
         ctx.attr.root_namespaces,
-        aliases = aliases,
+        aliases = ctx.attr.aliases,
         link_deps = ctx.attr.link_deps,
         compile_data = ctx.files.compile_data,
         compile_data_targets = ctx.attr.compile_data,

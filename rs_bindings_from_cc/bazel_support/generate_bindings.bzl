@@ -185,8 +185,14 @@ def generate_bindings(
         # mode, the crosstool `pic` feature adds the PIC flags (`-fPIC` etc.) to the
         # `rs-bindings-from-cc` action, which Clang needs to accept the `.pic.pcm` modules.
         use_pic = (
-            feature_configuration.is_enabled("pic") or
-            feature_configuration.is_enabled("supports_pic")
+            cc_common.is_enabled(
+                feature_configuration = feature_configuration,
+                feature_name = "pic",
+            ) or
+            cc_common.is_enabled(
+                feature_configuration = feature_configuration,
+                feature_name = "supports_pic",
+            )
         )
         header_module_variables = {
             "cpp_module_map": getattr(compilation_context, "_module_map", None),

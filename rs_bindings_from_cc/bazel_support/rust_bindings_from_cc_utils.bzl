@@ -270,7 +270,10 @@ def generate_and_compile_bindings(
         cc_toolchain,
         use_header_modules,
     )
-    if use_header_modules and not feature_configuration_for_bindings.is_enabled("use_header_modules"):
+    if use_header_modules and not cc_common.is_enabled(
+        feature_configuration = feature_configuration_for_bindings,
+        feature_name = "use_header_modules",
+    ):
         # The target doesn't use header modules, for example because it is built with
         # `features = ["-use_header_modules"]` (as the Kythe extractor does), or because the
         # toolchain doesn't support them. Handle it exactly as if header modules were disabled.
@@ -554,6 +557,17 @@ bindings_attrs = {
         default = "@rules_crubit//rs_bindings_from_cc/bazel_support:legacy_mangling_allowlist",
     ),
 }
+
+def get_alias_owner_label(target):
+    """Returns the owner label that `rules_rust` resolves an alias key target to.
+
+    Matches `rules_rust`'s `collect_deps` resolution: `target[CrateInfo].owner` when `target`
+    provides `CrateInfo` (e.g. a `rust_library` or `rust_api_from_cpp` target), and `target.label`
+    otherwise (e.g. a `cc_library` target).
+    """
+    if CrateInfo in target:
+        return target[CrateInfo].owner
+    return target.label
 
 def make_aliasable_dep_info(name, dep):
     """Constructs an AliasableDepInfo provider with an immutable CrateInfo.
