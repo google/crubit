@@ -18,10 +18,8 @@ path = "../../../../rs_bindings_from_cc/generate_bindings/generate_function.rs"
 doctest = false
 
 [dependencies]
-cpp_type_name = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/cpp_type_name", package = "rs_bindings_from_cc_cpp_type_name"}
 generate_comment = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_comment", package = "rs_bindings_from_cc_generate_comment"}
 generate_function_thunk = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function_thunk", package = "rs_bindings_from_cc_generate_function_thunk"}
-has_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/has_bindings", package = "rs_bindings_from_cc_has_bindings"}
 lifetime_defaults_transform = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform", package = "rs_bindings_from_cc_lifetime_defaults_transform"}
 rustversion = { path = "../../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}

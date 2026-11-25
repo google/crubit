@@ -18,6 +18,7 @@ path = "../../../../rs_bindings_from_cc/generate_bindings/test_generators.rs"
 doctest = false
 
 [dependencies]
+cc_api = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/cc_api", package = "rs_bindings_from_cc_cc_api"}
 generate_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings", package = "rs_bindings_from_cc_generate_bindings"}
 multiplatform_ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing", package = "rs_bindings_from_cc_multiplatform_ir_testing"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}

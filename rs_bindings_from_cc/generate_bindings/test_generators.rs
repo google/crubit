@@ -5,10 +5,11 @@
 //! Utilities for generating bindings in tests.
 
 use arc_anyhow::Result;
+use cc_api::new_database;
 use database::code_snippet::BindingsTokens;
 use database::db::{BindingsGenerator, Interner};
 use error_report::{bail, ErrorReport, FatalErrors, SourceLanguage};
-use generate_bindings::{generate_bindings_tokens, new_database};
+use generate_bindings::generate_bindings_tokens;
 use ir::IR;
 use ir_testing::{make_test_ir, make_test_ir_dependency};
 use multiplatform_ir_testing::{
@@ -67,16 +68,27 @@ pub fn generate_bindings_tokens_from_assumed_lifetimes_cc_dependency(
 
 pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
     let fatal_errors = FatalErrors::new();
-    let tokens = generate_bindings_tokens(
-        &ir,
-        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
-        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support/internal", &["unused"])
+    let tokens = {
+        let interner = Interner::default();
+        let db = new_database(
+            &ir,
+            &error_report::IgnoreErrors,
+            &fatal_errors,
+            false,
+            /* kythe_annotations= */ false,
+            &interner,
+        );
+        generate_bindings_tokens(
+            &db,
+            dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"])
+                .unwrap(),
+            dyn_format::Format::parse_with_metavars(
+                "crubit/rs_bindings_support/internal",
+                &["unused"],
+            )
             .unwrap(),
-        &error_report::IgnoreErrors,
-        &fatal_errors,
-        false,
-        /* kythe_annotations= */ false,
-    )?;
+        )?
+    };
     let fatal = fatal_errors.take_string();
     if !fatal.is_empty() {
         bail!("Fatal errors:{}", fatal)
@@ -86,16 +98,27 @@ pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
 
 pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR) -> Result<BindingsTokens> {
     let fatal_errors = FatalErrors::new();
-    let tokens = generate_bindings_tokens(
-        &ir,
-        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
-        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support/internal", &["unused"])
+    let tokens = {
+        let interner = Interner::default();
+        let db = new_database(
+            &ir,
+            &error_report::IgnoreErrors,
+            &fatal_errors,
+            false,
+            /* kythe_annotations= */ true,
+            &interner,
+        );
+        generate_bindings_tokens(
+            &db,
+            dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"])
+                .unwrap(),
+            dyn_format::Format::parse_with_metavars(
+                "crubit/rs_bindings_support/internal",
+                &["unused"],
+            )
             .unwrap(),
-        &error_report::IgnoreErrors,
-        &fatal_errors,
-        false,
-        /* kythe_annotations= */ true,
-    )?;
+        )?
+    };
     let fatal = fatal_errors.take_string();
     if !fatal.is_empty() {
         bail!("Fatal errors:{}", fatal)
@@ -110,16 +133,27 @@ pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR) -> Result<Bind
 pub fn generate_error_report_json_for_test(ir: IR) -> Result<String> {
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
-    generate_bindings_tokens(
-        &ir,
-        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
-        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support/internal", &["unused"])
+    {
+        let interner = Interner::default();
+        let db = new_database(
+            &ir,
+            &errors,
+            &fatal_errors,
+            false,
+            /* kythe_annotations= */ false,
+            &interner,
+        );
+        generate_bindings_tokens(
+            &db,
+            dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"])
+                .unwrap(),
+            dyn_format::Format::parse_with_metavars(
+                "crubit/rs_bindings_support/internal",
+                &["unused"],
+            )
             .unwrap(),
-        &errors,
-        &fatal_errors,
-        false,
-        /* kythe_annotations= */ false,
-    )?;
+        )?;
+    }
     let fatal = fatal_errors.take_string();
     if !fatal.is_empty() {
         bail!("Fatal errors:{}", fatal)

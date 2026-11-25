@@ -20,13 +20,7 @@ doctest = false
 [dependencies]
 cpp_type_name = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/cpp_type_name", package = "rs_bindings_from_cc_cpp_type_name"}
 generate_comment = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_comment", package = "rs_bindings_from_cc_generate_comment"}
-generate_enum = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_enum", package = "rs_bindings_from_cc_generate_enum"}
-generate_function = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function", package = "rs_bindings_from_cc_generate_function"}
-generate_function_thunk = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function_thunk", package = "rs_bindings_from_cc_generate_function_thunk"}
 generate_struct_and_union = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_struct_and_union", package = "rs_bindings_from_cc_generate_struct_and_union"}
-has_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/has_bindings", package = "rs_bindings_from_cc_has_bindings"}
-lifetime_defaults_transform = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform", package = "rs_bindings_from_cc_lifetime_defaults_transform"}
-rs_type_kind = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/rs_type_kind", package = "rs_bindings_from_cc_rs_type_kind"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
 crubit_abi_type = { path = "../../../../cargo/common/crubit_abi_type"}

@@ -7,7 +7,6 @@ use arc_anyhow::{anyhow, ensure, Context, Error, Result};
 use code_gen_utils::make_rs_lifetime_ident;
 use code_gen_utils::{
     format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, try_make_rs_ident, CcInclude,
-    CommonTokens,
 };
 use cpp_type_name::format_cpp_type_with_references;
 use crubit_abi_type::{
@@ -19,7 +18,7 @@ use database::code_snippet::{
     integer_literal_tokens, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes,
     DeprecatedAttr, Feature, GeneratedItem, ThunkImpl,
 };
-use database::db::{BindingsGenerator, CodegenFunctions, Interner};
+use database::db::BindingsGenerator;
 use database::intern;
 use database::rs_snippet::{
     resolve_bridge_rust_name, BackingType, BridgeRsTypeKind, Callable, CustomizeMethodsKind,
@@ -27,7 +26,7 @@ use database::rs_snippet::{
     PrimitiveName, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
 };
 use dyn_format::Format;
-use error_report::{bail, ErrorReporting, ReportFatalError};
+use error_report::bail;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_struct_and_union::generate_incomplete_record;
@@ -37,7 +36,6 @@ use kythe_metadata::rs_embed_provenance_map;
 
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
-use rs_type_kind::rs_type_kind_with_lifetime_elision;
 use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsStr;
 use std::fmt::Write;
@@ -50,19 +48,14 @@ use token_stream_printer::{
 
 mod generate_dyn_callable;
 
-/// Generates bindings source code from an `IR` instance.
-#[allow(clippy::too_many_arguments)]
+/// Generates bindings source code from a `BindingsGenerator` database.
 pub fn generate_bindings(
-    ir: &IR,
+    db: &BindingsGenerator<'_>,
     crubit_support_path_format: &str,
     crubit_support_versioned_path_format: &str,
     clang_format_exe_path: &OsStr,
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
-    errors: &dyn ErrorReporting,
-    fatal_errors: &dyn ReportFatalError,
-    is_golden_test: bool,
-    kythe_annotations: bool,
     kythe_default_corpus: &str,
 ) -> Result<Bindings> {
     let crubit_support_path_format =
@@ -78,16 +71,12 @@ pub fn generate_bindings(
         Format::parse_with_metavars(crubit_support_versioned_path_format, &["header"])?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(
-        ir,
+        db,
         crubit_support_path_format,
         crubit_support_versioned_path_format,
-        errors,
-        fatal_errors,
-        is_golden_test,
-        kythe_annotations,
     )?;
 
-    let top_level_comment = generate_top_level_comment(ir, is_golden_test);
+    let top_level_comment = generate_top_level_comment(db.ir(), db.is_golden_test());
 
     let rs_api: String = {
         let rustfmt_exe_path =
@@ -108,7 +97,7 @@ pub fn generate_bindings(
                 {rs_api}"
             )
         };
-        if kythe_annotations {
+        if db.kythe_annotations() {
             let (rs_api, provenance_map) =
                 rs_tokens_to_formatted_string_with_provenance(rs_api, rustfmt_config.as_ref())?;
             rs_embed_provenance_map(&provenance_map, kythe_default_corpus, adjust_rs_api(rs_api))
@@ -462,7 +451,7 @@ fn generate_namespace(db: &BindingsGenerator, namespace: FfiRc<Namespace>) -> Re
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.
-fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
+pub fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
     if let Some(owning_target) = item.owning_target()
         && !db.ir().is_current_target(&owning_target)
     {
@@ -585,66 +574,16 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
     Ok(generated_item)
 }
 
-/// Creates a new database. Public for testing.
-pub fn new_database<'db>(
-    ir: &'db IR,
-    errors: &'db dyn ErrorReporting,
-    fatal_errors: &'db dyn ReportFatalError,
-    is_golden_test: bool,
-    kythe_annotations: bool,
-    interner: &'db Interner,
-) -> BindingsGenerator<'db> {
-    BindingsGenerator::new(
-        ir,
-        errors,
-        fatal_errors,
-        is_golden_test,
-        kythe_annotations,
-        CodegenFunctions {
-            generate_enum: generate_enum::generate_enum,
-            generate_item,
-            generate_record: generate_struct_and_union::generate_record,
-        },
-        interner,
-        CommonTokens::new(),
-        lifetime_defaults_transform::decl_lifetime_arity,
-        rs_type_kind_safety,
-        unknown_lifetime_safety,
-        lifetime_defaults_transform::lifetime_defaults_transform_item,
-        lifetime_defaults_transform::lifetime_defaults_transform_record,
-        lifetime_defaults_transform::lifetime_defaults_transform_func,
-        lifetime_defaults_transform::lifetime_defaults_transform_type_alias,
-        record_field_safety,
-        record_safety,
-        has_bindings::has_bindings,
-        rs_type_kind_with_lifetime_elision,
-        generate_function::generate_function,
-        generate_function::overload_sets,
-        generate_function::is_record_clonable,
-        generate_function::get_binding,
-        generate_struct_and_union::collect_unqualified_member_functions,
-        crubit_abi_type,
-        has_bindings::resolve_names,
-        generate_function::mangled_name_counts,
-        unsupported_item_errors,
-    )
-}
-
 /// Returns the Rust code implementing bindings, plus any auxiliary C++ code
 /// needed to support it.
 //
 /// Public for use in `generate_bindings_tokens_for_test`.
 pub fn generate_bindings_tokens(
-    ir: &IR,
+    db: &BindingsGenerator<'_>,
     crubit_support_path_format: Format<1>,
     crubit_support_versioned_path_format: Format<1>,
-    errors: &dyn ErrorReporting,
-    fatal_errors: &dyn ReportFatalError,
-    is_golden_test: bool,
-    kythe_annotations: bool,
 ) -> Result<BindingsTokens> {
-    let interner = Interner::default();
-    let db = new_database(ir, errors, fatal_errors, is_golden_test, kythe_annotations, &interner);
+    let ir = db.ir();
     let mut snippets = ApiSnippets::default();
 
     // For #![rustfmt::skip].
@@ -677,7 +616,7 @@ pub fn generate_bindings_tokens(
                 // Find records that are template instantiations of `rs::DynCallable` or
                 // `absl::AnyInvocable`.
                 let Ok(Some(BridgeRsTypeKind::Callable(callable))) =
-                    BridgeRsTypeKind::new(record, &LifetimeOptions::default(), &None, &db, &[])
+                    BridgeRsTypeKind::new(record, &LifetimeOptions::default(), &None, db, &[])
                 else {
                     return None;
                 };
@@ -696,19 +635,19 @@ pub fn generate_bindings_tokens(
                 // generate a nice error because whoever uses this will also fail
                 // and generate an error at the relevant site.
                 let cpp_api = generate_dyn_callable_invoker_and_manager_decls(
-                    &db,
+                    db,
                     &callable,
                     param_idents,
                     &mut internal_includes,
                 )?;
                 let mut rust_api =
-                    generate_dyn_callable_invoker_and_manager_defs(&db, &callable, param_idents)?;
+                    generate_dyn_callable_invoker_and_manager_defs(db, &callable, param_idents)?;
 
                 if let BackingType::AnyInvocable { invoke_any_invocable_ident } =
                     &callable.backing_type
                 {
                     rust_api.extend(generate_any_invocable_invoker_decl(
-                        &db,
+                        db,
                         &callable,
                         param_idents,
                         invoke_any_invocable_ident,
@@ -718,7 +657,7 @@ pub fn generate_bindings_tokens(
                     // By appending them to cpp_api after this loop finishes, we ensure that all the
                     // C++ decls appear before the defs.
                     deferred_cpp_api.extend(generate_any_invocable_invoker_def(
-                        &db,
+                        db,
                         &callable,
                         param_idents,
                         invoke_any_invocable_ident,
@@ -796,10 +735,10 @@ pub fn generate_bindings_tokens(
             }
         });
     let main_api =
-        code_snippet::generated_items_to_token_stream(&generated_items, &db, &top_level_ids);
+        code_snippet::generated_items_to_token_stream(&generated_items, db, &top_level_ids);
     let template_instantiations_api = code_snippet::generated_items_to_token_stream(
         &generated_items,
-        &db,
+        db,
         &template_instantiation_ids,
     );
 
@@ -841,7 +780,7 @@ pub fn generate_bindings_tokens(
 
     let cc_details = CppDetails {
         includes: generate_rs_api_impl_includes(
-            &db,
+            db,
             crubit_support_path_format,
             crubit_support_versioned_path_format,
             internal_includes,
@@ -952,7 +891,10 @@ pub fn generate_bindings_tokens(
 }
 
 /// Implementation of `BindingsGenerator::rs_type_kind_safety`.
-fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Option<UnsafeReason> {
+pub fn rs_type_kind_safety(
+    db: &BindingsGenerator,
+    rs_type_kind: RsTypeKind,
+) -> Option<UnsafeReason> {
     match rs_type_kind {
         RsTypeKind::Error { error, .. } => Some(UnsafeReason(intern!(
             db.interner(),
@@ -1100,7 +1042,7 @@ fn unknown_existing_rust_type_lifetimes_reason(
 /// enabled, so container parameters such as `absl::StatusOr<DynFuture>` cannot accept a
 /// potentially dangling `Unsafe<T<'static>>` from safe Rust. It also makes a function whose
 /// return type contains such a type `unsafe` (see `api_func_shape_for_identifier`).
-fn unknown_lifetime_safety(
+pub fn unknown_lifetime_safety(
     db: &BindingsGenerator<'_>,
     rs_type_kind: RsTypeKind,
 ) -> Option<UnsafeReason> {
@@ -1338,7 +1280,7 @@ fn callable_safety(
 }
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
-fn record_field_safety(
+pub fn record_field_safety(
     db: &BindingsGenerator,
     record: FfiRc<ir::Record>,
     field_index: usize,
@@ -1361,7 +1303,10 @@ fn record_field_safety(
 }
 
 /// Implementation of `BindingsGenerator::unsupported_item_errors`.
-fn unsupported_item_errors(db: &BindingsGenerator, item: FfiRc<ir::UnsupportedItem>) -> Vec<Error> {
+pub fn unsupported_item_errors(
+    db: &BindingsGenerator,
+    item: FfiRc<ir::UnsupportedItem>,
+) -> Vec<Error> {
     item.errors()
         .iter()
         .map(|e| {
@@ -1380,7 +1325,7 @@ fn unsupported_item_errors(db: &BindingsGenerator, item: FfiRc<ir::UnsupportedIt
 }
 
 /// Implementation of `BindingsGenerator::record_safety`.
-fn record_safety(db: &BindingsGenerator, record: FfiRc<Record>) -> Option<UnsafeReason> {
+pub fn record_safety(db: &BindingsGenerator, record: FfiRc<Record>) -> Option<UnsafeReason> {
     let mut doc = String::new();
 
     match record.safety_annotation() {
@@ -1658,7 +1603,7 @@ fn strip_output_dir_prefix(path: &str) -> &str {
 }
 
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
-fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
+pub fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
         RsTypeKind::Error { symbol, error, .. } => Err(error_report::because(
             error_report::anyhow!("Type '{symbol}' has an error and cannot be bridged: {error}"),

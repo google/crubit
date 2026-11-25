@@ -19,7 +19,14 @@ doctest = false
 
 [dependencies]
 generate_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings", package = "rs_bindings_from_cc_generate_bindings"}
+generate_enum = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_enum", package = "rs_bindings_from_cc_generate_enum"}
+generate_function = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function", package = "rs_bindings_from_cc_generate_function"}
+generate_struct_and_union = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_struct_and_union", package = "rs_bindings_from_cc_generate_struct_and_union"}
+has_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/has_bindings", package = "rs_bindings_from_cc_has_bindings"}
+lifetime_defaults_transform = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform", package = "rs_bindings_from_cc_lifetime_defaults_transform"}
+rs_type_kind = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/rs_type_kind", package = "rs_bindings_from_cc_rs_type_kind"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
+code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
 error_report = { path = "../../../../cargo/common/error_report"}
 ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}

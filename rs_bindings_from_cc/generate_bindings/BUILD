@@ -41,7 +41,14 @@ rust_library(
     ],
     deps = [
         ":generate_bindings",
+        ":generate_enum",
+        ":generate_function",
+        ":generate_struct_and_union",
+        ":has_bindings",
+        ":lifetime_defaults_transform",
+        ":rs_type_kind",
         "//common:arc_anyhow",
+        "//common:code_gen_utils",
         "//common:error_report",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
@@ -62,13 +69,7 @@ rust_library(
     deps = [
         ":cpp_type_name",
         ":generate_comment",
-        ":generate_enum",
-        ":generate_function",
-        ":generate_function_thunk",
         ":generate_struct_and_union",
-        ":has_bindings",
-        ":lifetime_defaults_transform",
-        ":rs_type_kind",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_abi_type",
@@ -243,6 +244,7 @@ rust_library(
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
+        ":cc_api",
         ":generate_bindings",
         ":multiplatform_ir_testing",
         "//common:arc_anyhow",
@@ -361,7 +363,6 @@ rust_library(
     ],
     deps = [
         ":cpp_type_name",
-        ":lifetime_defaults_transform",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_abi_type",
@@ -390,10 +391,8 @@ rust_library(
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
-        ":cpp_type_name",
         ":generate_comment",
         ":generate_function_thunk",
-        ":has_bindings",
         ":lifetime_defaults_transform",
         "//cc_bindings_from_rs:rustversion",
         "//common:arc_anyhow",
@@ -503,7 +502,7 @@ multiplatform_rust_test(
     ],
     visibility = ["//cargo:__subpackages__"],
     deps = [
-        ":generate_bindings",
+        ":cc_api",
         ":lifetime_defaults_transform",
         ":multiplatform_ir_testing",
         ":test_generators",
@@ -533,8 +532,6 @@ rust_library(
     ],
     deps = [
         ":cpp_type_name",
-        ":has_bindings",
-        ":lifetime_defaults_transform",
         "//common:arc_anyhow",
         "//common:crubit_feature",
         "//common:error_report",

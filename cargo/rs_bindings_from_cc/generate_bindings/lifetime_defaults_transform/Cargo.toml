@@ -31,7 +31,7 @@ quote.workspace = true
 syn.workspace = true
 unicode-ident.workspace = true
 [dev-dependencies]
-generate_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings", package = "rs_bindings_from_cc_generate_bindings"}
+cc_api = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/cc_api", package = "rs_bindings_from_cc_cc_api"}
 lifetime_defaults_transform = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform", package = "rs_bindings_from_cc_lifetime_defaults_transform"}
 multiplatform_ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing", package = "rs_bindings_from_cc_multiplatform_ir_testing"}
 test_generators = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/test_generators", package = "rs_bindings_from_cc_test_generators"}

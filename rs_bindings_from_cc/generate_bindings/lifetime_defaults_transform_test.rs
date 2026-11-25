@@ -4,9 +4,9 @@
 #![cfg(test)]
 
 use arc_anyhow::Result;
+use cc_api::new_database;
 use database::db::Interner;
 use error_report::{ErrorReport, FatalErrors, SourceLanguage};
-use generate_bindings::new_database;
 use googletest::matchers::contains_substring;
 use googletest::{assert_that, gtest};
 use ir_matchers::assert_ir_matches;
