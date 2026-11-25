@@ -17,6 +17,7 @@ crubit_test_cc_library(
     deps = [
         "//support:annotations",
         "//support/rs_std:dyn_callable",
+        "//support/rs_std:fn_ref",
         "@abseil-cpp//absl/functional:any_invocable",
     ],
 )
@@ -31,6 +32,39 @@ crubit_rust_test(
     srcs = ["test.rs"],
     deps = [
         ":calls_back_to_rust_rust",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "std_function_ref",
+    srcs = ["std_function_ref.cc"],
+    hdrs = ["std_function_ref.h"],
+    aspect_hints = ["//features:supported"],
+    features = [
+        "-c++default",
+        "c++26",
+        # The prebuilt libc++ header module is built in the default C++ mode.
+        "-use_header_modules",
+    ],
+    target_compatible_with = LLVM_UNSTABLE_ONLY,
+)
+
+rust_api_from_cpp(
+    name = "std_function_ref_rust",
+    cpp_target = ":std_function_ref",
+)
+
+crubit_rust_test(
+    name = "std_function_ref_test",
+    srcs = ["std_function_ref_test.rs"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
+    target_compatible_with = LLVM_UNSTABLE_ONLY,
+    deps = [
+        ":std_function_ref_rust",
         "@crate_index//:googletest",
     ],
 )

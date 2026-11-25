@@ -6,7 +6,10 @@ use arc_anyhow::Result;
 use code_gen_utils::try_make_rs_ident;
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{missing_feature_descriptions, NoBindingsReason, ResolvedName};
-use database::rs_snippet::{LifetimeOptions, RsTypeKind};
+use database::rs_snippet::{
+    borrowed_callable_return_type_error, cc_type_contains_borrowed_callable,
+    record_contains_borrowed_callable, LifetimeOptions, RsTypeKind,
+};
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
@@ -282,6 +285,13 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<(), NoBindings
                     c_array.display_cc_type_name_for_rs_type(),
                 )));
             }
+            if rs_type_kind.contains_borrowed_callable().is_some()
+                || cc_type_contains_borrowed_callable(db, global_var.type_()).is_some()
+            {
+                return Err(NoBindingsReason::Unsupported(anyhow!(
+                    "borrowed callable type cannot be used as a global variable"
+                )));
+            }
             Ok(())
         }
         // Other items are public.
@@ -366,6 +376,39 @@ fn func_has_bindings(db: &BindingsGenerator, func: FfiRc<Func>) -> Result<(), No
                 })
             }
         }
+    }
+
+    if let Some(callable_name) = cc_type_contains_borrowed_callable(db, func.return_type()) {
+        let return_type_name = db
+            .rs_type_kind(func.return_type().clone())
+            .map(|rt| rt.display_cc_type_name_for_rs_type().to_string())
+            .unwrap_or_else(|_| db.cc_type_debug_name(func.return_type()).to_string());
+        return Err(NoBindingsReason::Unsupported(borrowed_callable_return_type_error(
+            &return_type_name,
+            &callable_name,
+        )));
+    } else if let Ok(rs_type_kind) = db.rs_type_kind(func.return_type().clone())
+        && rs_type_kind.contains_borrowed_callable().is_some()
+    {
+        return Err(NoBindingsReason::Unsupported(anyhow!(
+            "borrowed callable type `{}` cannot be used as a return type",
+            rs_type_kind.display_cc_type_name_for_rs_type()
+        )));
+    }
+
+    if *func.cc_name() == ir::UnqualifiedIdentifier::Constructor
+        && let Some(enclosing_id) = func.enclosing_item_id()
+        && let Item::Record(record) = db.find_untyped_decl(enclosing_id)
+        && func.params().iter().skip(1).any(|p| {
+            db.rs_type_kind(p.type_().clone())
+                .is_ok_and(|rt| rt.contains_borrowed_callable().is_some())
+        })
+        && let Some(callable_name) = record_contains_borrowed_callable(db, record)
+    {
+        return Err(NoBindingsReason::Unsupported(borrowed_callable_return_type_error(
+            record.cc_name().as_str(),
+            &callable_name,
+        )));
     }
 
     if !missing_features.is_empty() {

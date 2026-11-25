@@ -100,6 +100,9 @@ pub(crate) fn schema() -> Schema {
         enum BackingType {
             DynCallable,
             AnyInvocable,
+            FunctionRef,
+            FnRef,
+            StdFunctionRef,
         }
         #[scope("bridge_type::Callable")]
         enum FnTrait {
@@ -375,6 +378,7 @@ pub(crate) fn schema() -> Schema {
         struct Callable {
             backing_type: bridge_type::callable::BackingType,
             fn_trait: bridge_type::callable::FnTrait,
+            is_noexcept: Bool,
             return_type: CcType,
             param_types: Vec(CcType),
         }

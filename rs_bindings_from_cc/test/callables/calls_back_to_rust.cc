@@ -44,3 +44,22 @@ void invoke_as_absl_anyinvocable(rs::DynCallable<void()> f) {
   absl::AnyInvocable<void()> any_invocable = std::move(f);
   any_invocable();
 }
+
+void invoke_fn_ref(rs::FnRef<void()> f) { f(); }
+void invoke_fn_ref_const(rs::FnRef<void() const> f) { f(); }
+int map_int_fn_ref(rs::FnRef<int(int) const> f, int arg) { return f(arg); }
+std::optional<int> map_optional_int_fn_ref(
+    rs::FnRef<std::optional<int>(std::optional<int>) const> f,
+    std::optional<int> arg) {
+  return f(arg);
+}
+ABICompatible map_abi_compatible_fn_ref(
+    rs::FnRef<ABICompatible(ABICompatible) const> f, ABICompatible arg) {
+  return f(arg);
+}
+LayoutCompatible map_layout_compatible_fn_ref(
+    rs::FnRef<LayoutCompatible(LayoutCompatible) const> f,
+    LayoutCompatible arg) {
+  return f(arg);
+}
+void HasFnRefMethod::invoke(rs::FnRef<void()> f) { f(); }

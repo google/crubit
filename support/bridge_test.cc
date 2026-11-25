@@ -8,9 +8,28 @@
 #include <type_traits>
 
 #include "gtest/gtest.h"
+#include "support/rs_std/fn_ref.h"
 
 namespace crubit::bridge {
 namespace {
+
+TEST(BridgeTest, CallableRefAbi) {
+  using Abi = crubit::CallableRefAbi<rs::FnRef<int(int)>>;
+  static_assert(crubit::is_crubit_abi<Abi>);
+
+  // Test Decode
+  // A fat pointer in Rust is just two void* (data, invoker).
+  void* fat_ptr[2] = {nullptr, nullptr};
+  unsigned char buf[Abi::kSize];
+  std::memcpy(buf, fat_ptr, sizeof(fat_ptr));
+
+  auto make_callable = [](const void* state) {
+    int (*invoker)(void*, int) = nullptr;
+    return rs::internal::MakeFnRef<int(int)>(const_cast<void*>(state), invoker);
+  };
+  auto decoded = internal::Decode<Abi>(Abi(make_callable), buf);
+  EXPECT_EQ(decoded.data(), buf);
+}
 
 TEST(BridgeTest, RoundtripI32) {
   using Abi = TransmuteAbi<int>;

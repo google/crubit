@@ -970,18 +970,35 @@ std::optional<llvm::Expected<BridgeType>> ExtractCallable(
   } else if (top_level_namespace == "absl" &&
              templated_decl->getName() == "AnyInvocable") {
     backing_type = BridgeType::Callable::ANY_INVOCABLE;
+  } else if (top_level_namespace == "absl" &&
+             templated_decl->getName() == "FunctionRef") {
+    backing_type = BridgeType::Callable::FUNCTION_REF;
+  } else if ((top_level_namespace == "rs" || top_level_namespace == "rs_std") &&
+             templated_decl->getName() == "FnRef") {
+    backing_type = BridgeType::Callable::FN_REF;
+  } else if (top_level_namespace == "std" &&
+             templated_decl->getName() == "function_ref") {
+    backing_type = BridgeType::Callable::STD_FUNCTION_REF;
   } else {
     return std::nullopt;
   }
 
-  if (specialization_decl.getTemplateArgs().size() != 1) {
+  // `std::function_ref` is declared as `template <class... S>`, so its single
+  // signature argument arrives wrapped in a parameter pack.
+  llvm::ArrayRef<clang::TemplateArgument> template_args =
+      specialization_decl.getTemplateArgs().asArray();
+  if (template_args.size() == 1 &&
+      template_args[0].getKind() == clang::TemplateArgument::Pack) {
+    template_args = template_args[0].getPackAsArray();
+  }
+  if (template_args.size() != 1 ||
+      template_args[0].getKind() != clang::TemplateArgument::Type) {
     return crubit::InvalidArgumentError(
         "Callable template specialization must have exactly one template "
         "argument");
   }
   const clang::FunctionProtoType* sig_fn_type =
-      specialization_decl.getTemplateArgs()
-          .get(0)
+      template_args[0]
           .getAsType()
           .getTypePtr()
           ->getAs<clang::FunctionProtoType>();
@@ -1000,6 +1017,14 @@ std::optional<llvm::Expected<BridgeType>> ExtractCallable(
     fn_trait = BridgeType::Callable::FN;
   } else {
     fn_trait = BridgeType::Callable::FN_MUT;
+  }
+
+  if ((backing_type == BridgeType::Callable::FUNCTION_REF ||
+       backing_type == BridgeType::Callable::FN_REF ||
+       backing_type == BridgeType::Callable::STD_FUNCTION_REF) &&
+      fn_trait == BridgeType::Callable::FN_ONCE) {
+    return crubit::InvalidArgumentError(
+        "FunctionRef/FnRef does not support && qualifier");
   }
 
   // Convert the return type, ensuring that it is complete first.
@@ -1052,6 +1077,7 @@ std::optional<llvm::Expected<BridgeType>> ExtractCallable(
   auto* c = result.mutable_callable();
   c->set_backing_type(backing_type);
   c->set_fn_trait(fn_trait);
+  c->set_is_noexcept(sig_fn_type->isNothrow());
   *c->mutable_return_type() = std::move(return_type);
   for (auto& param : param_types) {
     *c->add_param_types() = std::move(param);

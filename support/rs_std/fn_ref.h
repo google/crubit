@@ -15,6 +15,18 @@
 // NOLINTBEGIN(google-explicit-constructor)
 namespace rs {
 
+// A non-owning reference to a callable with signature `Sig`, representing
+// Rust's borrowed closure types (`&dyn Fn` / `&mut dyn FnMut`).
+//
+// Threading and lifetime contract:
+// - Unlike `absl::FunctionRef` and `std::function_ref` (which require `Sync` on
+//   the Rust side when bound by `rs_bindings_from_cc`), `rs::FnRef` does NOT
+//   require the underlying Rust closure to implement `Sync` or `Send` (so it
+//   can capture `!Sync` state such as `Cell` or `Rc`). Consequently, an
+//   `rs::FnRef` must ONLY be invoked on the calling thread and never accessed
+//   from other threads.
+// - `rs::FnRef` does not own its target callable; it must not be retained or
+//   invoked after the call that received it returns.
 template <typename Sig>
 class FnRef;
 
@@ -23,6 +35,10 @@ namespace internal {
 struct FnRefPayload {
   void* data;
   void (*invoker)();
+};
+
+struct PrivateTag {
+  explicit PrivateTag() = default;
 };
 
 template <typename R, typename F, typename... Args>
@@ -34,9 +50,17 @@ R InvokeHelper(F&& f, Args&&... args) {
   }
 }
 
+// Internal factory used by Crubit-generated C++ bindings to build an rs::FnRef
+// straight from a fat pointer components.
+template <typename Sig, typename R, typename... Args>
+FnRef<Sig> MakeFnRef(void* data, R (*invoker)(void*, Args...)) noexcept {
+  return FnRef<Sig>(PrivateTag{}, data, invoker);
+}
+
 }  // namespace internal
 
-// Non-const FnRef: matches `&mut dyn FnMut(...)`
+// Non-const FnRef: matches `&mut dyn FnMut(...)` in `cc_bindings_from_rs` and
+// `&dyn Fn(...)` (without `Sync`) in `rs_bindings_from_cc`.
 template <typename R, typename... Args>
 class FnRef<R(Args...)> {
  public:
@@ -81,6 +105,14 @@ class FnRef<R(Args...)> {
   auto invoker() const noexcept { return invoker_; }
 
  private:
+  template <typename Sig, typename R_, typename... Args_>
+  friend FnRef<Sig> internal::MakeFnRef(void* data,
+                                        R_ (*invoker)(void*,
+                                                      Args_...)) noexcept;
+
+  FnRef(internal::PrivateTag, void* data, R (*invoker)(void*, Args...)) noexcept
+      : data_(data), invoker_(invoker) {}
+
   void* data_ = nullptr;
   R (*invoker_)(void*, Args...) = nullptr;
 };
@@ -137,6 +169,14 @@ class FnRef<R(Args...) const> {
   auto invoker() const noexcept { return invoker_; }
 
  private:
+  template <typename Sig, typename R_, typename... Args_>
+  friend FnRef<Sig> internal::MakeFnRef(void* data,
+                                        R_ (*invoker)(void*,
+                                                      Args_...)) noexcept;
+
+  FnRef(internal::PrivateTag, void* data, R (*invoker)(void*, Args...)) noexcept
+      : data_(data), invoker_(invoker) {}
+
   void* data_ = nullptr;
   R (*invoker_)(void*, Args...) = nullptr;
 };

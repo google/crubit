@@ -8850,7 +8850,6 @@ fn test_static_data_members_of_nested_class_in_template_specialization() {
         }
     );
 }
-
 #[gtest]
 fn test_predefined_sugar_types() -> Result<()> {
     let header = r#"
@@ -9116,4 +9115,88 @@ fn test_param_noescape_ignored_attr_without_noescape() {
     let params = func.params();
     expect_true!(!params[0].clang_noescape());
     expect_eq!(params[0].unknown_attr(), None);
+}
+
+#[gtest]
+fn test_absl_function_ref() {
+    let proto = multiplatform_ir_testing::ir_proto_from_cc(
+        r#"
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wunused-template"
+        namespace absl {
+            template <typename Sig> class FunctionRef {};
+        }
+        using FnMutRef = absl::FunctionRef<int(int)>;
+        #pragma clang diagnostic pop
+        "#,
+    )
+    .unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                ...
+                cc_name: "absl::FunctionRef<int (int)>",
+                ...
+                ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_rs_fn_ref() {
+    let proto = multiplatform_ir_testing::ir_proto_from_cc(
+        r#"
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wunused-template"
+        namespace rs {
+            template <typename Sig> class FnRef {};
+        }
+        using MyFnRef = rs::FnRef<int(int)>;
+        #pragma clang diagnostic pop
+        "#,
+    )
+    .unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                ...
+                cc_name: "rs::FnRef<int (int)>",
+                ...
+                ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_std_function_ref() {
+    let proto = multiplatform_ir_testing::ir_proto_from_cc(
+        r#"
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wunused-template"
+        namespace std {
+            template <typename Sig> class function_ref {};
+        }
+        using StdFnRef = std::function_ref<int(int)>;
+        #pragma clang diagnostic pop
+        "#,
+    )
+    .unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                ...
+                cc_name: "std::function_ref<int (int)>",
+                ...
+                ...
+            }
+        }
+    );
 }

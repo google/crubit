@@ -662,12 +662,13 @@ pub fn generate_bindings_tokens(
 
     let mut internal_includes = BTreeSet::new();
 
-    let (callables_rs_api_impl, callables_rs_api) = {
+    let (callables_rs_api_impl, callables_rs_api, has_owned_callables) = {
         // Since Idents are not free, we reuse them across records.
         let mut param_idents_buffer = vec![];
 
         let mut deferred_cpp_api = TokenStream::new();
 
+        let mut has_owned_callables = false;
         let (mut cpp_api, rust_api): (TokenStream, TokenStream) = ir
             .records()
             .filter_map(|record| {
@@ -681,6 +682,9 @@ pub fn generate_bindings_tokens(
                 else {
                     return None;
                 };
+                if !callable.is_borrowed() {
+                    has_owned_callables = true;
+                }
 
                 // The parameters shall be named `param_0`, `param_1`, etc.
                 // These names can be reused across different callables, so we reuse the same vec
@@ -727,23 +731,25 @@ pub fn generate_bindings_tokens(
                     )?);
                 }
 
-                internal_includes.insert(CcInclude::SupportLibHeader(
-                    crubit_support_path_format.clone(),
-                    intern!(db.interner(), "rs/dyn_callable.h"),
-                ));
+                if !callable.is_borrowed() {
+                    internal_includes.insert(CcInclude::SupportLibHeader(
+                        crubit_support_path_format.clone(),
+                        intern!(db.interner(), "rs/dyn_callable.h"),
+                    ));
+                }
 
                 Some((cpp_api, rust_api))
             })
             .unzip();
         cpp_api.extend(deferred_cpp_api);
-        (cpp_api, rust_api)
+        (cpp_api, rust_api, has_owned_callables)
     };
 
     // Callables use `Box<dyn F>`, and bindings that depend on `rs_alloc` (either directly or
     // transitively via `rs_std`) can refer to `::alloc::...` types (e.g.
     // `::alloc::string::String`).
     let extern_crate_alloc = {
-        let has_callables = !callables_rs_api.is_empty();
+        let has_callables = has_owned_callables;
         let has_rs_alloc = !ir
             .target_crubit_features(&BazelLabel::from(
                 "//support/rs_std:rs_alloc",
@@ -2054,21 +2060,38 @@ fn generate_dyn_callable_invoker_and_manager_decls(
     }
 
     let invoker_ident = &callable.invoker_ident;
-    let manager_ident = &callable.manager_ident;
-
-    Some(quote! {
-        extern "C" #decl_return_type_tokens #invoker_ident(
-            ::absl::internal_any_invocable::TypeErasedState* state
-            #params
-            #out_param
-        );
-        extern "C" void #manager_ident(
-            ::absl::internal_any_invocable::FunctionToCall operation,
-            ::absl::internal_any_invocable::TypeErasedState* from,
-            ::absl::internal_any_invocable::TypeErasedState* to
-        ) noexcept;
-        __NEWLINE__ __NEWLINE__
-    })
+    if callable.is_borrowed() {
+        let state_type = match &callable.backing_type {
+            BackingType::FunctionRef { .. } | BackingType::StdFunctionRef { .. } => {
+                quote! { const unsigned char* }
+            }
+            BackingType::FnRef { .. } => quote! { void* },
+            BackingType::DynCallable | BackingType::AnyInvocable { .. } => unreachable!(),
+        };
+        Some(quote! {
+            extern "C" #decl_return_type_tokens #invoker_ident(
+                #state_type state
+                #params
+                #out_param
+            );
+            __NEWLINE__ __NEWLINE__
+        })
+    } else {
+        let manager_ident = &callable.manager_ident;
+        Some(quote! {
+            extern "C" #decl_return_type_tokens #invoker_ident(
+                ::absl::internal_any_invocable::TypeErasedState* state
+                #params
+                #out_param
+            );
+            extern "C" void #manager_ident(
+                ::absl::internal_any_invocable::FunctionToCall operation,
+                ::absl::internal_any_invocable::TypeErasedState* from,
+                ::absl::internal_any_invocable::TypeErasedState* to
+            ) noexcept;
+            __NEWLINE__ __NEWLINE__
+        })
+    }
 }
 
 /// Generates a unique Rust definition of an extern "C" function.
@@ -2209,7 +2232,27 @@ fn generate_dyn_callable_invoker_and_manager_defs(
 
     let dyn_fn_spelling = callable.dyn_fn_spelling(db);
     let invoker_ident = &callable.invoker_ident;
-    let manager_ident = &callable.manager_ident;
+
+    if callable.is_borrowed() {
+        return Some(quote! {
+            #[unsafe(no_mangle)]
+            unsafe extern "C" fn #invoker_ident(
+                f: *const ::core::ffi::c_void
+                #params
+                #out_param
+            ) #return_type_fragment {
+                // SAFETY: `f` points into the caller's `Encoder` buffer where `FunctionRefAbi::encode`
+                // wrote a `*const (#dyn_fn_spelling)` (potentially at an unaligned byte offset when
+                // nested inside a composite bridge type like `OptionAbi`), and the pointee closure
+                // remains live on the caller's stack for the duration of the C++ call.
+                let f = unsafe { ::core::ptr::read_unaligned(f.cast::<*const (#dyn_fn_spelling)>()) };
+                #ffi_to_rust_transforms
+                #invoke_rust_and_return_to_ffi
+            }
+        });
+    }
+
+    let manager_ident = callable.manager_ident.as_ref().unwrap();
 
     Some(quote! {
         #[unsafe(no_mangle)]

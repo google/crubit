@@ -6,6 +6,7 @@
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CALLABLES_H_
 
 #include "support/rs_std/dyn_callable.h"
+#include "support/rs_std/fn_ref.h"
 
 void invoke_once(rs_std::DynCallable<void() &&> f);
 
@@ -47,5 +48,32 @@ LayoutCompatible map_layout_compatible(
     LayoutCompatible arg);
 
 int callable_taking_reference(rs_std::DynCallable<void(int&)> f, int arg);
+
+void invoke_fn_ref(rs::FnRef<void()> f);
+void invoke_fn_ref_const(rs::FnRef<void() const> f);
+int map_int_fn_ref(rs::FnRef<int(int) const> f, int arg);
+const int& find_if_fn_ref(const int& v, rs::FnRef<bool(int)> pred);
+
+// Rejections for borrowed callables
+rs::FnRef<void()> return_fn_ref();
+rs_std::DynCallable<rs::FnRef<void()>() const> return_fn_ref_from_dyn();
+rs::FnRef<rs::FnRef<void()>()> fn_ref_returning_fn_ref(rs::FnRef<void()> f);
+void accept_nested_fn_ref(rs::FnRef<void(rs::FnRef<void()>)> f);
+
+struct StructWithFnRef {
+  rs::FnRef<void()> f;
+};
+
+StructWithFnRef make_struct_with_fn_ref(rs::FnRef<void()> f);
+
+struct NestedStructWithFnRef {
+  StructWithFnRef inner;
+};
+
+NestedStructWithFnRef make_nested_struct_with_fn_ref();
+
+struct DerivedFromStructWithFnRef : StructWithFnRef {};
+
+DerivedFromStructWithFnRef make_derived_struct_with_fn_ref();
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CALLABLES_H_
