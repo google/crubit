@@ -643,13 +643,13 @@ impl<'db> BindingsGenerator<'db> {
 
     pub fn new_unsupported_item(
         &self,
-        item: &impl GenericItem,
+        item: &dyn GenericItem,
         path: Option<ir::UnsupportedItemPath>,
         error: Option<ir::FormattedError>,
         must_bind: bool,
     ) -> ir::UnsupportedItem {
         ir::UnsupportedItem::new_raw(
-            self.debug_name(item.id()),
+            &self.debug_name(item.id()),
             item.unique_name(),
             item.unsupported_kind(),
             item.id(),
@@ -663,7 +663,7 @@ impl<'db> BindingsGenerator<'db> {
 
     pub fn new_unsupported_item_with_static_message(
         &self,
-        item: &impl GenericItem,
+        item: &dyn GenericItem,
         path: Option<ir::UnsupportedItemPath>,
         message: &'static str,
     ) -> ir::UnsupportedItem {
@@ -678,7 +678,7 @@ impl<'db> BindingsGenerator<'db> {
 
     pub fn new_unsupported_item_with_cause(
         &self,
-        item: &impl GenericItem,
+        item: &dyn GenericItem,
         path: Option<ir::UnsupportedItemPath>,
         cause: Error,
     ) -> ir::UnsupportedItem {
@@ -770,7 +770,7 @@ impl<'db> BindingsGenerator<'db> {
 
     pub fn namespace_qualifier(
         &self,
-        item: &impl ir::GenericItem,
+        item: &dyn ir::GenericItem,
     ) -> code_gen_utils::NamespaceQualifier {
         self.namespace_qualifier_from_id(item.id())
     }
@@ -783,7 +783,7 @@ impl<'db> BindingsGenerator<'db> {
     /// namespaces are omitted for it, and for the items nested in it.
     pub fn cc_namespace_qualifier(
         &self,
-        item: &impl ir::GenericItem,
+        item: &dyn ir::GenericItem,
     ) -> code_gen_utils::NamespaceQualifier {
         self.cc_namespace_qualifier_from_id(item.id())
     }

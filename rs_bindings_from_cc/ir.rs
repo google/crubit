@@ -509,15 +509,15 @@ impl CcType {
     pub fn new(
         variant: CcTypeVariant,
         is_const: bool,
-        unknown_attr: impl Into<FfiString>,
-        explicit_lifetimes: impl Into<FfiVec<FfiString>>,
+        unknown_attr: FfiString,
+        explicit_lifetimes: FfiVec<FfiString>,
     ) -> Self {
         Self {
             variant,
             is_const,
             is_nonnull: false,
-            unknown_attr: unknown_attr.into(),
-            explicit_lifetimes: explicit_lifetimes.into(),
+            unknown_attr,
+            explicit_lifetimes,
             template_args: FfiVec::default(),
         }
     }
@@ -586,14 +586,9 @@ impl PointerType {
     pub fn new(
         kind: PointerTypeKind,
         lifetime: Option<LifetimeId>,
-        pointee_type: impl Into<FfiRc<CcType>>,
+        pointee_type: FfiRc<CcType>,
     ) -> Self {
-        let mut pt = Self {
-            has_bits: 0,
-            kind,
-            lifetime: LifetimeId::default(),
-            pointee_type: pointee_type.into(),
-        };
+        let mut pt = Self { has_bits: 0, kind, lifetime: LifetimeId::default(), pointee_type };
         if let Some(lifetime) = lifetime {
             pt.set_lifetime(lifetime);
         }
@@ -602,8 +597,8 @@ impl PointerType {
 }
 
 impl ConstantArrayType {
-    pub fn new(num_elements: usize, element_type: impl Into<FfiRc<CcType>>) -> Self {
-        Self { num_elements, element_type: element_type.into() }
+    pub fn new(num_elements: usize, element_type: FfiRc<CcType>) -> Self {
+        Self { num_elements, element_type }
     }
 }
 
@@ -785,8 +780,8 @@ impl TypeWithDeclId for CcType {
 }
 
 impl Identifier {
-    pub fn new(identifier: impl Into<FfiString>) -> Self {
-        Self { identifier: identifier.into() }
+    pub fn new(identifier: &str) -> Self {
+        Self { identifier: FfiString::from(identifier) }
     }
 
     pub fn as_str(&self) -> &str {
@@ -847,8 +842,8 @@ fn validate_num_elements(num_elements: usize, has_filler: bool, size: u64) -> Re
 }
 
 impl Operator {
-    pub fn new(name: impl Into<FfiString>) -> Self {
-        Self { name: name.into() }
+    pub fn new(name: &str) -> Self {
+        Self { name: FfiString::from(name) }
     }
 
     pub fn cc_name(&self) -> String {
@@ -1398,23 +1393,23 @@ impl UnsupportedItem {
 
     #[allow(clippy::too_many_arguments)]
     pub fn new_raw(
-        name: impl Into<FfiString>,
-        unique_name: Option<impl Into<FfiString>>,
+        name: &str,
+        unique_name: Option<&str>,
         kind: UnsupportedItemKind,
         id: ItemId,
         decl_loc: Option<DeclLocation>,
         defining_target: Option<BazelLabel>,
         must_bind: bool,
         path: Option<UnsupportedItemPath>,
-        error: Option<impl Into<FormattedError>>,
+        error: Option<FormattedError>,
     ) -> Self {
         let mut item = Self {
             has_bits: 0,
-            name: name.into(),
+            name: FfiString::from(name),
             unique_name: FfiString::default(),
             kind,
             path: UnsupportedItemPath::default(),
-            errors: error.into_iter().map(Into::into).collect(),
+            errors: error.into_iter().collect(),
             decl_loc: DeclLocation::default(),
             inline_cpp_source_text: FfiString::default(),
             id,
@@ -1423,7 +1418,7 @@ impl UnsupportedItem {
             do_not_bind: FfiVec::EMPTY,
         };
         if let Some(unique_name) = unique_name {
-            item.set_unique_name(unique_name.into());
+            item.set_unique_name(FfiString::from(unique_name));
         }
         if let Some(path) = path {
             item.set_path(path);

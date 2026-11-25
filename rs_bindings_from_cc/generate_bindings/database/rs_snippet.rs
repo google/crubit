@@ -180,10 +180,7 @@ impl ToTokens for CratePath {
     }
 }
 
-pub fn unique_lifetimes<'a>(
-    types: impl IntoIterator<Item = &'a RsTypeKind> + 'a,
-    assumed_inputs: &[ir::FfiString],
-) -> Vec<Lifetime> {
+pub fn unique_lifetimes(types: &[RsTypeKind], assumed_inputs: &[ir::FfiString]) -> Vec<Lifetime> {
     let mut unordered_lifetimes = HashSet::new();
     let mut saved_assumed_inputs: Vec<Lifetime> = Vec::new();
     for lt in assumed_inputs {
@@ -193,7 +190,7 @@ pub fn unique_lifetimes<'a>(
         }
     }
     let mut all_lifetimes: Vec<Lifetime> = types
-        .into_iter()
+        .iter()
         .flat_map(|ty| ty.lifetimes())
         .filter(move |lifetime| unordered_lifetimes.insert(lifetime.clone()))
         .chain(saved_assumed_inputs)
@@ -202,17 +199,13 @@ pub fn unique_lifetimes<'a>(
     all_lifetimes
 }
 
-pub fn format_generic_params<'a, T: ToTokens>(
-    lifetimes: impl IntoIterator<Item = &'a Lifetime>,
-    types: impl IntoIterator<Item = T>,
-) -> TokenStream {
+pub fn format_generic_params(lifetimes: &[Lifetime], types: &[TokenStream]) -> TokenStream {
     // It is never valid to capture 'static as a lifetime parameter.
     let mut lifetimes = lifetimes
-        .into_iter()
+        .iter()
         .filter(|lifetime| &*lifetime.0 != "_" && &*lifetime.0 != "static")
         .peekable();
-    let mut types = types.into_iter().peekable();
-    if types.peek().is_none() {
+    if types.is_empty() {
         if lifetimes.peek().is_none() {
             quote! {}
         } else {
@@ -225,15 +218,14 @@ pub fn format_generic_params<'a, T: ToTokens>(
     }
 }
 
-pub fn format_generic_params_replacing_by_self<'a: 'b, 'b>(
-    db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
-    types: impl IntoIterator<Item = &'b RsTypeKind>,
+pub fn format_generic_params_replacing_by_self(
+    db: &BindingsGenerator<'_>,
+    types: &[RsTypeKind],
     trait_type: Option<&RsTypeKind>,
 ) -> TokenStream {
-    format_generic_params(
-        [],
-        types.into_iter().map(|ty| ty.to_token_stream_replacing_by_self(db, trait_type)),
-    )
+    let formatted_types: Vec<TokenStream> =
+        types.iter().map(|ty| ty.to_token_stream_replacing_by_self(db, trait_type)).collect();
+    format_generic_params(&[], &formatted_types)
 }
 
 // TODO(jeanpierreda): These functions are at a weird level of abstraction (using
@@ -1696,8 +1688,8 @@ impl RsTypeKind {
     /// Resolves the single type template argument of a pointer-like `ExistingRustType` such as
     /// `rs::SliceRef<T>` or `rs::Box<T>` into a layout-compatible pointee `RsTypeKind`, returning
     /// it alongside the C++ argument type.
-    fn layout_compatible_pointee_template_arg<'a>(
-        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+    fn layout_compatible_pointee_template_arg(
+        db: &BindingsGenerator<'_>,
         existing_rust_type: &ExistingRustType,
         options: &LifetimeOptions,
     ) -> Result<(Self, CcType)> {
@@ -1728,8 +1720,8 @@ impl RsTypeKind {
     /// Creates an `RsTypeKind::Box` for `rs::Box<T>`, `rs::PinBox<T>`, `rs::SliceBox<T>`, or
     /// `rs::StrBox`, validating that the pointee `T` (if any) can be owned by the corresponding
     /// Rust box type.
-    fn new_box<'a>(
-        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+    fn new_box(
+        db: &BindingsGenerator<'_>,
         kind: BoxKind,
         existing_rust_type: FfiRc<ExistingRustType>,
         options: &LifetimeOptions,
@@ -1743,25 +1735,25 @@ impl RsTypeKind {
                     ensure!(
                         inner_rs_type_kind.allowed_behind_multi_element_ptr(),
                         "SliceBox pointee type is not allowed behind a multi element pointer: {}",
-                        inner_rs_type_kind.display(&db),
+                        inner_rs_type_kind.display(db),
                     );
                 } else {
                     ensure!(
                         inner_rs_type_kind.allowed_behind_single_element_ptr(),
                         "Box pointee type is not allowed behind a single element pointer: {}",
-                        inner_rs_type_kind.display(&db),
+                        inner_rs_type_kind.display(db),
                     );
                 }
                 ensure!(
                     !inner_rs_type_kind.pass_by_value_bridges(),
                     "Box pointee type parameter `{}` is a bridged type and is not layout-compatible between Rust and C++.",
-                    inner_rs_type_kind.display(&db),
+                    inner_rs_type_kind.display(db),
                 );
-                inner_rs_type_kind.ensure_complete_type_arg(&db, existing_rust_type.cc_name())?;
+                inner_rs_type_kind.ensure_complete_type_arg(db, existing_rust_type.cc_name())?;
                 if (kind == BoxKind::Box || kind == BoxKind::SliceBox)
                     && !inner_rs_type_kind.is_unpin()
                 {
-                    let cc_name = inner_rs_type_kind.display(&db);
+                    let cc_name = inner_rs_type_kind.display(db);
                     if kind == BoxKind::Box {
                         bail!("`rs::Box<T>` cannot be used with `T` = `{cc_name}` because `T` is not Rust-movable (`!Unpin`): Rust could move the pointee out of the box, which would relocate a C++ object whose move constructor is non-trivial or deleted. Use `rs::PinBox<T>` (`Pin<Box<T>>`) instead. See crubit.rs/types/box#pinbox.");
                     } else {
@@ -1774,8 +1766,8 @@ impl RsTypeKind {
         Ok(RsTypeKind::Box { kind, pointee, existing_rust_type })
     }
 
-    fn new_existing_rust_type<'a>(
-        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+    fn new_existing_rust_type(
+        db: &BindingsGenerator<'_>,
         existing_rust_type: FfiRc<ExistingRustType>,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
@@ -1803,7 +1795,7 @@ impl RsTypeKind {
             ensure!(
                 inner_rs_type_kind.allowed_behind_multi_element_ptr(),
                 "SliceRef pointee type is not allowed behind a multi element pointer: {}",
-                inner_rs_type_kind.display(&db),
+                inner_rs_type_kind.display(db),
             );
 
             return Ok(RsTypeKind::Pointer {
@@ -1918,9 +1910,9 @@ impl RsTypeKind {
                         ensure!(
                             !rs_type_kind.pass_by_value_bridges(),
                             "Type parameter `{}` is a bridged type (such as a Protobuf message or std::string) and is not layout-compatible between Rust and C++. See crubit.rs/types.",
-                            rs_type_kind.display(&db),
+                            rs_type_kind.display(db),
                         );
-                        rs_type_kind.ensure_complete_type_arg(&db, existing_rust_type.cc_name())?;
+                        rs_type_kind.ensure_complete_type_arg(db, existing_rust_type.cc_name())?;
                         Ok((
                             rs_type_kind.to_token_stream(db),
                             rs_type_kind.is_complete(),
@@ -2175,7 +2167,7 @@ impl RsTypeKind {
     pub fn ensure_complete_type_arg(
         &self,
         db: &BindingsGenerator<'_>,
-        container_name: impl Display,
+        container_name: &str,
     ) -> Result<()> {
         if let RsTypeKind::Error { error, .. } = self.unalias() {
             return Err(error.clone());
@@ -2565,9 +2557,9 @@ impl RsTypeKind {
         }
     }
 
-    pub fn format_as_return_type_fragment<'a>(
+    pub fn format_as_return_type_fragment(
         &self,
-        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+        db: &BindingsGenerator<'_>,
         self_type: Option<&RsTypeKind>,
     ) -> Option<TokenStream> {
         match self.unalias() {
@@ -2958,9 +2950,9 @@ impl RsTypeKind {
 
     /// Similar to to_token_stream, but replacing RsTypeKind with Self
     /// when the underlying type matches the given one.
-    pub fn to_token_stream_replacing_by_self<'a>(
+    pub fn to_token_stream_replacing_by_self(
         &self,
-        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+        db: &BindingsGenerator<'_>,
         self_type: Option<&RsTypeKind>,
     ) -> TokenStream {
         match self {
@@ -3419,8 +3411,8 @@ pub fn interpolate_spelled_rust_type(
     )
 }
 
-fn interpolate_existing_rust_type<'a>(
-    db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+fn interpolate_existing_rust_type(
+    db: &BindingsGenerator<'_>,
     existing_rust_type: &ExistingRustType,
     uninterpolated_rust_type: &str,
     type_args: &[RsTypeKind],
@@ -3613,10 +3605,7 @@ impl ToTokens for PrimitiveName {
 }
 
 impl RsTypeKind {
-    pub fn to_token_stream<'a>(
-        &self,
-        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
-    ) -> TokenStream {
+    pub fn to_token_stream(&self, db: &BindingsGenerator<'_>) -> TokenStream {
         match self {
             // errors become opaque blobs
             RsTypeKind::Error { symbol, .. } => {
@@ -3687,7 +3676,7 @@ impl RsTypeKind {
                 customize_methods: _,
             } => {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
-                    return generic_monomorphization.to_token_stream(&db);
+                    return generic_monomorphization.to_token_stream(db);
                 }
                 let arity = db
                     .decl_lifetime_arity(record.id())
@@ -3856,7 +3845,7 @@ impl RsTypeKind {
                         }
                     }
                     BridgeRsTypeKind::Callable(callable) => {
-                        let callable_spelling = callable.dyn_fn_spelling(&db);
+                        let callable_spelling = callable.dyn_fn_spelling(db);
                         quote! { ::alloc::boxed::Box<#callable_spelling> }
                     }
                     BridgeRsTypeKind::C9Co {
@@ -3927,14 +3916,11 @@ impl RsTypeKind {
         }
     }
 
-    pub fn to_token_stream_without_lifetimes<'a>(
-        &self,
-        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
-    ) -> TokenStream {
+    pub fn to_token_stream_without_lifetimes(&self, db: &BindingsGenerator<'_>) -> TokenStream {
         match self {
             RsTypeKind::Record { record, crate_path, uniform_repr_template_type, .. } => {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
-                    return generic_monomorphization.to_token_stream(&db);
+                    return generic_monomorphization.to_token_stream(db);
                 }
                 let ident = make_rs_ident(record.rs_name().as_str());
                 quote! { #crate_path #ident }
@@ -3994,8 +3980,8 @@ impl RsTypeKind {
 ///
 /// This has _very_ limited support for other type expressions, like `&T`,
 /// and special-cases well known builtin types like `char`.
-fn fully_qualify_type<'a>(
-    db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+fn fully_qualify_type(
+    db: &BindingsGenerator<'_>,
     item: ir::Item,
     type_expression: &str,
 ) -> TokenStream {
@@ -4006,13 +3992,13 @@ fn fully_qualify_type<'a>(
             None => quote! { crate },
         }
     };
-    fully_qualify_type_impl(type_expression, root_crate)
+    fully_qualify_type_impl(type_expression, &root_crate)
 }
 
 /// Broken out for testing :/
 fn fully_qualify_type_impl(
     type_expression: &str,
-    root_crate: impl Fn() -> TokenStream,
+    root_crate: &dyn Fn() -> TokenStream,
 ) -> TokenStream {
     let mut type_expression_suffix = type_expression;
     'fix: loop {
@@ -4211,38 +4197,85 @@ pub fn resolve_bridge_rust_name(rust_path: &str, hint: &Option<BazelLabel>, ir: 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::{CodegenFunctions, Interner};
     use arc_anyhow::Result;
-    use error_report::anyhow;
+    use code_gen_utils::CommonTokens;
+    use error_report::{anyhow, FatalErrors, IgnoreErrors};
     use googletest::matchers::eq;
     use googletest::{expect_that, gtest};
-    use std::marker::PhantomData;
     use token_stream_matchers::assert_rs_matches;
 
-    #[derive(Copy, Clone)]
-    struct EmptyDatabase<'a>(PhantomData<&'a ()>);
-    impl<'a> EmptyDatabase<'a> {
-        const fn new() -> Self {
-            Self(PhantomData)
-        }
+    struct EmptyDatabase {
+        ir: IR,
+        fatal_errors: FatalErrors,
+        interner: Interner,
     }
-    impl<'a> Deref for EmptyDatabase<'a> {
-        type Target = BindingsGenerator<'a>;
-        fn deref(&self) -> &Self::Target {
-            panic!("Tried to use the empty bindings generator query group.")
+
+    impl EmptyDatabase {
+        fn new() -> Self {
+            Self {
+                ir: proto_to_ir(&proto!(ir_generated::IR {}))
+                    .expect("empty IR proto should always convert to IR"),
+                fatal_errors: FatalErrors::new(),
+                interner: Interner::default(),
+            }
+        }
+
+        fn make_db(&self) -> BindingsGenerator<'_> {
+            macro_rules! unimplemented_query {
+                ($($p:pat),*) => {
+                    |$($p),*| panic!("Tried to use the empty bindings generator query group.")
+                };
+            }
+            BindingsGenerator::new(
+                &self.ir,
+                &IgnoreErrors,
+                &self.fatal_errors,
+                /* is_golden_test= */ false,
+                /* kythe_annotations= */ false,
+                CodegenFunctions {
+                    generate_enum: unimplemented_query!(_, _),
+                    generate_item: unimplemented_query!(_, _),
+                    generate_record: unimplemented_query!(_, _),
+                },
+                &self.interner,
+                CommonTokens::new(),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _, _),
+                unimplemented_query!(_, _, _),
+                unimplemented_query!(_),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_, _),
+                unimplemented_query!(_),
+                unimplemented_query!(_, _),
+            )
         }
     }
 
     fn existing_rust_type_proto_to_rs_type_kind(
         proto: &ir_generated::ExistingRustType,
     ) -> RsTypeKind {
+        let empty_db = EmptyDatabase::new();
         RsTypeKind::new_existing_rust_type(
-            EmptyDatabase::new(),
+            &empty_db.make_db(),
             FfiRc::new(proto.clone()),
             &LifetimeOptions::default(),
             &None,
             &[],
         )
-        .expect("Should succeed because all fallible operations come from BindingsGenerated, which EmptyDatabase cannot successfully deref to (it panics).")
+        .expect("Should succeed because crate-absolute paths do not query unimplemented BindingsGenerator functions.")
     }
 
     fn make_existing_rust_type_proto(
@@ -4297,7 +4330,8 @@ mod tests {
             lifetime: Lifetime::new("_"),
             is_cref: false,
         };
-        assert_rs_matches!(reference.to_token_stream(EmptyDatabase::new()), quote! {&::T});
+        let empty_db = EmptyDatabase::new();
+        assert_rs_matches!(reference.to_token_stream(&empty_db.make_db()), quote! {&::T});
     }
 
     #[gtest]
@@ -4308,8 +4342,9 @@ mod tests {
             mutability: Mutability::Mut,
             lifetime: Lifetime::new("_"),
         };
+        let empty_db = EmptyDatabase::new();
         assert_rs_matches!(
-            reference.to_token_stream(EmptyDatabase::new()),
+            reference.to_token_stream(&empty_db.make_db()),
             quote! {RvalueReference<'_, ::T>}
         );
     }
@@ -4541,7 +4576,7 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_type() {
         assert_rs_matches!(
-            fully_qualify_type_impl("A", || {
+            fully_qualify_type_impl("A", &|| {
                 quote! {crate}
             }),
             quote! {crate::A},
@@ -4553,14 +4588,14 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_crate_relative_type() {
         assert_rs_matches!(
-            fully_qualify_type_impl("crate::foo::A", || {
+            fully_qualify_type_impl("crate::foo::A", &|| {
                 quote! {crate}
             }),
             quote! {crate::foo::A},
         );
         // Generated paths may contain spaces around `::`.
         assert_rs_matches!(
-            fully_qualify_type_impl("crate :: foo :: A", || {
+            fully_qualify_type_impl("crate :: foo :: A", &|| {
                 quote! {crate}
             }),
             quote! {crate::foo::A},
@@ -4572,7 +4607,7 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_crate_relative_type_in_imported_crate() {
         assert_rs_matches!(
-            fully_qualify_type_impl("crate::foo::A", || {
+            fully_qualify_type_impl("crate::foo::A", &|| {
                 quote! {::mangled_dependency}
             }),
             quote! {::mangled_dependency::foo::A},
@@ -4584,7 +4619,7 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_type_with_crate_like_module_name() {
         assert_rs_matches!(
-            fully_qualify_type_impl("crate_like::A", || {
+            fully_qualify_type_impl("crate_like::A", &|| {
                 quote! {crate}
             }),
             quote! {crate::crate_like::A},
@@ -4596,13 +4631,13 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_reference_with_lifetime_placeholder() {
         assert_rs_matches!(
-            fully_qualify_type_impl("&{'a} str", || {
+            fully_qualify_type_impl("&{'a} str", &|| {
                 quote! {crate}
             }),
             quote! {&{'a} str},
         );
         assert_rs_matches!(
-            fully_qualify_type_impl("& { 'a } mut Foo", || {
+            fully_qualify_type_impl("& { 'a } mut Foo", &|| {
                 quote! {crate}
             }),
             quote! {&{'a} mut crate::Foo},
@@ -4612,7 +4647,7 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_i32() {
         assert_rs_matches!(
-            fully_qualify_type_impl("i32", || {
+            fully_qualify_type_impl("i32", &|| {
                 quote! {crate}
             }),
             quote! {i32},
@@ -4622,7 +4657,7 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_ref() {
         assert_rs_matches!(
-            fully_qualify_type_impl("&mut *const X", || {
+            fully_qualify_type_impl("&mut *const X", &|| {
                 quote! {crate}
             }),
             quote! {&mut *const crate::X},

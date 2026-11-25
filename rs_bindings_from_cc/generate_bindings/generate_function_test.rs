@@ -2696,18 +2696,16 @@ fn test_annotated_lifetimes() -> Result<()> {
 
 #[gtest]
 fn test_format_generic_params() -> Result<()> {
-    assert!(
-        format_generic_params(/* lifetimes= */ &[], std::iter::empty::<syn::Ident>()).is_empty(),
-    );
+    assert!(format_generic_params(/* lifetimes= */ &[], /* types= */ &[]).is_empty());
 
-    let idents = ["T1", "T2"].iter().map(|s| make_rs_ident(s));
-    assert_rs_matches!(format_generic_params(/* lifetimes= */ &[], idents), quote! { < T1, T2 > });
+    let idents = ["T1", "T2"].map(|s| {
+        let ident = make_rs_ident(s);
+        quote! { #ident }
+    });
+    assert_rs_matches!(format_generic_params(/* lifetimes= */ &[], &idents), quote! { < T1, T2 > });
 
-    let lifetimes = ["a", "b", "_"].iter().map(|s| Lifetime::new(s)).collect::<Vec<_>>();
-    assert_rs_matches!(
-        format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>()),
-        quote! { < 'a, 'b > }
-    );
+    let lifetimes = ["a", "b", "_"].map(Lifetime::new);
+    assert_rs_matches!(format_generic_params(&lifetimes, &[]), quote! { < 'a, 'b > });
 
     Ok(())
 }

@@ -959,7 +959,7 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
             if lifetime_kind != ExistingRustTypeLifetimes::Known {
                 return Some(unknown_existing_rust_type_lifetimes_reason(db, &existing_rust_type));
             }
-            template_params_safety(db, type_args.iter().cloned())
+            template_params_safety(db, &type_args)
         }
         RsTypeKind::Box { pointee, .. } => {
             pointee.as_ref().and_then(|p| db.rs_type_kind_safety(p.as_ref().clone()))
@@ -972,12 +972,14 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
                 {
                     return Some(reason);
                 }
-                template_params_safety(db, generic_types.iter().cloned())
+                template_params_safety(db, &generic_types)
             }
             BridgeRsTypeKind::ProtoMessageBridge { .. } => record_safety(db, original_type.clone())
                 // Full unsafe reason is not shown here, it's documented on the type instead.
                 .map(|_reason| UnsafeReason(intern!(db.interner(), "unsafe proto message type"))),
-            BridgeRsTypeKind::StdOptional(t) => template_params_safety(db, [t.as_ref().clone()]),
+            BridgeRsTypeKind::StdOptional(t) => {
+                template_params_safety(db, core::slice::from_ref(t.as_ref()))
+            }
             BridgeRsTypeKind::StdPair(t1, t2) => {
                 let s1 = db.rs_type_kind_safety(t1.as_ref().clone());
                 let s2 = db.rs_type_kind_safety(t2.as_ref().clone());
@@ -1157,16 +1159,16 @@ fn unsafe_template_params_enabled(db: &BindingsGenerator<'_>) -> bool {
 
 /// Helper function for `rs_type_kind_safety`.
 /// Returns whether any template parameter is unsafe.
-fn template_params_safety<'a>(
-    db: &BindingsGenerator<'a>,
-    template_params: impl IntoIterator<Item = RsTypeKind>,
+fn template_params_safety(
+    db: &BindingsGenerator<'_>,
+    template_params: &[RsTypeKind],
 ) -> Option<UnsafeReason> {
     let check_all_template_params = unsafe_template_params_enabled(db);
     let reasons: Vec<String> = template_params
-        .into_iter()
+        .iter()
         .filter_map(|param| {
             let reason = if check_all_template_params {
-                db.rs_type_kind_safety(param)?
+                db.rs_type_kind_safety(param.clone())?
             } else {
                 db.unknown_lifetime_safety(param.clone())?
             };
@@ -1269,7 +1271,7 @@ fn record_template_params_safety<'a>(
     customize_methods: Option<&CustomizeMethodsKind>,
 ) -> Option<UnsafeReason> {
     match record_template_params(db, record, uniform_repr_template_type, customize_methods) {
-        Ok(params) => template_params_safety(db, params),
+        Ok(params) => template_params_safety(db, &params),
         Err(err) if unsafe_template_params_enabled(db) => Some(UnsafeReason(intern!(
             db.interner(),
             "template parameter is unsafe: Rust type is unknown: {err}"
@@ -2527,7 +2529,7 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
 
 /// Only to be used in a `CrubitAbiType::Transmute` context.
 fn make_cpp_type_from_item(
-    item: &impl GenericItem,
+    item: &dyn GenericItem,
     cc_name: &str,
     db: &BindingsGenerator,
 ) -> Result<TokenStream> {

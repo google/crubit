@@ -117,8 +117,7 @@ fn trait_name_to_token_stream_removing_trait_record(
         }
         Other { name, params, .. } => {
             let name_as_token_stream = name.parse::<TokenStream>().unwrap();
-            let formatted_params =
-                format_generic_params_replacing_by_self(db, &**params, self_type);
+            let formatted_params = format_generic_params_replacing_by_self(db, params, self_type);
             quote! {#name_as_token_stream #formatted_params}
         }
         Delete => {
@@ -2433,8 +2432,7 @@ pub fn generate_function(
     match impl_kind {
         ImplKind::None { .. } => {
             let func_body = create_func_body()?;
-            let fn_generic_params =
-                format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+            let fn_generic_params = format_generic_params(&lifetimes, &[]);
             api_func = quote! {
                 #unimplemented_trait_def
                 #capture_tags
@@ -2471,8 +2469,7 @@ pub fn generate_function(
             }
 
             let record_name = make_rs_ident(target_record.rs_name().as_str());
-            let fn_generic_params =
-                format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+            let fn_generic_params = format_generic_params(&lifetimes, &[]);
 
             if target_record.is_rs_name_mangled() {
                 // Unnameable template instantiations (`__CcTemplateInst...`) cannot have their
@@ -2574,8 +2571,7 @@ pub fn generate_function(
                     create_func_body()?
                 };
 
-                let free_fn_generic_params =
-                    format_generic_params(&free_lifetimes, std::iter::empty::<syn::Ident>());
+                let free_fn_generic_params = format_generic_params(&free_lifetimes, &[]);
 
                 // Add the free method to the mapping, which we will extract and put into
                 // snippets inside db later.
@@ -2685,10 +2681,12 @@ pub fn generate_function(
                 .chain(first_param_lifetimes.into_iter().flatten())
                 .chain(target_type_lifetimes.into_iter().flatten())
                 .collect();
-            let fn_generic_params = format_generic_params(
-                lifetimes.iter().filter(|lifetime| !trait_lifetimes.contains(lifetime)),
-                std::iter::empty::<syn::Ident>(),
-            );
+            let fn_lifetime_params: Vec<Lifetime> = lifetimes
+                .iter()
+                .filter(|lifetime| !trait_lifetimes.contains(lifetime))
+                .cloned()
+                .collect();
+            let fn_generic_params = format_generic_params(&fn_lifetime_params, &[]);
             let trait_generic_params: Vec<Lifetime> = lifetimes
                 .iter()
                 .filter_map(|lifetime| {
@@ -2882,8 +2880,10 @@ pub fn generate_function(
             };
 
             // NOTE: `trait_generic_params` may include lifetimes!
+            let trait_generic_param_tokens: Vec<TokenStream> =
+                trait_generic_params.iter().map(ToTokens::to_token_stream).collect();
             let formatted_trait_generic_params =
-                format_generic_params(&trait_lifetime_params, &*trait_generic_params);
+                format_generic_params(&trait_lifetime_params, &trait_generic_param_tokens);
             let mut self_type_for_extra = db.rs_type_kind((&**trait_record).into())?;
             if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type_for_extra {
                 *lifetimes = trait_lifetime_params.clone().into();
@@ -3082,7 +3082,8 @@ pub fn generate_function(
                     }
                 }
             };
-            let canonical_trait_name = trait_name.map_args(RsTypeKind::canonical_for_function_id);
+            let canonical_trait_name =
+                trait_name.map_args(&mut RsTypeKind::canonical_for_function_id);
             function_id = FunctionId {
                 self_type: syn::parse2(canonical_self_type_tokens).ok(),
                 function_path: {
@@ -3479,7 +3480,7 @@ fn function_signature(
                     format_tuple_except_singleton_replacing_by_self(db, args_type, Some(self_type))
                 } else {
                     format_tuple_except_singleton(
-                        args_type.iter().map(|rs_type_kind| rs_type_kind.to_token_stream(db)),
+                        &mut args_type.iter().map(|rs_type_kind| rs_type_kind.to_token_stream(db)),
                     )
                 };
                 api_params = vec![quote! {args: #args_type}];
@@ -3489,7 +3490,7 @@ fn function_signature(
                     param_idents.iter().collect::<Vec<_>>()
                 };
                 let thunk_vars = format_tuple_except_singleton(
-                    param_idents_for_unpack.into_iter().map(|ts| quote! { mut #ts }),
+                    &mut param_idents_for_unpack.into_iter().map(|ts| quote! { mut #ts }),
                 );
                 // We must unpack the input args from a tuple before doing other preparation.
                 thunk_prepare = {
@@ -3761,8 +3762,7 @@ fn move_self_from_out_param_to_return_value(
 /// * [] => ()
 /// * [x] => x  // equivalent to (x), but lint-free.
 /// * [x, y] => (x, y)
-fn format_tuple_except_singleton(iter: impl IntoIterator<Item = TokenStream>) -> TokenStream {
-    let mut items = iter.into_iter();
+fn format_tuple_except_singleton(items: &mut dyn Iterator<Item = TokenStream>) -> TokenStream {
     let Some(first) = items.next() else {
         return quote! { () };
     };
@@ -3956,8 +3956,7 @@ pub fn generate_standard_indexing_impl(
                 let output_type_tokens = output_type.to_token_stream(db);
                 let index_lifetimes = unique_lifetimes(core::slice::from_ref(&**index_type), &[]);
                 if trait_record.is_unpin() {
-                    let impl_generics =
-                        format_generic_params(&index_lifetimes, std::iter::empty::<syn::Ident>());
+                    let impl_generics = format_generic_params(&index_lifetimes, &[]);
                     quote! {
                         impl #impl_generics ::core::ops::Index<#index_type_tokens> for #record_name #unsatisfied_where_clause {
                             type Output = #output_type_tokens;
@@ -3972,8 +3971,7 @@ pub fn generate_standard_indexing_impl(
                     if !lifetimes.iter().any(|l| l.0.as_ref() == CONTAINER_LIFETIME_NAME) {
                         lifetimes.push(Lifetime::new(CONTAINER_LIFETIME_NAME));
                     }
-                    let impl_generics =
-                        format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+                    let impl_generics = format_generic_params(&lifetimes, &[]);
                     quote! {
                         impl #impl_generics ::core::ops::Index<#index_type_tokens> for ::core::pin::Pin<&'ctnr mut #record_name> #unsatisfied_where_clause {
                             type Output = #output_type_tokens;
@@ -4005,8 +4003,7 @@ pub fn generate_standard_indexing_impl(
                 let index_type_tokens = index_type.to_token_stream(db);
                 let index_lifetimes = unique_lifetimes(core::slice::from_ref(&**index_type), &[]);
                 if trait_record.is_unpin() {
-                    let impl_generics =
-                        format_generic_params(&index_lifetimes, std::iter::empty::<syn::Ident>());
+                    let impl_generics = format_generic_params(&index_lifetimes, &[]);
                     quote! {
                         impl #impl_generics ::core::ops::IndexMut<#index_type_tokens> for #record_name #unsatisfied_where_clause {
                             #[inline(always)]
@@ -4020,8 +4017,7 @@ pub fn generate_standard_indexing_impl(
                     if !lifetimes.iter().any(|l| l.0.as_ref() == CONTAINER_LIFETIME_NAME) {
                         lifetimes.push(Lifetime::new(CONTAINER_LIFETIME_NAME));
                     }
-                    let impl_generics =
-                        format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+                    let impl_generics = format_generic_params(&lifetimes, &[]);
                     quote! {
                         impl #impl_generics ::core::ops::IndexMut<#index_type_tokens> for ::core::pin::Pin<&'ctnr mut #record_name> #unsatisfied_where_clause {
                             #[inline(always)]

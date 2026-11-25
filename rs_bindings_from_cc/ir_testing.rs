@@ -93,13 +93,13 @@ fn update_test_ir(ir: &mut IR, extra_feature: Option<&str>) {
 }
 
 /// Create a testing `IR` instance from given items, using mock values for other fields.
-pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
+pub fn make_ir_from_items(items: &[Item]) -> IR {
     let current_target = ir::BazelLabel::from(TESTING_TARGET);
     let mut top_level_items: BTreeMap<ir::BazelLabel, Vec<Item>> = BTreeMap::new();
     for item in items {
         if item.enclosing_item_id().is_none() {
             let target = item.owning_target().unwrap_or_else(|| current_target.clone());
-            top_level_items.entry(target).or_default().push(item);
+            top_level_items.entry(target).or_default().push(item.clone());
         }
     }
     let mut ir = ir::make_ir(TreeIR {
@@ -300,7 +300,7 @@ mod tests {
     }
     #[gtest]
     fn test_features_ir_from_items() -> Result<()> {
-        let ir = make_ir_from_items([]);
+        let ir = make_ir_from_items(&[]);
         let enabled_features = ir.target_crubit_features(&ir::BazelLabel::from(TESTING_TARGET));
         expect_eq!(
             enabled_features,
@@ -323,7 +323,7 @@ mod tests {
         let r1 = retrieve_record(&ir, "R1").clone();
         let mut r2 = r1.clone();
         r2.set_rs_name(Identifier::new("R2"));
-        let _ = make_ir_from_items([Item::Record(ir::Rc::new(r1)), Item::Record(ir::Rc::new(r2))]);
+        let _ = make_ir_from_items(&[Item::Record(ir::Rc::new(r1)), Item::Record(ir::Rc::new(r2))]);
     }
 
     #[gtest]

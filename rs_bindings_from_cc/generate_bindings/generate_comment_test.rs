@@ -120,7 +120,7 @@ impl ir::GenericItem for TestItem {
 fn make_factory() -> TestDbFactory {
     let test_item = UnsupportedItem::new_raw(
         "test_item",
-        None::<&str>,
+        None,
         UnsupportedItemKind::Other,
         TEST_ITEM_ID,
         Some(test_decl_loc()),
@@ -132,7 +132,7 @@ fn make_factory() -> TestDbFactory {
             message: "unsupported_message".into(),
         }),
     );
-    TestDbFactory::new(make_ir_from_items([test_item.into()]))
+    TestDbFactory::new(make_ir_from_items(&[test_item.into()]))
 }
 
 #[gtest]

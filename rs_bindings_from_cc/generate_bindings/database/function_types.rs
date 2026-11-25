@@ -214,10 +214,10 @@ impl TraitName {
     }
 
     /// Returns a copy of `self` with every [`RsTypeKind`] argument transformed by `f`.
-    pub fn map_args(&self, mut f: impl FnMut(&RsTypeKind) -> Rc<RsTypeKind>) -> Self {
+    pub fn map_args(&self, f: &mut dyn FnMut(&RsTypeKind) -> Rc<RsTypeKind>) -> Self {
         fn map_slice(
             params: &[RsTypeKind],
-            f: &mut impl FnMut(&RsTypeKind) -> Rc<RsTypeKind>,
+            f: &mut dyn FnMut(&RsTypeKind) -> Rc<RsTypeKind>,
         ) -> Rc<[RsTypeKind]> {
             params.iter().map(|p| f(p).as_ref().clone()).collect()
         }
@@ -225,10 +225,10 @@ impl TraitName {
             Self::Clone => Self::Clone,
             Self::Default => Self::Default,
             Self::Delete => Self::Delete,
-            Self::CtorNew(params) => Self::CtorNew(map_slice(params, &mut f)),
-            Self::From(params) => Self::From(map_slice(params, &mut f)),
-            Self::UnsafeCtorNew(params) => Self::UnsafeCtorNew(map_slice(params, &mut f)),
-            Self::UnsafeFrom(params) => Self::UnsafeFrom(map_slice(params, &mut f)),
+            Self::CtorNew(params) => Self::CtorNew(map_slice(params, f)),
+            Self::From(params) => Self::From(map_slice(params, f)),
+            Self::UnsafeCtorNew(params) => Self::UnsafeCtorNew(map_slice(params, f)),
+            Self::UnsafeFrom(params) => Self::UnsafeFrom(map_slice(params, f)),
             Self::PartialEq { param, negate_thunk_result } => {
                 Self::PartialEq { param: f(param), negate_thunk_result: *negate_thunk_result }
             }
@@ -241,7 +241,7 @@ impl TraitName {
             }
             Self::Other { name, params, is_unsafe_fn } => Self::Other {
                 name: name.clone(),
-                params: map_slice(params, &mut f),
+                params: map_slice(params, f),
                 is_unsafe_fn: *is_unsafe_fn,
             },
         }

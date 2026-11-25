@@ -279,7 +279,7 @@ pub fn generate_function_thunk(
 
     let thunk_ident = thunk_ident(db, func);
 
-    let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+    let generic_params = format_generic_params(&lifetimes, &[]);
     let param_idents =
         out_param_ident.as_ref().into_iter().chain(param_idents).cloned().collect_vec();
     let param_types = out_param
