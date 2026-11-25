@@ -990,16 +990,15 @@ fn generate_constructor_impls<'tcx>(
                     key_type,
                     preferred_type,
                 }) => {
-                    generate_unsupported::error_scope!(db, impl_id, impl_args);
                     let trait_name = if is_from { "From" } else { "Into" };
-                    let err = anyhow!(
-                        "{trait_name} implementation for `{key_type}` is not supported when \
-                         `{trait_name}<{preferred_type}>` is implemented as it may overlap."
-                    );
-                    return Some(
-                        generate_unsupported_def_with_args(db, impl_id, impl_args, err)
-                            .into_main_api(),
-                    );
+                    return Some(generate_trait_collision_error(
+                        db,
+                        trait_name,
+                        impl_id,
+                        impl_args,
+                        key_type,
+                        preferred_type,
+                    ));
                 }
             };
             let mut prereqs = CcPrerequisites::default();
@@ -1098,6 +1097,22 @@ fn generate_constructor_impls<'tcx>(
             })
         })
         .collect()
+}
+
+fn generate_trait_collision_error<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    trait_name: &str,
+    impl_id: DefId,
+    impl_args: GenericArgs<'tcx>,
+    key_type: Ty<'tcx>,
+    preferred_type: Ty<'tcx>,
+) -> ApiSnippets<'tcx> {
+    generate_unsupported::error_scope!(db, impl_id, impl_args);
+    let err = anyhow!(
+        "{trait_name} implementation for `{key_type}` is not supported when \
+         `{trait_name}<{preferred_type}>` is implemented as it may overlap."
+    );
+    generate_unsupported_def_with_args(db, impl_id, impl_args, err).into_main_api()
 }
 
 /// Returns the `impl`s of `trait_def_id` whose operator should become a C++ operator on the C++
@@ -1213,63 +1228,67 @@ fn generate_trait_operator_impls<'tcx>(
             })
             .avoid_colliding_types(tcx, |(_, _, trait_arg_ty)| *trait_arg_ty)
             .into_iter()
-            .map(|res| {
-                res.map_err(
-                    |TypeCollisionRisk {
-                         item: (impl_id, impl_args, _),
-                         key_type,
-                         preferred_type,
-                     }| {
-                        let err = anyhow!(
-                            "{trait_name} implementation for `{key_type}` is not supported when \
-                             `{trait_name}<{preferred_type}>` is implemented as it may overlap."
-                        );
-                        (err, impl_id, impl_args)
-                    },
-                )
-                .and_then(|(impl_id, impl_args, trait_arg_ty)| {
-                    if trait_arg_ty.flags().intersects(has_type_or_const_vars()) {
-                        let err = anyhow!(
-                            "{trait_name} impl has uninstantiated generic parameters, \
-                                       which is not yet supported {trait_arg_ty}"
-                        );
-                        return Err((err, impl_id, impl_args));
+            .filter_map(|res| {
+                let (impl_id, impl_args, trait_arg_ty) = match res {
+                    Ok(item) => item,
+                    Err(TypeCollisionRisk {
+                        item: (impl_id, impl_args, _),
+                        key_type,
+                        preferred_type,
+                    }) => {
+                        return Some(Cow::Owned(generate_trait_collision_error(
+                            db,
+                            &trait_name,
+                            impl_id,
+                            impl_args,
+                            key_type,
+                            preferred_type,
+                        )));
                     }
-
-                    let assoc_fn_id = tcx
-                        .associated_items(impl_id)
-                        .in_definition_order()
-                        .find(|item| {
-                            item.name().as_str() == method_name
-                                && matches!(item.kind, AssocKind::Fn { .. })
-                        })
-                        .unwrap_or_else(|| {
-                            panic!("Caller should ensure {trait_name} has method {method_name}");
-                        })
-                        .def_id;
-                    db.generate_function(
-                        assoc_fn_id,
-                        Some(impl_args),
-                        Some(operator_name),
-                        StaticMethodMode::Infer,
-                    )
-                    .map_err(|e| (e, assoc_fn_id, impl_args))
-                })
-            })
-            .filter_map(|res| match res {
-                Ok(snippets) => (!self_is_generic
-                    || !snippets_introduce_recursive_specialization(
-                        tcx,
-                        core.common.self_ty,
-                        snippets,
-                    ))
-                .then_some(Cow::Borrowed(snippets)),
-                Err((err, def_id, impl_args)) => {
-                    generate_unsupported::error_scope!(db, def_id, impl_args);
-                    Some(Cow::Owned(
-                        generate_unsupported_def_with_args(db, def_id, impl_args, err)
+                };
+                if trait_arg_ty.flags().intersects(has_type_or_const_vars()) {
+                    generate_unsupported::error_scope!(db, impl_id, impl_args);
+                    let err = anyhow!(
+                        "{trait_name} impl has uninstantiated generic parameters, \
+                                   which is not yet supported {trait_arg_ty}"
+                    );
+                    return Some(Cow::Owned(
+                        generate_unsupported_def_with_args(db, impl_id, impl_args, err)
                             .into_main_api(),
-                    ))
+                    ));
+                }
+
+                let assoc_fn_id = tcx
+                    .associated_items(impl_id)
+                    .in_definition_order()
+                    .find(|item| {
+                        item.name().as_str() == method_name
+                            && matches!(item.kind, AssocKind::Fn { .. })
+                    })
+                    .unwrap_or_else(|| {
+                        panic!("Caller should ensure {trait_name} has method {method_name}");
+                    })
+                    .def_id;
+                match db.generate_function(
+                    assoc_fn_id,
+                    Some(impl_args),
+                    Some(operator_name),
+                    StaticMethodMode::Infer,
+                ) {
+                    Ok(snippets) => (!self_is_generic
+                        || !snippets_introduce_recursive_specialization(
+                            tcx,
+                            core.common.self_ty,
+                            snippets,
+                        ))
+                    .then_some(Cow::Borrowed(snippets)),
+                    Err(err) => {
+                        generate_unsupported::error_scope!(db, assoc_fn_id, impl_args);
+                        Some(Cow::Owned(
+                            generate_unsupported_def_with_args(db, assoc_fn_id, impl_args, err)
+                                .into_main_api(),
+                        ))
+                    }
                 }
             })
             .collect()
@@ -1435,24 +1454,40 @@ fn generate_ord_and_partialord_impls<'tcx>(
 
     let self_is_generic =
         core.def_id.is_some_and(|id| query_compiler::has_non_lifetime_generics(tcx, id));
-    for (impl_id, impl_args) in
-        non_blanket_impls_for_ty(db, partial_ord_trait_id, core.common.self_ty)
-    {
-        let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
-        let rhs_ty = trait_ref.args.type_at(1);
-        let erased_rhs_ty = erase_regions(tcx, rhs_ty);
+    let partial_ord_impls = non_blanket_impls_for_ty(db, partial_ord_trait_id, core.common.self_ty)
+        .filter_map(|(impl_id, impl_args)| {
+            let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
+            let rhs_ty = trait_ref.args.type_at(1);
+            let erased_rhs_ty = erase_regions(tcx, rhs_ty);
+            if ord_rhs_types.contains(&erased_rhs_ty) {
+                return None;
+            }
+            if self_is_generic && is_recursive_specialization(tcx, core.common.self_ty, rhs_ty) {
+                return None;
+            }
+            Some((impl_id, impl_args, rhs_ty))
+        })
+        .avoid_colliding_types(tcx, |(_, _, rhs_ty)| *rhs_ty);
 
-        if ord_rhs_types.contains(&erased_rhs_ty) {
-            continue;
+    for res in partial_ord_impls {
+        match res {
+            Ok((impl_id, impl_args, rhs_ty)) => {
+                generate_unsupported::error_scope!(db, impl_id, impl_args);
+                snippets += generate_partial_ord_impls(db, core, rhs_ty).unwrap_or_else(|err| {
+                    generate_unsupported_def_with_args(db, impl_id, impl_args, err).into_main_api()
+                });
+            }
+            Err(TypeCollisionRisk { item: (impl_id, impl_args, _), key_type, preferred_type }) => {
+                snippets += generate_trait_collision_error(
+                    db,
+                    "PartialOrd",
+                    impl_id,
+                    impl_args,
+                    key_type,
+                    preferred_type,
+                );
+            }
         }
-        if self_is_generic && is_recursive_specialization(tcx, core.common.self_ty, rhs_ty) {
-            continue;
-        }
-
-        generate_unsupported::error_scope!(db, impl_id, impl_args);
-        snippets += generate_partial_ord_impls(db, core, rhs_ty).unwrap_or_else(|err| {
-            generate_unsupported_def_with_args(db, impl_id, impl_args, err).into_main_api()
-        });
     }
 
     snippets
@@ -1587,6 +1622,7 @@ fn generate_partial_ord_impls<'tcx>(
         main_api.prereqs.includes.insert(CcInclude::type_traits());
     }
 
+    let rhs_is_unsized = !rhs_ty.is_sized(tcx, ty::TypingEnv::fully_monomorphized());
     let mut cc_details = [ref_self_cc_ty, ref_rhs_cc_ty].map_snippets(
         |[ref_self_cc_tokens, ref_rhs_cc_tokens]| {
             let rhs_cc_tokens_for_impl = if rhs_ty.is_bool() {
@@ -1594,13 +1630,18 @@ fn generate_partial_ord_impls<'tcx>(
             } else {
                 ref_rhs_cc_tokens
             };
+            let (thunk_rhs_param, thunk_rhs_arg) = if rhs_is_unsized {
+                (Cow::Owned(quote! { #ref_rhs_cc_tokens const* }), quote! { &other })
+            } else {
+                (Cow::Borrowed(ref_rhs_cc_tokens), quote! { other })
+            };
             quote! {
                 namespace __crubit_internal {
-                    extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_rhs_cc_tokens);
+                    extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #thunk_rhs_param);
                 }
                 #template_prefix
                 inline ::std::partial_ordering (#cc_fully_qualified_name::operator<=>)(#rhs_cc_tokens_for_impl other) const {
-                    auto val = __crubit_internal::#thunk_name(*this, other);
+                    auto val = __crubit_internal::#thunk_name(*this, #thunk_rhs_arg);
                     switch (val) {
                         case -1: return ::std::partial_ordering::less;
                         case 0: return ::std::partial_ordering::equivalent;
@@ -1616,12 +1657,18 @@ fn generate_partial_ord_impls<'tcx>(
         cc_details.prereqs.includes.insert(CcInclude::type_traits());
     }
 
+    let (unsafe_kw, rhs_param_ty, deref_rhs) = if rhs_is_unsized {
+        (quote! { unsafe }, quote! { *const &#rhs_rs_ty }, quote! { let rhs = unsafe { *rhs }; })
+    } else {
+        (quote! {}, quote! { &#rhs_rs_ty }, quote! {})
+    };
     let rs_details = RsSnippet::new(quote! {
         #[unsafe(no_mangle)]
-        extern "C" fn #thunk_name(
+        #unsafe_kw extern "C" fn #thunk_name(
             lhs: &#self_rs_ty,
-            rhs: &#rhs_rs_ty,
+            rhs: #rhs_param_ty,
         ) -> i8 {
+            #deref_rhs
             match <#self_rs_ty as ::core::cmp::PartialOrd<#rhs_rs_ty>>::partial_cmp(lhs, rhs) {
                 ::core::option::Option::Some(ordering) => ordering as i8,
                 ::core::option::Option::None => 2,
