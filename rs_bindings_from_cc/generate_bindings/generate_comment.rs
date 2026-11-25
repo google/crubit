@@ -21,12 +21,6 @@ pub fn generate_top_level_comment(ir: &IR, is_golden_test: bool) -> String {
     //
     // [1]
     // https://rust-lang.github.io/rustfmt/?version=v1.4.38&search=#format_generated_files
-    //
-    // TODO(b/255784681): It would be nice to include "by $argv[0]"" in the
-    // @generated comment below.  OTOH, `std::env::current_exe()` in our
-    // current build environment returns a guid-like path... :-/
-    //
-    // TODO(b/255784681): Consider including cmdline arguments.
     let target = ir.current_target().as_str();
 
     let mut result = format!(
