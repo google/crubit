@@ -33,18 +33,10 @@ namespace reexport {
 
 ::cc_ns::CcType make_value(::std::int32_t value);
 
-}
-
-namespace reexport {
-
 // CRUBIT_ANNOTATE: cpp_type=cc_ns :: CcType
 // CRUBIT_ANNOTATE: cpp_move_constructible=
 using CcType CRUBIT_INTERNAL_RUST_TYPE(":: cc_type :: cc_ns :: CcType") =
     ::cc_ns::CcType;
-}
-
-namespace reexport {
-
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_uvalue_uvia_ufree_ufn(
     ::cc_ns::CcType const&);

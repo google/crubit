@@ -714,6 +714,94 @@ fn test_generated_bindings_module_deprecated_named_args() {
 }
 
 #[gtest]
+fn test_generated_bindings_top_level_reexport_from_deprecated_module() {
+    let test_src = r#"
+            #![allow(deprecated)]
+            #[deprecated]
+            pub mod dep_mod {
+                pub struct S(pub i32);
+            }
+            pub use dep_mod::S;
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_not_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace [[deprecated]] rust_out
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: S") [[clang::trivial_abi]] S final {
+                        ...
+                    };
+                    ...
+                }  // namespace rust_out
+                ...
+                namespace rust_out {
+                    namespace [[deprecated]] dep_mod {
+                        using S CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: S") = ::rust_out::S;
+                    }
+                }  // namespace rust_out
+            }
+        );
+    });
+}
+
+#[gtest]
+fn test_generated_bindings_alias_namespace_deprecation_follows_enclosing_module() {
+    let test_src = r#"
+            #![allow(deprecated)]
+            #[deprecated]
+            pub mod dep_mod {
+                pub struct DeprecatedModStruct(pub i32);
+                pub use crate::TopLevelStruct as AliasedInDepMod;
+            }
+            pub struct TopLevelStruct(pub i32);
+            pub mod outer {
+                pub mod non_dep_mod {
+                    pub use crate::dep_mod::DeprecatedModStruct;
+                }
+            }
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_not_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace [[deprecated]] non_dep_mod
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out::outer::non_dep_mod {
+                    using DeprecatedModStruct CRUBIT_INTERNAL_RUST_TYPE(
+                        ":: rust_out :: dep_mod :: DeprecatedModStruct") =
+                        ::rust_out::dep_mod::DeprecatedModStruct;
+                }
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out {
+                    namespace [[deprecated]] dep_mod {
+                        ...
+                        using AliasedInDepMod CRUBIT_INTERNAL_RUST_TYPE(
+                            ":: rust_out :: TopLevelStruct") = ::rust_out::TopLevelStruct;
+                    }
+                }
+            }
+        );
+    });
+}
+
+#[gtest]
 fn test_format_bridged_type_pointer_like_errors() {
     let test_src = r#"
             #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=const CppType*")]
@@ -1999,6 +2087,21 @@ fn test_format_namespace_bound_cc_tokens() {
                 void f1c();
                 void f1d();
                 }  // namespace m1
+            },
+        );
+    });
+}
+
+#[gtest]
+fn test_format_namespace_bound_cc_tokens_deprecated_empty_namespace() {
+    run_compiler_for_testing("#[deprecated] pub mod dep_mod {}", |tcx| {
+        let dep_mod_id = find_def_id_by_name(tcx, "dep_mod").to_def_id();
+        let top_level = NamespaceQualifier::new::<&str>([], true);
+        let input = [(Some(dep_mod_id), top_level, quote! { void f(); })];
+        assert_cc_matches!(
+            format_namespace_bound_cc_tokens(input, tcx),
+            quote! {
+                void f();
             },
         );
     });

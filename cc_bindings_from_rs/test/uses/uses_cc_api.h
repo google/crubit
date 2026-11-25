@@ -68,10 +68,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName")
 
 void other_public_name();
 
-}
-
-namespace uses {
-
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: AliasOfExportedStruct")
     [[clang::trivial_abi]] AliasOfExportedStruct final {
@@ -86,34 +82,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: AliasOfExportedStruct")
 
 ::std::int32_t private_fn();
 
-}
-
-namespace uses {
-
 // CRUBIT_ANNOTATE: must_bind=
 ::extern_crate::X return_x();
 
 // CRUBIT_ANNOTATE: must_bind=
 ::extern_crate::Y return_y();
 
-}
-
-namespace uses {
-
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t f();
-
-}
-
-namespace uses {
 
 using X CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") = ::extern_crate::X;
 using XFromExternCrate CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") =
     ::extern_crate::X;
-}
-
-namespace uses {
-
 // CRUBIT_ANNOTATE: must_bind=
 using Alias CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
     ::uses::Original;
@@ -187,10 +167,6 @@ inline void other_public_name() {
   return __crubit_internal::__crubit_thunk_other_upublic_uname();
 }
 
-}
-
-namespace uses {
-
 // CRUBIT_ANNOTATE: must_bind=
 using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;
@@ -227,10 +203,6 @@ extern "C" ::std::int32_t __crubit_thunk_private_ufn();
 inline ::std::int32_t private_fn() {
   return __crubit_internal::__crubit_thunk_private_ufn();
 }
-
-}
-
-namespace uses {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_ux(::extern_crate::X* __ret_ptr);

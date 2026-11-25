@@ -599,6 +599,7 @@ fn public_paths_by_def_id(db: &BindingsGenerator<'_>, crate_num: CrateNum) -> Cr
     let mut add_child = |bfs_queue: &mut VecDeque<_>,
                          child: &ModChild,
                          parent: &[Symbol],
+                         module_def_id: DefId,
                          is_doc_hidden: bool| {
         // Underscores do not create paths that are valid to spell, so we can exclude them from our
         // traversal.
@@ -693,6 +694,7 @@ fn public_paths_by_def_id(db: &BindingsGenerator<'_>, crate_num: CrateNum) -> Cr
             path: parent.to_vec(),
             name: child.ident.name,
             type_alias_def_id,
+            module_def_id,
             is_doc_hidden,
             is_reexport: !child.reexport_chain.is_empty(),
             krate: crate_num,
@@ -719,7 +721,7 @@ fn public_paths_by_def_id(db: &BindingsGenerator<'_>, crate_num: CrateNum) -> Cr
         let module_children = module_children(tcx, mod_like.def_id);
         let is_doc_hidden = mod_like.is_doc_hidden || tcx.is_doc_hidden(mod_like.def_id);
         for child in module_children.iter() {
-            add_child(bfs_queue, child, &mod_like.path_so_far, is_doc_hidden);
+            add_child(bfs_queue, child, &mod_like.path_so_far, mod_like.def_id, is_doc_hidden);
         }
     }
 
@@ -817,7 +819,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
     // etc.).
     should_receive_bindings(db, def_id)?;
 
-    let (full_path_strs, type_alias_def_id, krate_num) = {
+    let (full_path_strs, type_alias_def_id, module_def_id, krate_num) = {
         // Select a canonical path for this symbol from available paths.
         let canonical_path = db
             .all_public_paths_by_def_id()
@@ -848,6 +850,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
         (
             canonical_path.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
             canonical_path.type_alias_def_id,
+            canonical_path.module_def_id,
             canonical_path.krate,
         )
     };
@@ -909,6 +912,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
         cpp_top_level_ns: cpp_top_level_ns.into(),
         cpp_ns_path,
         rs_mod_path,
+        module_def_id,
         unqualified: *unqualified,
     })
 }
@@ -1385,7 +1389,8 @@ pub fn format_namespace_bound_cc_tokens(
         })
         .map(|(ns_def_id_opt, ns, tokens)| {
             let mut ns_attributes = vec![];
-            if let Some(ns_def_id) = ns_def_id_opt
+            if !ns.is_empty()
+                && let Some(ns_def_id) = ns_def_id_opt
                 && let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, ns_def_id)
             {
                 ns_attributes.push(cc_deprecated_tag);
@@ -1410,6 +1415,7 @@ pub fn format_namespace_bound_cc_tokens(
 
 struct FormattedItem<'db, 'tcx> {
     def_id: DefId,
+    module_def_id: DefId,
     cpp_ns_path: &'db NamespaceQualifier,
     snippets: Option<ApiSnippets<'tcx>>,
     aliases: Vec<&'db ExportedPath>,
@@ -1540,6 +1546,7 @@ fn formatted_items_in_crate<'db, 'tcx>(
             };
             Some(FormattedItem {
                 def_id,
+                module_def_id: canonical_name.module_def_id,
                 cpp_ns_path: &canonical_name.cpp_ns_path,
                 snippets,
                 aliases,
@@ -1832,17 +1839,17 @@ fn cc_type_spelling(tokens: TokenStream, keep_nullability: bool) -> String {
 /// Formats all public items from the Rust crate being compiled.
 fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'tcx>> {
     struct CcDetails<'db> {
-        def_id: DefId,
+        namespace_def_id: Option<DefId>,
         namespace: Cow<'db, NamespaceQualifier>,
         tokens: TokenStream,
     }
     impl<'db> CcDetails<'db> {
         fn new(
-            def_id: DefId,
+            namespace_def_id: Option<DefId>,
             namespace: Cow<'db, NamespaceQualifier>,
             tokens: TokenStream,
         ) -> Self {
-            Self { def_id, namespace, tokens }
+            Self { namespace_def_id, namespace, tokens }
         }
     }
     let mut cc_details_prereqs = CcPrerequisites::default();
@@ -1866,10 +1873,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
             let using_snippets = generate_using(db, &alias.name, def_id)
                 .unwrap_or_else(|err| generate_unsupported_def(db, def_id, err));
             cc_details.push(CcDetails::new(
-                // `def_id` gets used for coalescing namespaces in
-                // `format_namespace_bound_cc_tokens`, so we want to carry it alongside our alias
-                // even though we technically no longer need it.
-                def_id,
+                Some(alias.module_def_id),
                 Cow::Owned(alias.to_namespace_qualifier(db)),
                 using_snippets.into_tokens(&mut cc_details_prereqs),
             ));
@@ -1889,7 +1893,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
                 .crate_features(def_id.krate)
                 .contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
             parent_ns_aliases.push(CcDetails::new(
-                def_id,
+                None,
                 std::borrow::Cow::Owned(NamespaceQualifier::new(
                     cpp_top_level_ns[..cpp_top_level_ns.len() - 1].iter().cloned(),
                     use_leading_colons,
@@ -1903,7 +1907,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
         // - `chain`ing `cc_details` after `ordered_main_apis` trivially
         // meets the prerequisites.
         cc_details.push(CcDetails::new(
-            def_id,
+            Some(item.module_def_id),
             Cow::Borrowed(item.cpp_ns_path),
             api_snippets.cc_details.into_tokens(&mut cc_details_prereqs),
         ));
@@ -2050,7 +2054,11 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
                             tcx.def_path_str(def_id),
                         )
                     });
-                    (tcx.opt_parent(def_id), canonical_name.cpp_ns_qualifier(db), tokens)
+                    (
+                        Some(canonical_name.module_def_id),
+                        canonical_name.cpp_ns_qualifier(db),
+                        tokens,
+                    )
                 }
                 // Specializations always live in the top-level namespace.
                 Node::Specialization(_) => {
@@ -2062,7 +2070,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
             })
             .chain(cc_details.into_iter().map(|details| {
                 let use_leading_colons = db
-                    .crate_features(details.def_id.krate)
+                    .crate_features(db.source_crate_num())
                     .contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
                 let mut namespaces =
                     Vec::with_capacity(cpp_top_level_ns.len() + details.namespace.namespaces.len());
@@ -2072,18 +2080,16 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
                     Cow::Owned(ns) => namespaces.extend(ns.namespaces),
                 }
                 (
-                    tcx.opt_parent(details.def_id),
+                    details.namespace_def_id,
                     NamespaceQualifier::new(namespaces, use_leading_colons),
                     details.tokens,
                 )
             }))
             // `parent_ns_aliases` already carry their absolute namespace, so they are not
             // prefixed with `cpp_top_level_ns`.
-            .chain(
-                parent_ns_aliases
-                    .into_iter()
-                    .map(|details| (None, details.namespace.into_owned(), details.tokens)),
-            )
+            .chain(parent_ns_aliases.into_iter().map(|details| {
+                (details.namespace_def_id, details.namespace.into_owned(), details.tokens)
+            }))
             .collect_vec();
 
         (includes, ordered_cc)

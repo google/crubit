@@ -38,10 +38,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX")
   static void __crubit_field_offset_assertions();
 };
 
-}
-
-namespace uses_reexport {
-
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Bar") alignas(4)
     [[clang::trivial_abi]] Bar final {
  public:
@@ -105,10 +101,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo") alignas(4)
 
 ::std::int32_t g2();
 
-}
-
-namespace uses_reexport {
-
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G")
     [[clang::trivial_abi]] G final {
  public:
@@ -117,10 +109,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G")
  private:
   static void __crubit_field_offset_assertions();
 };
-
-}
-
-namespace uses_reexport {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: X1") alignas(4)
     [[clang::trivial_abi]] X1 final {
@@ -150,10 +138,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: X1") alignas(4)
 
 ::std::int32_t f2();
 
-}
-
-namespace uses_reexport {
-
 static_assert(
     sizeof(::uses_reexport::InnerX) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -168,10 +152,6 @@ inline void ::uses_reexport::InnerX::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::uses_reexport::InnerX;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
-}
-
-namespace uses_reexport {
-
 static_assert(
     sizeof(::uses_reexport::Bar) == 4,
     "Verify that ADT layout didn't change since this header got generated");

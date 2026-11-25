@@ -45,15 +45,8 @@ namespace generics {
 template <typename T>
 struct GenericStruct;
 struct SelfReferentialViaPhantom;
-}
-
-namespace generics {
 template <typename T>
 struct RenamedSubGeneric;
-}
-
-namespace generics {
-
 using AliasedGenericI64 CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: AliasedGenericI64") =
     ::generics::GenericStruct<::std::int64_t>;
@@ -218,18 +211,10 @@ instantiate_with_array();
 // `generics_golden::ZeroSizedUnboundType`: Zero-sized types (ZSTs) are not
 // supported (b/258259459)
 
-}
-
-namespace generics {
-
 template <typename T>
 struct RenamedSubGeneric {
   static_assert(false, "This template can only be used via a specialization");
 };
-
-}
-
-namespace generics {
 
 ::generics::GenericStruct<::std::int64_t> use_aliased_generic(
     ::generics::GenericStruct<::std::int64_t> x);
@@ -1771,10 +1756,6 @@ instantiate_with_array() {
       __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-
-}
-
-namespace generics {
 
 template <typename T>
 using SubGeneric = ::generics::RenamedSubGeneric<T>;
