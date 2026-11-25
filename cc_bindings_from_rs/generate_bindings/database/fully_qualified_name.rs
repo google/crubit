@@ -63,6 +63,9 @@ pub struct FullyQualifiedName {
     /// For example, this would be `cmp` for `std::cmp::Ordering`.
     /// The path may contain multiple modules - e.g. `foo::bar::baz`.
     pub rs_mod_path: NamespaceQualifier,
+    /// `DefId` of the module containing the item's canonical path (or the crate
+    /// root `DefId` when `rs_mod_path` is empty).
+    pub module_def_id: DefId,
     /// The C++ namespace to use for the symbol excluding the top-level
     /// namespace.
     pub cpp_ns_path: NamespaceQualifier,
@@ -181,6 +184,9 @@ pub struct ExportedPath {
     /// If this path points as a type alias, rather than a use statement, this will be the DefId of
     /// the type alias.
     pub type_alias_def_id: Option<DefId>,
+    /// `DefId` of the module containing this exported path (or the crate root `DefId` when `path`
+    /// is empty).
+    pub module_def_id: DefId,
     /// True if any segment of this path is marked #[doc(hidden)] making it a less preferable path
     /// than any non-hidden path regardless of length.
     pub is_doc_hidden: bool,

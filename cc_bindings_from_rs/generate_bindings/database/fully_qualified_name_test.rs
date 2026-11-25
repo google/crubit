@@ -130,6 +130,7 @@ fn exported_path(path: &[&str], name: &str) -> ExportedPath {
         path: path.iter().map(|s| Symbol::intern(s)).collect(),
         name: Symbol::intern(name),
         type_alias_def_id: None,
+        module_def_id: LOCAL_CRATE.as_def_id(),
         is_doc_hidden: false,
         is_reexport: false,
         krate: LOCAL_CRATE,

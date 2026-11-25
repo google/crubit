@@ -2843,9 +2843,7 @@ pub fn format_with_cc_body(
 
     // Nested namespace syntax does not accept attributes (see b/445613694), so we have to split out
     // the with-attribute decl to contain only the trailing namespace.
-    // TODO: b/455882065 - Figure out the correct way to handle top level aliases of deprecated
-    // definitions and remove this workaround.
-    if !attributes.is_empty() && !namespaces.is_empty() {
+    if !attributes.is_empty() {
         let innermost_namespace = namespaces
             .pop()
             .expect("there should be at least one namespace if there are attributes");

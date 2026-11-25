@@ -42,10 +42,6 @@ namespace transitive_reexports {
 ::direct::Transitive direct_to_transittive_type_alias(
     ::direct::Direct const& direct);
 
-}
-
-namespace transitive_reexports {
-
 using DirectReexportOfTransitive CRUBIT_INTERNAL_RUST_TYPE(
     ":: direct :: TransitiveReexportAndDirectReexport") =
     ::direct::TransitiveReexportAndDirectReexport;

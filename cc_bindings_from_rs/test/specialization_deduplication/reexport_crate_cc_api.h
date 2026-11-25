@@ -110,10 +110,6 @@ using SAlias CRUBIT_INTERNAL_RUST_TYPE(":: dep_crate :: ExpectedName") =
     ::dep_crate::ExpectedName;
 using Foo CRUBIT_INTERNAL_RUST_TYPE(":: dep_crate :: ExpectedName") =
     ::dep_crate::ExpectedName;
-}
-
-namespace reexport_crate {
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_use_us(
     ::rs::Result<::dep_crate::ExpectedName, ::std::int32_t>* __ret_ptr);
