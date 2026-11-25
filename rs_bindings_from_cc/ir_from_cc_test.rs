@@ -3252,10 +3252,11 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         }
     );
 
-    // The template should be instantiated in `dependency`, rather than in
-    // `current_target`.
-    // TODO(b/222001243): Fix which target contains the instantiations and then flip
-    // the test assertions below.  Tentative fix: cl/438580040.
+    // In eager import mode (`--lazy_import_alien_decls=false`; see
+    // `test_template_and_alias_are_both_in_dependency_with_lazy_import` below
+    // for default lazy import), `MyAliasOfTemplate` in `dependency` is imported
+    // and `Importer::GetOwningTarget` attributes class template specializations
+    // to `current_target`.
     assert_ir_not_matches!(
         ir,
         quote! {
@@ -3275,9 +3276,9 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         }
     );
 
-    // The template instantiations in the `dependency` should only produce type
-    // information (e.g. TypeAlias, Record) and don't need to produce Func
-    // items.
+    // Likewise, `Importer::GetOwningTarget` attributes member functions of the
+    // instantiated class template specialization to `current_target` rather
+    // than `dependency`.
     assert_ir_not_matches!(
         ir,
         quote! {
@@ -3287,9 +3288,6 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
             }
         }
     );
-    // There should be nothing template-instantiation-related in the main test
-    // target. TODO(b/222001243): Fix which target contains the instantiations
-    // and then flip the test assertions below to `assert_ir_not_matches`.
     assert_ir_matches!(
         ir,
         quote! {
