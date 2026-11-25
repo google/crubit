@@ -15,6 +15,7 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "test_annotations",
     hdrs = ["test_annotations.h"],
+    deps = ["//support:lifetime_annotations"],
 )
 
 crubit_test_cc_library(

@@ -5,12 +5,10 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ASSUME_LIFETIMES_TEST_ANNOTATIONS_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ASSUME_LIFETIMES_TEST_ANNOTATIONS_H_
 
-#define $(l) [[clang::annotate_type("lifetime", #l)]]
+// `$(l)`, `$a`..`$z`, `$static` and `$unknown` come from Crubit's public
+// header, so that the tests use the spellings users write.
+#include "support/lifetime_annotations.h"  // IWYU pragma: export
+
 #define LIFETIME_PARAMS(...) [[clang::annotate("lifetime_params", __VA_ARGS__)]]
-#define $a $(a)
-#define $b $(b)
-#define $c $(c)
-#define $static $(static)
-#define $unknown $(unknown)
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ASSUME_LIFETIMES_TEST_ANNOTATIONS_H_
