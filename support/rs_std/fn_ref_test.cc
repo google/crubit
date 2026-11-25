@@ -60,4 +60,28 @@ TEST(FnRefTest, PayloadInvoker) {
   EXPECT_THAT(invoker(payload.data, 20, 22), Eq(42));
 }
 
+TEST(FnRefTest, MakeFnRef) {
+  int x = 42;
+  static_assert(
+      std::is_same_v<decltype(+[](void* data, int arg) -> int { return 0; }),
+                     int (*)(void*, int)>);
+
+  rs::FnRef<int(int)> f = rs::internal::MakeFnRef<int(int)>(
+      &x, +[](void* data, int arg) -> int {
+        return *static_cast<int*>(data) + arg;
+      });
+  EXPECT_THAT(f(10), Eq(52));
+
+  rs::FnRef<int(int) const> f_const = rs::internal::MakeFnRef<int(int) const>(
+      &x, +[](void* data, int arg) -> int {
+        return *static_cast<int*>(data) + arg;
+      });
+  EXPECT_THAT(f_const(10), Eq(52));
+
+  rs::FnRef<void()> f_void = rs::internal::MakeFnRef<void()>(
+      &x, +[](void* data) { *static_cast<int*>(data) = 100; });
+  f_void();
+  EXPECT_THAT(x, Eq(100));
+}
+
 }  // namespace

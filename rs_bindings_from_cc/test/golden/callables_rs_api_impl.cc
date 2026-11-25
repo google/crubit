@@ -250,6 +250,22 @@ __crubit_manager___CcTemplateInstN6rs_std11DynCallableIKFvvEEE__2f_2fthird_5fpar
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
+extern "C" bool
+__crubit_invoker___CcTemplateInstN2rs5FnRefIFbiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    void* state, int param_0);
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN2rs5FnRefIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    void* state);
+
+extern "C" int
+__crubit_invoker___CcTemplateInstN2rs5FnRefIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    void* state, int param_0);
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN2rs5FnRefIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+    void* state);
+
 extern "C" void
 __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
     ::absl::AnyInvocable<void(int&)>* f, int& param_0) {
@@ -562,5 +578,93 @@ __rust_thunk___Z25callable_taking_referenceN6rs_std11DynCallableIFvRiEEEi(
 
 static_assert((int (*)(class rs_std::DynCallable<void(int&)>, int)) &
               ::callable_taking_reference);
+
+extern "C" void __rust_thunk___Z13invoke_fn_refN2rs5FnRefIFvvEEE(
+    const unsigned char* f) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::CallableRefAbi<::rs::FnRef<void()>>::kSize, f);
+  invoke_fn_ref(
+      ::crubit::CallableRefAbi<::rs::FnRef<void()>>([](const void* state)
+                                                        -> ::rs::FnRef<void()> {
+        return ::rs::internal::MakeFnRef<void()>(
+            const_cast<void*>(state), +[](void* state) noexcept -> void {
+              __crubit_invoker___CcTemplateInstN2rs5FnRefIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+                  state);
+            });
+      }).Decode(__f_decoder));
+}
+
+static_assert((void (*)(class rs::FnRef<void()>)) & ::invoke_fn_ref);
+
+extern "C" void __rust_thunk___Z19invoke_fn_ref_constN2rs5FnRefIKFvvEEE(
+    const unsigned char* f) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::CallableRefAbi<::rs::FnRef<void() const>>::kSize, f);
+  invoke_fn_ref_const(
+      ::crubit::CallableRefAbi<
+          ::rs::FnRef<void() const>>([](const void* state)
+                                         -> ::rs::FnRef<void() const> {
+        return ::rs::internal::MakeFnRef<void() const>(
+            const_cast<void*>(state), +[](void* state) noexcept -> void {
+              __crubit_invoker___CcTemplateInstN2rs5FnRefIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+                  state);
+            });
+      }).Decode(__f_decoder));
+}
+
+static_assert((void (*)(class rs::FnRef<void() const>)) &
+              ::invoke_fn_ref_const);
+
+extern "C" int __rust_thunk___Z14map_int_fn_refN2rs5FnRefIKFiiEEEi(
+    const unsigned char* f, int arg) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::CallableRefAbi<::rs::FnRef<int(int) const>>::kSize, f);
+  return map_int_fn_ref(
+      ::crubit::CallableRefAbi<::rs::FnRef<int(
+          int) const>>([](const void* state) -> ::rs::FnRef<int(int) const> {
+        return ::rs::internal::MakeFnRef<int(int) const>(
+            const_cast<void*>(state),
+            +[](void* state, int param_0) noexcept -> int {
+              return __crubit_invoker___CcTemplateInstN2rs5FnRefIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+                  state, param_0);
+            });
+      }).Decode(__f_decoder),
+      arg);
+}
+
+static_assert((int (*)(class rs::FnRef<int(int) const>, int)) &
+              ::map_int_fn_ref);
+
+extern "C" int const* __rust_thunk___Z14find_if_fn_refRKiN2rs5FnRefIFbiEEE(
+    int const* v, const unsigned char* pred) {
+  ::crubit::Decoder __pred_decoder(
+      ::crubit::CallableRefAbi<::rs::FnRef<bool(int)>>::kSize, pred);
+  return std::addressof(find_if_fn_ref(
+      *v,
+      ::crubit::CallableRefAbi<::rs::FnRef<bool(int)>>([](const void* state)
+                                                           -> ::rs::FnRef<bool(
+                                                               int)> {
+        return ::rs::internal::MakeFnRef<bool(int)>(
+            const_cast<void*>(state),
+            +[](void* state, int param_0) noexcept -> bool {
+              return __crubit_invoker___CcTemplateInstN2rs5FnRefIFbiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+                  state, param_0);
+            });
+      }).Decode(__pred_decoder)));
+}
+
+static_assert((int const& (*)(int const&, class rs::FnRef<bool(int)>)) &
+              ::find_if_fn_ref);
+
+static_assert(CRUBIT_SIZEOF(struct StructWithFnRef) == 16);
+static_assert(alignof(struct StructWithFnRef) == 8);
+static_assert(CRUBIT_OFFSET_OF(f, struct StructWithFnRef) == 0);
+
+static_assert(CRUBIT_SIZEOF(struct NestedStructWithFnRef) == 16);
+static_assert(alignof(struct NestedStructWithFnRef) == 8);
+static_assert(CRUBIT_OFFSET_OF(inner, struct NestedStructWithFnRef) == 0);
+
+static_assert(CRUBIT_SIZEOF(struct DerivedFromStructWithFnRef) == 16);
+static_assert(alignof(struct DerivedFromStructWithFnRef) == 8);
 
 #pragma clang diagnostic pop

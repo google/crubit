@@ -213,6 +213,145 @@ pub unsafe fn callable_taking_reference(
     }
 }
 
+#[inline(always)]
+pub fn invoke_fn_ref(f: &(dyn ::core::ops::Fn() + '_)) {
+    unsafe {
+        crate::detail::__rust_thunk___Z13invoke_fn_refN2rs5FnRefIFvvEEE(::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'_,dyn::core::ops::Fn()+'_>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn()+'static>,f).as_ptr()as*const u8)
+    }
+}
+
+#[inline(always)]
+pub fn invoke_fn_ref_const(f: &(dyn ::core::ops::Fn() + '_)) {
+    unsafe {
+        crate::detail::__rust_thunk___Z19invoke_fn_ref_constN2rs5FnRefIKFvvEEE(::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'_,dyn::core::ops::Fn()+'_>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn()+'static>,f).as_ptr()as*const u8)
+    }
+}
+
+#[inline(always)]
+pub fn map_int_fn_ref(
+    f: &(dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int + '_),
+    arg: ::ffi_11::c_int,
+) -> ::ffi_11::c_int {
+    unsafe {
+        crate::detail::__rust_thunk___Z14map_int_fn_refN2rs5FnRefIKFiiEEEi(::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'_,dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+'_>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+'static>,f).as_ptr()as*const u8,arg)
+    }
+}
+
+#[inline(always)]
+pub fn find_if_fn_ref<'v>(
+    v: &'v ::ffi_11::c_int,
+    pred: &(dyn ::core::ops::Fn(::ffi_11::c_int) -> bool + '_),
+) -> ::cref::CRef<'v, ::ffi_11::c_int> {
+    unsafe {
+        crate::detail::__rust_thunk___Z14find_if_fn_refRKiN2rs5FnRefIFbiEEE(v,::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'_,dyn::core::ops::Fn(::ffi_11::c_int)->bool+'_>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn(::ffi_11::c_int)->bool+'static>,pred).as_ptr()as*const u8)
+    }
+}
+
+// error: function `return_fn_ref` could not be bound
+//   Return type is not supported: borrowed callable type `rs::FnRef<void ()>` cannot be used as a return type
+
+// error: function `return_fn_ref_from_dyn` could not be bound
+//   Return type is not supported: return type `rs_std :: DynCallable < class rs :: FnRef < void () > () const >` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
+// error: function `fn_ref_returning_fn_ref` could not be bound
+//   Return type is not supported: return type `rs :: FnRef < class rs :: FnRef < void () > () >` contains borrowed callable type `rs::FnRef<class rs::FnRef<void ()> ()>`, which cannot be used in a return type
+
+// error: function `accept_nested_fn_ref` could not be bound
+//   Unsupported parameter type `rs::FnRef<void (class rs::FnRef<void ()>)> f`:
+//     borrowed callable type cannot be used inside another callable
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "15StructWithFnRef"]
+#[repr(C, align(8))]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithFnRef")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct StructWithFnRef {
+    /// Reason for representing this field as a blob of bytes:
+    /// crubit.rs/errors/bridge_field: '&(dyn::core::ops::Fn()+'_)' is not layout-compatible between Rust and C++.
+    pub(crate) f: [::core::mem::MaybeUninit<u8>; 16],
+}
+/// Cannot infer `Send` because:
+/// * field `f` is represented as opaque bytes
+impl !Send for StructWithFnRef {}
+/// Cannot infer `Sync` because:
+/// * field `f` is represented as opaque bytes
+impl !Sync for StructWithFnRef {}
+unsafe impl ::cxx::ExternType for StructWithFnRef {
+    type Id = ::cxx::type_id!("StructWithFnRef");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithFnRef"),
+    crate::StructWithFnRef
+);
+
+// error: function `StructWithFnRef::operator=` could not be bound
+//   Return type is not supported: return type `StructWithFnRef&` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
+// error: function `StructWithFnRef::operator=` could not be bound
+//   Return type is not supported: return type `StructWithFnRef&` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
+// error: function `make_struct_with_fn_ref` could not be bound
+//   Return type is not supported: return type `StructWithFnRef` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "21NestedStructWithFnRef"]
+#[repr(C)]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=NestedStructWithFnRef")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct NestedStructWithFnRef {
+    pub inner: crate::StructWithFnRef,
+}
+unsafe impl ::cxx::ExternType for NestedStructWithFnRef {
+    type Id = ::cxx::type_id!("NestedStructWithFnRef");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NestedStructWithFnRef"),
+    crate::NestedStructWithFnRef
+);
+
+// error: function `NestedStructWithFnRef::operator=` could not be bound
+//   Return type is not supported: return type `NestedStructWithFnRef&` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
+// error: function `NestedStructWithFnRef::operator=` could not be bound
+//   Return type is not supported: return type `NestedStructWithFnRef&` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
+// error: function `make_nested_struct_with_fn_ref` could not be bound
+//   Return type is not supported: return type `NestedStructWithFnRef` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "26DerivedFromStructWithFnRef"]
+#[repr(C, align(8))]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=DerivedFromStructWithFnRef")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct DerivedFromStructWithFnRef {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
+}
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
+impl !Send for DerivedFromStructWithFnRef {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
+impl !Sync for DerivedFromStructWithFnRef {}
+unsafe impl ::cxx::ExternType for DerivedFromStructWithFnRef {
+    type Id = ::cxx::type_id!("DerivedFromStructWithFnRef");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DerivedFromStructWithFnRef"),
+    crate::DerivedFromStructWithFnRef
+);
+
+// error: function `DerivedFromStructWithFnRef::operator=` could not be bound
+//   Return type is not supported: return type `DerivedFromStructWithFnRef&` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
+// error: function `DerivedFromStructWithFnRef::operator=` could not be bound
+//   Return type is not supported: return type `DerivedFromStructWithFnRef&` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
+// error: function `make_derived_struct_with_fn_ref` could not be bound
+//   Return type is not supported: return type `DerivedFromStructWithFnRef` contains borrowed callable type `rs::FnRef<void ()>`, which cannot be used in a return type
+
 /// Class template instantiations that aren't named by a C++ type alias.
 pub mod zz_template_instantiations {
     // error: class `absl::internal_any_invocable::CoreImpl<false, struct ABICompatible, struct ABICompatible>` could not be bound
@@ -236,6 +375,16 @@ pub mod zz_template_instantiations {
     //   template instantiation is not yet supported
 
     // error: class `absl::internal_any_invocable::CoreImpl<false, struct Bridged, struct Bridged>` could not be bound
+    //   crubit.rs/errors/unknown_target: the type is defined in
+    //     third_party/absl/functional/internal/any_invocable.h
+    //   which is not a public header of any Crubit-enabled target that
+    //     //rs_bindings_from_cc/test/golden:callables_cc
+    //   depends on directly. Either enable Crubit on the library that provides the header,
+    //   add that library as a direct dependency (and `#include` the header directly),
+    //   or move the type to a public header.
+    //   template instantiation is not yet supported
+
+    // error: class `absl::internal_any_invocable::CoreImpl<false, class rs::FnRef<void ()>>` could not be bound
     //   crubit.rs/errors/unknown_target: the type is defined in
     //     third_party/absl/functional/internal/any_invocable.h
     //   which is not a public header of any Crubit-enabled target that
@@ -274,6 +423,21 @@ pub mod zz_template_instantiations {
     //   add that library as a direct dependency (and `#include` the header directly),
     //   or move the type to a public header.
     //   template instantiation is not yet supported
+
+    // error: class `absl::AnyInvocable<class rs::FnRef<void ()> () const>` could not be bound
+    //   borrowed callable type cannot be used inside another callable
+
+    // error: class `rs::DynCallable<class rs::FnRef<void ()> () const>` could not be bound
+    //   borrowed callable type cannot be used inside another callable
+
+    // error: class `rs_std::DynCallable<class rs::FnRef<void ()> () const>` could not be bound
+    //   borrowed callable type cannot be used inside another callable
+
+    // error: class `rs::FnRef<class rs::FnRef<void ()> ()>` could not be bound
+    //   borrowed callable type cannot be used inside another callable
+
+    // error: class `rs::FnRef<void (class rs::FnRef<void ()>)>` could not be bound
+    //   borrowed callable type cannot be used inside another callable
 }
 mod detail {
     #[allow(unused_imports)]
@@ -319,6 +483,20 @@ mod detail {
             f: *const ::core::ffi::c_uchar,
             arg: ::ffi_11::c_int,
         ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z13invoke_fn_refN2rs5FnRefIFvvEEE(
+            f: *const ::core::ffi::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z19invoke_fn_ref_constN2rs5FnRefIKFvvEEE(
+            f: *const ::core::ffi::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z14map_int_fn_refN2rs5FnRefIKFiiEEEi(
+            f: *const ::core::ffi::c_uchar,
+            arg: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z14find_if_fn_refRKiN2rs5FnRefIFbiEEE<'v>(
+            v: &'v ::ffi_11::c_int,
+            pred: *const ::core::ffi::c_uchar,
+        ) -> ::cref::CRef<'v, ::ffi_11::c_int>;
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvRiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
@@ -1100,6 +1278,46 @@ mod detail {
             ::dyn_callable_rs::manager(operation, from, to);
         }
     }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN2rs5FnRefIFbiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *const ::core::ffi::c_void,
+        param_0: ::ffi_11::c_int,
+    ) -> bool {
+        let f = unsafe {
+            ::core::ptr::read_unaligned(
+                f.cast::<*const (dyn ::core::ops::Fn(::ffi_11::c_int) -> bool + '_)>(),
+            )
+        };
+        (unsafe { &*f })(param_0)
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN2rs5FnRefIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *const ::core::ffi::c_void,
+    ) {
+        let f =
+            unsafe { ::core::ptr::read_unaligned(f.cast::<*const (dyn ::core::ops::Fn() + '_)>()) };
+        (unsafe { &*f })();
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN2rs5FnRefIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *const ::core::ffi::c_void,
+        param_0: ::ffi_11::c_int,
+    ) -> ::ffi_11::c_int {
+        let f = unsafe {
+            ::core::ptr::read_unaligned(
+                f.cast::<*const (dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int + '_)>(),
+            )
+        };
+        (unsafe { &*f })(param_0)
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN2rs5FnRefIKFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3acallables_5fcc(
+        f: *const ::core::ffi::c_void,
+    ) {
+        let f =
+            unsafe { ::core::ptr::read_unaligned(f.cast::<*const (dyn ::core::ops::Fn() + '_)>()) };
+        (unsafe { &*f })();
+    }
 }
 
 const _: () = {
@@ -1113,4 +1331,18 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::LayoutCompatible: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::LayoutCompatible: Drop);
     assert!(::core::mem::offset_of!(crate::LayoutCompatible, private_) == 0);
+    assert!(::core::mem::size_of::<crate::StructWithFnRef>() == 16);
+    assert!(::core::mem::align_of::<crate::StructWithFnRef>() == 8);
+    static_assertions::assert_impl_all!(crate::StructWithFnRef: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::StructWithFnRef: Drop);
+    assert!(::core::mem::offset_of!(crate::StructWithFnRef, f) == 0);
+    assert!(::core::mem::size_of::<crate::NestedStructWithFnRef>() == 16);
+    assert!(::core::mem::align_of::<crate::NestedStructWithFnRef>() == 8);
+    static_assertions::assert_impl_all!(crate::NestedStructWithFnRef: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::NestedStructWithFnRef: Drop);
+    assert!(::core::mem::offset_of!(crate::NestedStructWithFnRef, inner) == 0);
+    assert!(::core::mem::size_of::<crate::DerivedFromStructWithFnRef>() == 16);
+    assert!(::core::mem::align_of::<crate::DerivedFromStructWithFnRef>() == 8);
+    static_assertions::assert_impl_all!(crate::DerivedFromStructWithFnRef: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::DerivedFromStructWithFnRef: Drop);
 };

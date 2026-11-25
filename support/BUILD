@@ -365,6 +365,7 @@ cc_test(
     srcs = ["bridge_test.cc"],
     deps = [
         ":bridge_cpp",
+        "//support/rs_std:fn_ref",
         "@googletest//:gtest_main",
     ],
 )

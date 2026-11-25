@@ -133,6 +133,7 @@ macro_rules! __proto_call_setter {
     ($msg:ident, is_mutable, $($arg:tt)*) => { $msg.set_is_mutable($($arg)*) };
     ($msg:ident, is_negative, $($arg:tt)*) => { $msg.set_is_negative($($arg)*) };
     ($msg:ident, is_no_unique_address, $($arg:tt)*) => { $msg.set_is_no_unique_address($($arg)*) };
+    ($msg:ident, is_noexcept, $($arg:tt)*) => { $msg.set_is_noexcept($($arg)*) };
     ($msg:ident, is_nonnull, $($arg:tt)*) => { $msg.set_is_nonnull($($arg)*) };
     ($msg:ident, is_noreturn, $($arg:tt)*) => { $msg.set_is_noreturn($($arg)*) };
     ($msg:ident, is_pub_crate, $($arg:tt)*) => { $msg.set_is_pub_crate($($arg)*) };
@@ -5684,6 +5685,9 @@ mod __defs {
                 #[default]
                 DynCallable = 0,
                 AnyInvocable = 1,
+                FunctionRef = 2,
+                FnRef = 3,
+                StdFunctionRef = 4,
             }
             impl BackingType {
                 pub const EMPTY: Self = Self::DynCallable;
@@ -5691,6 +5695,9 @@ mod __defs {
                     match val {
                         0 => Some(Self::DynCallable),
                         1 => Some(Self::AnyInvocable),
+                        2 => Some(Self::FunctionRef),
+                        3 => Some(Self::FnRef),
+                        4 => Some(Self::StdFunctionRef),
                         _ => None,
                     }
                 }
@@ -5900,6 +5907,7 @@ mod __defs {
         pub struct Callable {
             pub backing_type: super::bridge_type::callable::BackingType,
             pub fn_trait: super::bridge_type::callable::FnTrait,
+            pub is_noexcept: bool,
             pub return_type: super::CcType,
             pub param_types: FfiVec<super::CcType>,
         }
@@ -5917,6 +5925,7 @@ mod __defs {
             pub const EMPTY: Self = Self {
                 backing_type: super::bridge_type::callable::BackingType::EMPTY,
                 fn_trait: super::bridge_type::callable::FnTrait::EMPTY,
+                is_noexcept: false,
                 return_type: super::CcType::EMPTY,
                 param_types: FfiVec::EMPTY,
             };
@@ -5925,6 +5934,9 @@ mod __defs {
             }
             pub fn fn_trait(&self) -> super::bridge_type::callable::FnTrait {
                 self.fn_trait
+            }
+            pub fn is_noexcept(&self) -> bool {
+                self.is_noexcept
             }
             pub fn return_type(&self) -> &super::CcType {
                 &self.return_type
@@ -5937,6 +5949,10 @@ mod __defs {
             }
             pub fn set_fn_trait(&mut self, val: super::bridge_type::callable::FnTrait) {
                 self.fn_trait = val;
+            }
+            pub fn set_is_noexcept(&mut self, val: bool) -> &mut bool {
+                self.is_noexcept = val;
+                &mut self.is_noexcept
             }
             pub fn set_return_type(&mut self, val: super::CcType) -> &mut super::CcType {
                 self.return_type = val;

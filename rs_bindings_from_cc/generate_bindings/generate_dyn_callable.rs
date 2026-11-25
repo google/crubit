@@ -41,6 +41,14 @@ pub fn callable_crubit_abi_type(
         BackingType::AnyInvocable { .. } => quote! {
             #any_invocable_crate::AnyInvocableAbi<#dyn_fn_spelling>
         },
+        BackingType::FunctionRef { lifetime: _ }
+        | BackingType::FnRef { lifetime: _ }
+        | BackingType::StdFunctionRef { lifetime: _ } => {
+            let dyn_fn_spelling_static = callable.dyn_fn_spelling_static(db);
+            quote! {
+                ::crubit_support::bridge::FunctionRefAbi<'static, #dyn_fn_spelling_static>
+            }
+        }
     };
 
     let on_empty_tokens = {
@@ -71,6 +79,11 @@ pub fn callable_crubit_abi_type(
                 )
             }
         }
+        BackingType::FunctionRef { lifetime }
+        | BackingType::FnRef { lifetime }
+        | BackingType::StdFunctionRef { lifetime } => quote! {
+            ::crubit_support::bridge::FunctionRefAbi::<#lifetime, #dyn_fn_spelling>::new()
+        },
     };
 
     let qualifier = match callable.cpp_fn_trait {
@@ -86,8 +99,15 @@ pub fn callable_crubit_abi_type(
         .iter()
         .map(|param_ty| cpp_type_name::format_cpp_type_with_references(param_ty, db))
         .collect::<Result<Vec<_>>>()?;
+
+    let noexcept = if callable.is_noexcept {
+        quote! { noexcept }
+    } else {
+        quote! {}
+    };
+
     let cpp_fn_sig = quote! {
-        #cpp_return_type(#(#cpp_param_types),*) #qualifier
+        #cpp_return_type(#(#cpp_param_types),*) #qualifier #noexcept
     };
     let cpp_type_tokens = match &callable.backing_type {
         BackingType::DynCallable => quote! {
@@ -96,11 +116,76 @@ pub fn callable_crubit_abi_type(
         BackingType::AnyInvocable { .. } => quote! {
             ::crubit::AnyInvocableAbi<#cpp_fn_sig>
         },
+        BackingType::FunctionRef { .. } => quote! {
+            ::crubit::CallableRefAbi<::absl::FunctionRef<#cpp_fn_sig>>
+        },
+        BackingType::FnRef { .. } => quote! {
+            ::crubit::CallableRefAbi<::rs::FnRef<#cpp_fn_sig>>
+        },
+        BackingType::StdFunctionRef { .. } => quote! {
+            ::crubit::CallableRefAbi<::std::function_ref<#cpp_fn_sig>>
+        },
     };
 
     let cpp_expr_tokens = {
         let invoker_function_pointer =
             generate_invoker_function_pointer(db, callable, &cpp_param_types, &cpp_return_type)?;
+        // Borrowed callables point directly at the Rust fat pointer stored in the bridge buffer,
+        // which outlives the C++ call. The invoker is a stateless C++ lambda that calls the Rust
+        // invoker directly, so every indirect call stays C++-to-C++ for CFI purposes.
+        match &callable.backing_type {
+            BackingType::FunctionRef { .. } => {
+                return Ok(CrubitAbiType::Callable {
+                    rust_type_tokens,
+                    rust_expr_tokens,
+                    cpp_expr_tokens: quote! {
+                        #cpp_type_tokens(
+                            [](const void* state) -> ::absl::FunctionRef<#cpp_fn_sig> {
+                                static constexpr auto kInvoker = +#invoker_function_pointer;
+                                return ::absl::FunctionRef<#cpp_fn_sig>(
+                                    ::absl::nontype<kInvoker>,
+                                    static_cast<const unsigned char*>(state));
+                            }
+                        )
+                    },
+                    cpp_type_tokens,
+                });
+            }
+            BackingType::FnRef { .. } => {
+                return Ok(CrubitAbiType::Callable {
+                    rust_type_tokens,
+                    rust_expr_tokens,
+                    cpp_expr_tokens: quote! {
+                        #cpp_type_tokens(
+                            [](const void* state) -> ::rs::FnRef<#cpp_fn_sig> {
+                                return ::rs::internal::MakeFnRef<#cpp_fn_sig>(
+                                    const_cast<void*>(state),
+                                    +#invoker_function_pointer);
+                            }
+                        )
+                    },
+                    cpp_type_tokens,
+                });
+            }
+            BackingType::StdFunctionRef { .. } => {
+                return Ok(CrubitAbiType::Callable {
+                    rust_type_tokens,
+                    rust_expr_tokens,
+                    cpp_expr_tokens: quote! {
+                        #cpp_type_tokens(
+                            [](const void* state) -> ::std::function_ref<#cpp_fn_sig> {
+                                static constexpr auto kInvoker = +#invoker_function_pointer;
+                                return ::std::function_ref<#cpp_fn_sig>(
+                                    ::std::constant_wrapper<kInvoker>{},
+                                    static_cast<const unsigned char*>(state));
+                            }
+                        )
+                    },
+                    cpp_type_tokens,
+                });
+            }
+            BackingType::DynCallable | BackingType::AnyInvocable { .. } => {}
+        }
         let manager_ident = &callable.manager_ident;
 
         // As with the invoker, we cannot pass the Rust manager function pointer directly: C++
@@ -260,18 +345,42 @@ fn generate_invoker_function_pointer(
         }
     }
 
-    Ok(quote! {
-        [](
-            ::absl::internal_any_invocable::TypeErasedState* state
-            #(
-                , ::absl::internal_any_invocable::ForwardedParameterType<#cpp_param_types> #param_idents
-            )*
-        ) noexcept -> #cpp_return_type {
-            #arg_transforms
+    match callable.backing_type {
+        BackingType::DynCallable | BackingType::AnyInvocable { .. } => Ok(quote! {
+            [](
+                ::absl::internal_any_invocable::TypeErasedState* state
+                #(
+                    , ::absl::internal_any_invocable::ForwardedParameterType<#cpp_param_types> #param_idents
+                )*
+            ) noexcept -> #cpp_return_type {
+                #arg_transforms
 
-            #invoke_ffi_and_transform_to_cpp
-        }
-    })
+                #invoke_ffi_and_transform_to_cpp
+            }
+        }),
+        BackingType::FunctionRef { .. } | BackingType::StdFunctionRef { .. } => Ok(quote! {
+            [](
+                const unsigned char* state
+                #(
+                    , #cpp_param_types #param_idents
+                )*
+            ) noexcept -> #cpp_return_type {
+                #arg_transforms
+                #invoke_ffi_and_transform_to_cpp
+            }
+        }),
+        BackingType::FnRef { .. } => Ok(quote! {
+            [](
+                void* state
+                #(
+                    , #cpp_param_types #param_idents
+                )*
+            ) noexcept -> #cpp_return_type {
+                #arg_transforms
+                #invoke_ffi_and_transform_to_cpp
+            }
+        }),
+    }
 }
 
 /// Generates the `make_cpp_invoker` function for AnyInvocable.

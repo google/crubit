@@ -13,9 +13,10 @@ use database::function_types::{
     TraitName,
 };
 use database::rs_snippet::{
-    format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
-    unique_lifetimes, CratePath, Lifetime, LifetimeOptions, Mutability, PassingConvention,
-    RsTypeKind, RustPtrKind,
+    borrowed_callable_return_type_error, cc_type_contains_borrowed_callable, format_generic_params,
+    format_generic_params_replacing_by_self, record_contains_borrowed_callable,
+    should_derive_clone, unique_lifetimes, BridgeRsTypeKind, CratePath, Lifetime, LifetimeOptions,
+    Mutability, PassingConvention, RsTypeKind, RustPtrKind,
 };
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail, ErrorList};
@@ -629,6 +630,7 @@ fn api_func_shape_for_operator_assign(
         return None;
     };
     materialize_ctor_in_caller(func, param_types);
+    unelide_borrowed_callable_lifetimes(&mut param_types[1]);
 
     let rhs = &param_types[1];
 
@@ -1019,6 +1021,35 @@ fn issue_unsafe_constructor_errors(
     }
 }
 
+/// Replaces elided (`'_`) lifetimes on borrowed callables inside `ty` with `'__unelided` so that
+/// `ty` can appear in trait impl headers (`From<...>`, `CtorNew<...>`, `UnpinAssign<...>`, etc.),
+/// where an unannotated `&` in `&(dyn Fn(...) + '_)` would fail to compile.
+fn unelide_borrowed_callable_lifetimes(ty: &mut RsTypeKind) {
+    match ty {
+        RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
+            BridgeRsTypeKind::Callable(c) => {
+                if c.lifetime().is_some_and(Lifetime::is_elided)
+                    && let Some(lt) = Rc::make_mut(c).lifetime_mut()
+                {
+                    *lt = Lifetime::new("__unelided");
+                }
+            }
+            BridgeRsTypeKind::StdOptional(inner) => {
+                unelide_borrowed_callable_lifetimes(Rc::make_mut(inner));
+            }
+            BridgeRsTypeKind::StdPair(first, second) => {
+                unelide_borrowed_callable_lifetimes(Rc::make_mut(first));
+                unelide_borrowed_callable_lifetimes(Rc::make_mut(second));
+            }
+            _ => {}
+        },
+        RsTypeKind::TypeAlias { underlying_type, .. } => {
+            unelide_borrowed_callable_lifetimes(Rc::make_mut(underlying_type));
+        }
+        _ => {}
+    }
+}
+
 fn api_func_shape_for_constructor(
     db: &BindingsGenerator,
     func: &Func,
@@ -1034,6 +1065,12 @@ fn api_func_shape_for_constructor(
     }
     materialize_ctor_in_caller(func, param_types);
     let unsafe_params = issue_unsafe_constructor_errors(db, func, record, param_types, errors);
+
+    if param_types.len() > 1 {
+        for param in &mut param_types[1..] {
+            unelide_borrowed_callable_lifetimes(param);
+        }
+    }
 
     if !record.is_unpin() {
         let [_this, params @ ..] = param_types else {
@@ -2113,6 +2150,21 @@ fn rs_type_kinds_for_func(
                         c_array.display_cc_type_name_for_rs_type(),
                     );
                 }
+                if let Some(callable_name) =
+                    cc_type_contains_borrowed_callable(db, func.return_type())
+                {
+                    let return_type_name = ty.display_cc_type_name_for_rs_type().to_string();
+                    return Err(borrowed_callable_return_type_error(
+                        &return_type_name,
+                        &callable_name,
+                    ));
+                }
+                if ty.contains_borrowed_callable().is_some() {
+                    bail!(
+                        "borrowed callable type `{}` cannot be used as a return type",
+                        ty.display_cc_type_name_for_rs_type(),
+                    );
+                }
                 Ok(ty)
             })
             .map_err(|err| {
@@ -2120,6 +2172,16 @@ fn rs_type_kinds_for_func(
             }),
         )
     };
+
+    if *func.cc_name() == ir::UnqualifiedIdentifier::Constructor
+        && let Some(enclosing_id) = func.enclosing_item_id()
+        && let Item::Record(record) = db.find_untyped_decl(enclosing_id)
+        && param_types.iter().skip(1).any(|pt| pt.contains_borrowed_callable().is_some())
+        && let Some(callable_name) = record_contains_borrowed_callable(db, record)
+    {
+        let err = borrowed_callable_return_type_error(record.cc_name().as_str(), &callable_name);
+        errors.add(error_report::because(anyhow!("Return type is not supported: {err}"), err));
+    }
 
     errors.consolidate()?;
     Ok((param_types, return_type.unwrap()))

@@ -193,6 +193,9 @@ namespace bridge_type::callable {
 enum BackingType : int32_t {
   DYN_CALLABLE = 0,
   ANY_INVOCABLE = 1,
+  FUNCTION_REF = 2,
+  FN_REF = 3,
+  STD_FUNCTION_REF = 4,
 };
 }  // namespace bridge_type::callable
 
@@ -1366,6 +1369,9 @@ struct CRUBIT_FFI_TRIVIAL_ABI Callable {
   using BackingType = ::crubit::ffi::bridge_type::callable::BackingType;
   static constexpr BackingType DYN_CALLABLE = ::crubit::ffi::bridge_type::callable::DYN_CALLABLE;
   static constexpr BackingType ANY_INVOCABLE = ::crubit::ffi::bridge_type::callable::ANY_INVOCABLE;
+  static constexpr BackingType FUNCTION_REF = ::crubit::ffi::bridge_type::callable::FUNCTION_REF;
+  static constexpr BackingType FN_REF = ::crubit::ffi::bridge_type::callable::FN_REF;
+  static constexpr BackingType STD_FUNCTION_REF = ::crubit::ffi::bridge_type::callable::STD_FUNCTION_REF;
   using FnTrait = ::crubit::ffi::bridge_type::callable::FnTrait;
   static constexpr FnTrait FN = ::crubit::ffi::bridge_type::callable::FN;
   static constexpr FnTrait FN_MUT = ::crubit::ffi::bridge_type::callable::FN_MUT;
@@ -1374,6 +1380,8 @@ struct CRUBIT_FFI_TRIVIAL_ABI Callable {
   void set_backing_type(::crubit::ffi::bridge_type::callable::BackingType value) { backing_type_ = value; }
   ::crubit::ffi::bridge_type::callable::FnTrait fn_trait() const { return fn_trait_; }
   void set_fn_trait(::crubit::ffi::bridge_type::callable::FnTrait value) { fn_trait_ = value; }
+  bool is_noexcept() const { return is_noexcept_; }
+  void set_is_noexcept(bool value) { is_noexcept_ = value; }
   const ::crubit::ffi::CcType& return_type() const { return return_type_; }
   ::crubit::ffi::CcType* mutable_return_type() { return &return_type_; }
   const FfiVec<::crubit::ffi::CcType>& param_types() const { return param_types_; }
@@ -1383,6 +1391,7 @@ struct CRUBIT_FFI_TRIVIAL_ABI Callable {
   friend bool operator==(const Callable&, const Callable&) = default;
   ::crubit::ffi::bridge_type::callable::BackingType backing_type_{};
   ::crubit::ffi::bridge_type::callable::FnTrait fn_trait_{};
+  bool is_noexcept_{};
   ::crubit::ffi::CcType return_type_{};
   FfiVec<::crubit::ffi::CcType> param_types_{};
 };
@@ -3999,7 +4008,7 @@ static_assert(
 static_assert(std::is_standard_layout_v<bridge_type::Callable>);
 static_assert(
   sizeof(size_t) != 8 ||
-  (sizeof(bridge_type::Callable) == 168 &&
+  (sizeof(bridge_type::Callable) == 176 &&
     alignof(bridge_type::Callable) == 8));
 static_assert(
   sizeof(size_t) != 8 ||
@@ -4011,12 +4020,16 @@ static_assert(
     4);
 static_assert(
   sizeof(size_t) != 8 ||
-  offsetof(bridge_type::Callable, return_type_) ==
+  offsetof(bridge_type::Callable, is_noexcept_) ==
     8);
 static_assert(
   sizeof(size_t) != 8 ||
+  offsetof(bridge_type::Callable, return_type_) ==
+    16);
+static_assert(
+  sizeof(size_t) != 8 ||
   offsetof(bridge_type::Callable, param_types_) ==
-    144);
+    152);
 static_assert(std::is_standard_layout_v<BridgeType>);
 static_assert(
   sizeof(size_t) != 8 ||

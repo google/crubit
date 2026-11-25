@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/consume_absl:absl_functional
 
 #![rustfmt::skip]
-#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -135,6 +135,208 @@ forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Inc
 // error: function `CallIncompleteMapper` could not be bound
 //   Parameter #0 is not supported: Unsupported type 'absl::AnyInvocable<Incomplete (Incomplete) const>': Failed to create bindings for template specialization type absl::AnyInvocable<Incomplete (Incomplete) const>: Return type of callable is incomplete: struct Incomplete
 
+#[inline(always)]
+pub fn InvokeFunctionRef(f: &(dyn ::core::ops::Fn() + ::core::marker::Sync + '_)) {
+    unsafe {
+        crate::detail::__rust_thunk___Z17InvokeFunctionRefN4absl11FunctionRefIFvvEEE(::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'_,dyn::core::ops::Fn()+::core::marker::Sync+'_>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn()+::core::marker::Sync+'static>,f).as_ptr()as*const u8)
+    }
+}
+
+#[inline(always)]
+pub fn ApplyFunctionRef(
+    f: &(dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int + ::core::marker::Sync + '_),
+    x: ::ffi_11::c_int,
+) -> ::ffi_11::c_int {
+    unsafe {
+        crate::detail::__rust_thunk___Z16ApplyFunctionRefN4absl11FunctionRefIFiiEEEi(::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'_,dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Sync+'_>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Sync+'static>,f).as_ptr()as*const u8,x)
+    }
+}
+
+#[inline(always)]
+pub fn ApplyConstFunctionRef(
+    f: &(dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int + ::core::marker::Sync + '_),
+    x: ::ffi_11::c_int,
+) -> ::ffi_11::c_int {
+    unsafe {
+        crate::detail::__rust_thunk___Z21ApplyConstFunctionRefN4absl11FunctionRefIKFiiEEEi(::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'_,dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Sync+'_>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Sync+'static>,f).as_ptr()as*const u8,x)
+    }
+}
+
+// error: type alias `IntTransformRef` could not be bound
+//   Type alias for IntTransformRef suppressed due to being a bridge type
+
+#[inline(always)]
+pub fn ApplyAliasFunctionRef(
+    f: &(dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int + ::core::marker::Sync + '_),
+    x: ::ffi_11::c_int,
+) -> ::ffi_11::c_int {
+    unsafe {
+        crate::detail::__rust_thunk___Z21ApplyAliasFunctionRefN4absl11FunctionRefIFiiEEEi(::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'_,dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Sync+'_>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Sync+'static>,f).as_ptr()as*const u8,x)
+    }
+}
+
+/// Return-lifetime elision ties the returned reference to `v`, not `pred`.
+#[inline(always)]
+pub fn FindIf<'v>(
+    v: &'v ::ffi_11::c_int,
+    pred: &(dyn ::core::ops::Fn(::ffi_11::c_int) -> bool + ::core::marker::Sync + '_),
+) -> ::cref::CRef<'v, ::ffi_11::c_int> {
+    unsafe {
+        crate::detail::__rust_thunk___Z6FindIfRKiN4absl11FunctionRefIFbiEEE(v,::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'_,dyn::core::ops::Fn(::ffi_11::c_int)->bool+::core::marker::Sync+'_>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn(::ffi_11::c_int)->bool+::core::marker::Sync+'static>,pred).as_ptr()as*const u8)
+    }
+}
+
+/// Constructors taking `absl::FunctionRef` on both `Unpin` (`From`) and
+/// `!Unpin` (`CtorNew`) classes.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "19UnpinCallbackHolder"]
+#[repr(C)]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=UnpinCallbackHolder")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct UnpinCallbackHolder {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    pub value: ::ffi_11::c_int,
+}
+unsafe impl ::cxx::ExternType for UnpinCallbackHolder {
+    type Id = ::cxx::type_id!("UnpinCallbackHolder");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("UnpinCallbackHolder"),
+    crate::UnpinCallbackHolder
+);
+
+impl<'__unelided> From<&'__unelided (dyn ::core::ops::Fn() + ::core::marker::Sync + '__unelided)>
+    for UnpinCallbackHolder
+{
+    #[inline(always)]
+    fn from(
+        args: &'__unelided (dyn ::core::ops::Fn() + ::core::marker::Sync + '__unelided),
+    ) -> Self {
+        let mut f = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN19UnpinCallbackHolderC1EN4absl11FunctionRefIFvvEEE(&raw mut tmp as*mut _,::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'__unelided,dyn::core::ops::Fn()+::core::marker::Sync+'__unelided>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn()+::core::marker::Sync+'static>,f).as_ptr()as*const u8);
+            tmp.assume_init()
+        }
+    }
+}
+impl<'__unelided>
+    ::ctor::CtorNew<&'__unelided (dyn ::core::ops::Fn() + ::core::marker::Sync + '__unelided)>
+    for UnpinCallbackHolder
+{
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(
+        args: &'__unelided (dyn ::core::ops::Fn() + ::core::marker::Sync + '__unelided),
+    ) -> Self::CtorType {
+        <Self as From<&'__unelided(dyn::core::ops::Fn()+::core::marker::Sync+'__unelided)>>::from(args)
+    }
+}
+
+/// Not Rust-movable: type is neither copyable nor movable
+#[::ctor::recursively_pinned]
+#[cfi_encoding = "20PinnedCallbackHolder"]
+#[repr(C)]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=PinnedCallbackHolder")]
+pub struct PinnedCallbackHolder {
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    pub value: ::ffi_11::c_int,
+}
+unsafe impl ::cxx::ExternType for PinnedCallbackHolder {
+    type Id = ::cxx::type_id!("PinnedCallbackHolder");
+    type Kind = ::cxx::kind::Opaque;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("PinnedCallbackHolder"),
+    crate::PinnedCallbackHolder
+);
+
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for PinnedCallbackHolder {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN20PinnedCallbackHolderaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'__unelided>
+    ::ctor::CtorNew<&'__unelided (dyn ::core::ops::Fn() + ::core::marker::Sync + '__unelided)>
+    for PinnedCallbackHolder
+{
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(
+        args: &'__unelided (dyn ::core::ops::Fn() + ::core::marker::Sync + '__unelided),
+    ) -> Self::CtorType {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut f = args;
+                crate::detail::__rust_thunk___ZN20PinnedCallbackHolderC1EN4absl11FunctionRefIFvvEEE(__crubit_dest as*mut::core::ffi::c_void,::crubit_support::bridge::unstable_encode!(@::crubit_support::bridge::FunctionRefAbi::<'__unelided,dyn::core::ops::Fn()+::core::marker::Sync+'__unelided>::new(),::crubit_support::bridge::FunctionRefAbi<'static,dyn::core::ops::Fn()+::core::marker::Sync+'static>,f).as_ptr()as*const u8);
+            })
+        }
+    }
+}
+impl<'__unelided>
+    ::ctor::CtorNew<(&'__unelided (dyn ::core::ops::Fn() + ::core::marker::Sync + '__unelided),)>
+    for PinnedCallbackHolder
+{
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(
+        args: (&'__unelided (dyn ::core::ops::Fn() + ::core::marker::Sync + '__unelided),),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<
+            &'__unelided (dyn ::core::ops::Fn() + ::core::marker::Sync + '__unelided),
+        >>::ctor_new(arg)
+    }
+}
+
+// error: function `ReturnFunctionRef` could not be bound
+//   Return type is not supported: borrowed callable type `absl::FunctionRef<void ()>` cannot be used as a return type
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "21StructWithFunctionRef"]
+#[repr(C, align(8))]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=StructWithFunctionRef")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct StructWithFunctionRef {
+    /// Reason for representing this field as a blob of bytes:
+    /// crubit.rs/errors/bridge_field: '&(dyn::core::ops::Fn()+::core::marker::Sync+'_)' is not layout-compatible between Rust and C++.
+    pub(crate) f: [::core::mem::MaybeUninit<u8>; 16],
+}
+/// Cannot infer `Send` because:
+/// * field `f` is represented as opaque bytes
+impl !Send for StructWithFunctionRef {}
+/// Cannot infer `Sync` because:
+/// * field `f` is represented as opaque bytes
+impl !Sync for StructWithFunctionRef {}
+unsafe impl ::cxx::ExternType for StructWithFunctionRef {
+    type Id = ::cxx::type_id!("StructWithFunctionRef");
+    type Kind = ::cxx::kind::Trivial;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithFunctionRef"),
+    crate::StructWithFunctionRef
+);
+
+// error: function `StructWithFunctionRef::operator=` could not be bound
+//   Return type is not supported: return type `StructWithFunctionRef&` contains borrowed callable type `absl::FunctionRef<void ()>`, which cannot be used in a return type
+
+// error: function `StructWithFunctionRef::operator=` could not be bound
+//   Return type is not supported: return type `StructWithFunctionRef&` contains borrowed callable type `absl::FunctionRef<void ()>`, which cannot be used in a return type
+
+// error: function `MakeStructWithFunctionRef` could not be bound
+//   Return type is not supported: return type `StructWithFunctionRef` contains borrowed callable type `absl::FunctionRef<void ()>`, which cannot be used in a return type
+
+// error: function `ReturnMyOptionFunctionRef` could not be bound
+//   Return type is not supported: return type `MyOption<class absl::FunctionRef<void ()>>` contains borrowed callable type `absl::FunctionRef<void ()>`, which cannot be used in a return type
+
 // error: class `absl::AnyInvocable` could not be bound
 //   Return type of callable is incomplete: struct Incomplete
 
@@ -191,6 +393,41 @@ mod detail {
             i: ::ffi_11::c_int,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN6WidgetC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___Z17InvokeFunctionRefN4absl11FunctionRefIFvvEEE(
+            f: *const ::core::ffi::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z16ApplyFunctionRefN4absl11FunctionRefIFiiEEEi(
+            f: *const ::core::ffi::c_uchar,
+            x: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z21ApplyConstFunctionRefN4absl11FunctionRefIKFiiEEEi(
+            f: *const ::core::ffi::c_uchar,
+            x: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z21ApplyAliasFunctionRefN4absl11FunctionRefIFiiEEEi(
+            f: *const ::core::ffi::c_uchar,
+            x: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z6FindIfRKiN4absl11FunctionRefIFbiEEE<'v>(
+            v: &'v ::ffi_11::c_int,
+            pred: *const ::core::ffi::c_uchar,
+        ) -> ::cref::CRef<'v, ::ffi_11::c_int>;
+        pub(crate) unsafe fn __rust_thunk___ZN19UnpinCallbackHolderC1EN4absl11FunctionRefIFvvEEE<
+            '__unelided,
+        >(
+            __this: *mut ::core::ffi::c_void,
+            f: *const ::core::ffi::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN20PinnedCallbackHolderaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::PinnedCallbackHolder>,
+            __param_0: &'__param_0 crate::PinnedCallbackHolder,
+        ) -> ::core::pin::Pin<&'__this mut crate::PinnedCallbackHolder>;
+        pub(crate) unsafe fn __rust_thunk___ZN20PinnedCallbackHolderC1EN4absl11FunctionRefIFvvEEE<
+            '__unelided,
+        >(
+            __this: *mut ::core::ffi::c_void,
+            f: *const ::core::ffi::c_uchar,
+        );
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
@@ -354,6 +591,55 @@ mod detail {
             param_0: ::ffi_11::c_int,
         ) -> ::ffi_11::c_int;
     }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl11FunctionRefIFbiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+        f: *const ::core::ffi::c_void,
+        param_0: ::ffi_11::c_int,
+    ) -> bool {
+        let f = unsafe {
+            ::core::ptr::read_unaligned(f.cast::<*const(dyn::core::ops::Fn(::ffi_11::c_int)->bool+::core::marker::Sync+'_)>())
+        };
+        (unsafe { &*f })(param_0)
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl11FunctionRefIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+        f: *const ::core::ffi::c_void,
+        param_0: ::ffi_11::c_int,
+    ) -> ::ffi_11::c_int {
+        let f = unsafe {
+            ::core::ptr::read_unaligned(
+                f.cast::<*const (dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                     + ::core::marker::Sync
+                     + '_)>(),
+            )
+        };
+        (unsafe { &*f })(param_0)
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl11FunctionRefIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+        f: *const ::core::ffi::c_void,
+    ) {
+        let f = unsafe {
+            ::core::ptr::read_unaligned(
+                f.cast::<*const (dyn ::core::ops::Fn() + ::core::marker::Sync + '_)>(),
+            )
+        };
+        (unsafe { &*f })();
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl11FunctionRefIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+        f: *const ::core::ffi::c_void,
+        param_0: ::ffi_11::c_int,
+    ) -> ::ffi_11::c_int {
+        let f = unsafe {
+            ::core::ptr::read_unaligned(
+                f.cast::<*const (dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                     + ::core::marker::Sync
+                     + '_)>(),
+            )
+        };
+        (unsafe { &*f })(param_0)
+    }
 }
 
 const _: () = {
@@ -361,4 +647,19 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::Widget>() == 1);
     static_assertions::assert_impl_all!(crate::Widget: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Widget: Drop);
+
+    assert!(::core::mem::size_of::<crate::UnpinCallbackHolder>() == 4);
+    assert!(::core::mem::align_of::<crate::UnpinCallbackHolder>() == 4);
+    static_assertions::assert_impl_all!(crate::UnpinCallbackHolder: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::UnpinCallbackHolder: Drop);
+    assert!(::core::mem::offset_of!(crate::UnpinCallbackHolder, value) == 0);
+    assert!(::core::mem::size_of::<crate::PinnedCallbackHolder>() == 4);
+    assert!(::core::mem::align_of::<crate::PinnedCallbackHolder>() == 4);
+    static_assertions::assert_not_impl_any!(crate::PinnedCallbackHolder: Copy,Drop);
+    assert!(::core::mem::offset_of!(crate::PinnedCallbackHolder, value) == 0);
+    assert!(::core::mem::size_of::<crate::StructWithFunctionRef>() == 16);
+    assert!(::core::mem::align_of::<crate::StructWithFunctionRef>() == 8);
+    static_assertions::assert_impl_all!(crate::StructWithFunctionRef: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::StructWithFunctionRef: Drop);
+    assert!(::core::mem::offset_of!(crate::StructWithFunctionRef, f) == 0);
 };

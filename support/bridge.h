@@ -348,6 +348,32 @@ struct BoxedAbi {
   }
 };
 
+// A Crubit ABI for decoding a borrowed callable reference (`absl::FunctionRef`
+// or `rs::FnRef`) from a two-word Rust trait object fat pointer encoded in the
+// bridge buffer. The buffer lives on the Rust caller's stack for the duration
+// of the C++ function call.
+template <typename CallableRef>
+struct CallableRefAbi {
+  using Value = CallableRef;
+  using MakeCallableRef = CallableRef (*)(const void* state);
+  static constexpr size_t kSize = 2 * sizeof(void*);
+
+  explicit CallableRefAbi(MakeCallableRef make_callable_ref)
+      : make_callable_ref_(make_callable_ref) {}
+
+  void Encode(Value, Encoder&) && {
+    static_assert(sizeof(CallableRef) == 0,
+                  "CallableRefAbi::Encode is not supported");
+  }
+
+  Value Decode(Decoder& decoder) && {
+    return make_callable_ref_(decoder.Next(kSize));
+  }
+
+ private:
+  MakeCallableRef make_callable_ref_;
+};
+
 namespace internal {
 
 template <typename Abi>

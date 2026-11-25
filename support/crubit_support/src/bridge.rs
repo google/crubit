@@ -282,6 +282,36 @@ unsafe impl<T> CrubitAbi for TransmuteAbi<T> {
     }
 }
 
+/// A [`CrubitAbi`] for encoding a borrowed Rust callable reference (`&'a dyn Fn(...)`)
+/// as its two-word fat pointer (`*const F`) in the bridge buffer.
+pub struct FunctionRefAbi<'a, F: ?Sized + 'a>(core::marker::PhantomData<&'a F>);
+
+impl<'a, F: ?Sized + 'a> FunctionRefAbi<'a, F> {
+    /// Creates a new `FunctionRefAbi`.
+    pub const fn new() -> Self {
+        Self(core::marker::PhantomData)
+    }
+}
+
+// SAFETY: The ABI contract for `FunctionRefAbi<'a, F>` is that the raw 2-word fat pointer
+// for the trait object `&'a F` is copied into the bridge buffer using the existing `TransmuteAbi`.
+unsafe impl<'a, F: ?Sized + 'a> CrubitAbi for FunctionRefAbi<'a, F> {
+    type Value = &'a F;
+    const SIZE: usize = 2 * core::mem::size_of::<*const ()>();
+
+    unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+        assert_eq!(core::mem::size_of::<*const F>(), Self::SIZE);
+        let ptr = value as *const F;
+        // SAFETY: We checked the size of `*const F` matches `Self::SIZE`.
+        // The caller guarantees `encoder` has at least `Self::SIZE` bytes remaining.
+        unsafe { TransmuteAbi::<*const F>::default().encode(ptr, encoder) };
+    }
+
+    unsafe fn decode(self, _decoder: &mut Decoder) -> Self::Value {
+        unreachable!("C++ -> Rust callable bridging is unimplemented")
+    }
+}
+
 macro_rules! unsafe_impl_crubit_abi_for_tuple {
     { $( unsafe impl CrubitAbi for ( $($a:ident : $A:ident,)*); )* } => {
         $(
@@ -426,6 +456,42 @@ pub mod internal {
     pub const fn empty_buffer<const BYTES: usize>() -> [MaybeUninit<u8>; BYTES] {
         [const { MaybeUninit::uninit() }; BYTES]
     }
+
+    /// Encodes a value into a fixed-size stack buffer, checking at compile time that
+    /// `A::SIZE == N`.
+    #[inline(always)]
+    pub unsafe fn encode_buffer<A: CrubitAbi, const N: usize>(
+        crubit_abi: A,
+        buf: &mut [MaybeUninit<u8>; N],
+        value: A::Value,
+    ) {
+        const {
+            assert!(A::SIZE == N, "CrubitAbi::SIZE of expression does not match buffer size type",);
+        }
+        // SAFETY: `buf` is a valid writable buffer of `N == A::SIZE` bytes.
+        unsafe {
+            encode(crubit_abi, buf.as_mut_ptr().cast::<u8>(), value);
+        }
+    }
+
+    /// Decodes a value from a fixed-size stack buffer, checking at compile time that
+    /// `A::SIZE == N`.
+    ///
+    /// # Safety
+    ///
+    /// `buf` must have been populated with a valid `A::Value` encoded with schema `A`.
+    #[inline(always)]
+    pub unsafe fn decode_buffer<A: CrubitAbi, const N: usize>(
+        crubit_abi: A,
+        buf: &[MaybeUninit<u8>; N],
+    ) -> A::Value {
+        const {
+            assert!(A::SIZE == N, "CrubitAbi::SIZE of expression does not match buffer size type",);
+        }
+        // SAFETY: `N == A::SIZE`, and the caller guarantees `buf` contains a value encoded with
+        // schema `A`.
+        unsafe { decode(crubit_abi, buf.as_ptr().cast::<u8>()) }
+    }
 }
 
 // This cannot be a function because it errors with "constant expression depends on a generic
@@ -435,13 +501,17 @@ pub mod internal {
 #[macro_export]
 macro_rules! unstable_encode {
     {@ $crubit_abi_expr:expr, $crubit_abi:ty, $expr:expr} => {{
+        // `encode_buffer` omits a `::<$crubit_abi, _>` turbofish because `$crubit_abi` substitutes
+        // `'static` for non-`'static` lifetimes (e.g. in `FunctionRefAbi`), which cannot be named
+        // inside the constant array length `<$crubit_abi as CrubitAbi>::SIZE`; `encode_buffer`
+        // instead const-asserts that `$crubit_abi_expr`'s `SIZE` equals the array length.
         let mut __crubit_tmp_buffer = [const { ::core::mem::MaybeUninit::<u8>::uninit() }; <$crubit_abi as $crate::bridge::CrubitAbi>::SIZE];
         let __crubit_tmp_value = $expr;
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::bridge::internal::encode::<$crubit_abi>(
+            $crate::bridge::internal::encode_buffer(
                 $crubit_abi_expr,
-                __crubit_tmp_buffer.as_mut_ptr() as *mut u8,
+                &mut __crubit_tmp_buffer,
                 __crubit_tmp_value,
             );
         }
@@ -456,11 +526,14 @@ macro_rules! unstable_encode {
 #[macro_export]
 macro_rules! unstable_return {
     {@ $crubit_abi_expr:expr, $crubit_abi:ty, $cb:expr} => {{
+        // `decode_buffer` omits a `::<$crubit_abi, _>` turbofish for the same lifetime-erasure
+        // reason as `unstable_encode!`, const-asserting that `$crubit_abi_expr`'s `SIZE` matches
+        // the stack buffer length.
         let mut __crubit_tmp_buffer = [const { ::core::mem::MaybeUninit::<u8>::uninit() }; <$crubit_abi as $crate::bridge::CrubitAbi>::SIZE];
         ($cb)(__crubit_tmp_buffer.as_mut_ptr() as *mut u8);
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::bridge::internal::decode::<$crubit_abi>($crubit_abi_expr, __crubit_tmp_buffer.as_ptr() as *const u8)
+            $crate::bridge::internal::decode_buffer($crubit_abi_expr, &__crubit_tmp_buffer)
         }
     }};
 }
@@ -716,5 +789,72 @@ mod tests {
             )
         };
         expect_eq!(value, original);
+    }
+
+    #[gtest]
+    fn test_function_ref_abi() {
+        let f = |x: i32| x * 2;
+        let dyn_f: &dyn Fn(i32) -> i32 = &f;
+        let mut buffer = [0u8; 16];
+        let mut encoder = Encoder { remaining_bytes: 16, buf: buffer.as_mut_ptr() };
+        let abi = FunctionRefAbi::<'_, dyn Fn(i32) -> i32>::new();
+        // SAFETY: buffer is valid for 16 bytes (size of fat pointer).
+        unsafe { abi.encode(dyn_f, &mut encoder) };
+
+        // Read it back
+        let ptr: *const dyn Fn(i32) -> i32 =
+            unsafe { core::ptr::read_unaligned(buffer.as_ptr().cast()) };
+        let decoded_f: &dyn Fn(i32) -> i32 = unsafe { &*ptr };
+        expect_eq!(decoded_f(5), 10);
+    }
+
+    #[gtest]
+    fn test_function_ref_abi_nested() {
+        type DynFn = dyn Fn(i32) -> i32;
+        type Abi<'a> = (OptionAbi<FunctionRefAbi<'a, DynFn>>, TransmuteAbi<u8>);
+
+        let f = |x: i32| x + 5;
+        let dyn_f: &DynFn = &f;
+        let original: (Option<&DynFn>, u8) = (Some(dyn_f), 42);
+
+        let buf = unstable_encode!(@
+            (
+                OptionAbi(FunctionRefAbi::new()),
+                transmute_abi()
+            ),
+            Abi<'static>,
+            original
+        );
+
+        assert_eq!(buf.len(), 18);
+
+        let u8_val: u8 = unsafe { core::ptr::read_unaligned(buf[0..1].as_ptr().cast()) };
+        expect_eq!(u8_val, 42);
+
+        let ptr: *const DynFn = unsafe { core::ptr::read_unaligned(buf[1..17].as_ptr().cast()) };
+        let decoded_f: &DynFn = unsafe { &*ptr };
+        expect_eq!(decoded_f(10), 15);
+
+        let bool_val: bool = unsafe { core::ptr::read_unaligned(buf[17..18].as_ptr().cast()) };
+        expect_eq!(bool_val, true);
+    }
+
+    #[gtest]
+    fn test_function_ref_abi_with_generic_lifetime() {
+        fn call_with_encoded<'a>(f: &'a (dyn Fn(i32) -> i32 + Sync + 'a), arg: i32) -> i32 {
+            let buf = unstable_encode!(@
+                FunctionRefAbi::<'a, dyn Fn(i32) -> i32 + Sync + 'a>::new(),
+                FunctionRefAbi<'static, dyn Fn(i32) -> i32 + Sync + 'static>,
+                f
+            );
+            let ptr: *const (dyn Fn(i32) -> i32 + Sync + 'a) =
+                unsafe { core::ptr::read_unaligned(buf.as_ptr().cast()) };
+            let decoded: &'a (dyn Fn(i32) -> i32 + Sync + 'a) = unsafe { &*ptr };
+            decoded(arg)
+        }
+
+        let offset = 7;
+        let closure = |x: i32| x + offset;
+        expect_eq!(call_with_encoded(&closure, 35), 42);
     }
 }

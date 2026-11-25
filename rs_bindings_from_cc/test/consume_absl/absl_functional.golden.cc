@@ -62,6 +62,22 @@ __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fpart
     ::absl::internal_any_invocable::TypeErasedState* from,
     ::absl::internal_any_invocable::TypeErasedState* to) noexcept;
 
+extern "C" bool
+__crubit_invoker___CcTemplateInstN4absl11FunctionRefIFbiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    const unsigned char* state, int param_0);
+
+extern "C" int
+__crubit_invoker___CcTemplateInstN4absl11FunctionRefIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    const unsigned char* state, int param_0);
+
+extern "C" void
+__crubit_invoker___CcTemplateInstN4absl11FunctionRefIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    const unsigned char* state);
+
+extern "C" int
+__crubit_invoker___CcTemplateInstN4absl11FunctionRefIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+    const unsigned char* state, int param_0);
+
 extern "C" int
 __crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
     ::absl::AnyInvocable<int(int)>* f, int param_0) {
@@ -229,5 +245,184 @@ static_assert(alignof(struct Widget) == 1);
 extern "C" void __rust_thunk___ZN6WidgetC1Ev(struct Widget* __this) {
   crubit::construct_at(__this);
 }
+
+extern "C" void __rust_thunk___Z17InvokeFunctionRefN4absl11FunctionRefIFvvEEE(
+    const unsigned char* f) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<void()>>::kSize, f);
+  InvokeFunctionRef(
+      ::crubit::CallableRefAbi<
+          ::absl::FunctionRef<void()>>([](const void* state)
+                                           -> ::absl::FunctionRef<void()> {
+        static constexpr auto kInvoker =
+            +[](const unsigned char* state) noexcept -> void {
+          __crubit_invoker___CcTemplateInstN4absl11FunctionRefIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+              state);
+        };
+        return ::absl::FunctionRef<void()>(
+            ::absl::nontype<kInvoker>,
+            static_cast<const unsigned char*>(state));
+      }).Decode(__f_decoder));
+}
+
+static_assert((void (*)(class absl::FunctionRef<void()>)) &
+              ::InvokeFunctionRef);
+
+extern "C" int __rust_thunk___Z16ApplyFunctionRefN4absl11FunctionRefIFiiEEEi(
+    const unsigned char* f, int x) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<int(int)>>::kSize, f);
+  return ApplyFunctionRef(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<int(
+          int)>>([](const void* state) -> ::absl::FunctionRef<int(int)> {
+        static constexpr auto kInvoker =
+            +[](const unsigned char* state, int param_0) noexcept -> int {
+          return __crubit_invoker___CcTemplateInstN4absl11FunctionRefIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+              state, param_0);
+        };
+        return ::absl::FunctionRef<int(int)>(
+            ::absl::nontype<kInvoker>,
+            static_cast<const unsigned char*>(state));
+      }).Decode(__f_decoder),
+      x);
+}
+
+static_assert((int (*)(class absl::FunctionRef<int(int)>, int)) &
+              ::ApplyFunctionRef);
+
+extern "C" int
+__rust_thunk___Z21ApplyConstFunctionRefN4absl11FunctionRefIKFiiEEEi(
+    const unsigned char* f, int x) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<int(int) const>>::kSize, f);
+  return ApplyConstFunctionRef(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<int(
+          int) const>>([](const void* state)
+                           -> ::absl::FunctionRef<int(int) const> {
+        static constexpr auto kInvoker =
+            +[](const unsigned char* state, int param_0) noexcept -> int {
+          return __crubit_invoker___CcTemplateInstN4absl11FunctionRefIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+              state, param_0);
+        };
+        return ::absl::FunctionRef<int(int) const>(
+            ::absl::nontype<kInvoker>,
+            static_cast<const unsigned char*>(state));
+      }).Decode(__f_decoder),
+      x);
+}
+
+static_assert((int (*)(class absl::FunctionRef<int(int) const>, int)) &
+              ::ApplyConstFunctionRef);
+
+extern "C" int
+__rust_thunk___Z21ApplyAliasFunctionRefN4absl11FunctionRefIFiiEEEi(
+    const unsigned char* f, int x) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<int(int)>>::kSize, f);
+  return ApplyAliasFunctionRef(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<int(
+          int)>>([](const void* state) -> ::absl::FunctionRef<int(int)> {
+        static constexpr auto kInvoker =
+            +[](const unsigned char* state, int param_0) noexcept -> int {
+          return __crubit_invoker___CcTemplateInstN4absl11FunctionRefIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+              state, param_0);
+        };
+        return ::absl::FunctionRef<int(int)>(
+            ::absl::nontype<kInvoker>,
+            static_cast<const unsigned char*>(state));
+      }).Decode(__f_decoder),
+      x);
+}
+
+static_assert((int (*)(class absl::FunctionRef<int(int)>, int)) &
+              ::ApplyAliasFunctionRef);
+
+extern "C" int const* __rust_thunk___Z6FindIfRKiN4absl11FunctionRefIFbiEEE(
+    int const* v, const unsigned char* pred) {
+  ::crubit::Decoder __pred_decoder(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<bool(int)>>::kSize, pred);
+  return std::addressof(FindIf(
+      *v,
+      ::crubit::CallableRefAbi<::absl::FunctionRef<bool(
+          int)>>([](const void* state) -> ::absl::FunctionRef<bool(int)> {
+        static constexpr auto kInvoker =
+            +[](const unsigned char* state, int param_0) noexcept -> bool {
+          return __crubit_invoker___CcTemplateInstN4absl11FunctionRefIFbiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+              state, param_0);
+        };
+        return ::absl::FunctionRef<bool(int)>(
+            ::absl::nontype<kInvoker>,
+            static_cast<const unsigned char*>(state));
+      }).Decode(__pred_decoder)));
+}
+
+static_assert((int const& (*)(int const&, class absl::FunctionRef<bool(int)>)) &
+              ::FindIf);
+
+static_assert(CRUBIT_SIZEOF(struct UnpinCallbackHolder) == 4);
+static_assert(alignof(struct UnpinCallbackHolder) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, struct UnpinCallbackHolder) == 0);
+
+extern "C" void
+__rust_thunk___ZN19UnpinCallbackHolderC1EN4absl11FunctionRefIFvvEEE(
+    struct UnpinCallbackHolder* __this, const unsigned char* f) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<void()>>::kSize, f);
+  crubit::construct_at(
+      __this,
+      ::crubit::CallableRefAbi<
+          ::absl::FunctionRef<void()>>([](const void* state)
+                                           -> ::absl::FunctionRef<void()> {
+        static constexpr auto kInvoker =
+            +[](const unsigned char* state) noexcept -> void {
+          __crubit_invoker___CcTemplateInstN4absl11FunctionRefIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+              state);
+        };
+        return ::absl::FunctionRef<void()>(
+            ::absl::nontype<kInvoker>,
+            static_cast<const unsigned char*>(state));
+      }).Decode(__f_decoder));
+}
+
+static_assert(CRUBIT_SIZEOF(struct PinnedCallbackHolder) == 4);
+static_assert(alignof(struct PinnedCallbackHolder) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, struct PinnedCallbackHolder) == 0);
+
+extern "C" struct PinnedCallbackHolder*
+__rust_thunk___ZN20PinnedCallbackHolderaSERKS_(
+    struct PinnedCallbackHolder* __this,
+    struct PinnedCallbackHolder const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+static_assert(
+    (struct PinnedCallbackHolder &
+     (::PinnedCallbackHolder::*)(struct PinnedCallbackHolder const&)) &
+    ::PinnedCallbackHolder::operator=);
+
+extern "C" void
+__rust_thunk___ZN20PinnedCallbackHolderC1EN4absl11FunctionRefIFvvEEE(
+    struct PinnedCallbackHolder* __this, const unsigned char* f) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::CallableRefAbi<::absl::FunctionRef<void()>>::kSize, f);
+  crubit::construct_at(
+      __this,
+      ::crubit::CallableRefAbi<
+          ::absl::FunctionRef<void()>>([](const void* state)
+                                           -> ::absl::FunctionRef<void()> {
+        static constexpr auto kInvoker =
+            +[](const unsigned char* state) noexcept -> void {
+          __crubit_invoker___CcTemplateInstN4absl11FunctionRefIFvvEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+              state);
+        };
+        return ::absl::FunctionRef<void()>(
+            ::absl::nontype<kInvoker>,
+            static_cast<const unsigned char*>(state));
+      }).Decode(__f_decoder));
+}
+
+static_assert(CRUBIT_SIZEOF(struct StructWithFunctionRef) == 16);
+static_assert(alignof(struct StructWithFunctionRef) == 8);
+static_assert(CRUBIT_OFFSET_OF(f, struct StructWithFunctionRef) == 0);
 
 #pragma clang diagnostic pop

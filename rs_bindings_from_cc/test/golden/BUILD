@@ -78,7 +78,10 @@ DEPS = {
         "template_def_with_crubit",
         "template_fwd_without_crubit",
     ],
-    "callables": ["//support/rs_std:dyn_callable"],
+    "callables": [
+        "//support/rs_std:dyn_callable",
+        "//support/rs_std:fn_ref",
+    ],
     "bridge_wrapping_alias": ["//support:bridge_cpp"],
 }
 

@@ -963,6 +963,15 @@ pub enum BackingType {
         /// `extern "C" fn(*mut RawAnyInvocable, ...) -> ...`
         invoke_any_invocable_ident: Ident,
     },
+    FunctionRef {
+        lifetime: Lifetime,
+    },
+    FnRef {
+        lifetime: Lifetime,
+    },
+    StdFunctionRef {
+        lifetime: Lifetime,
+    },
 }
 
 /// Information about how the owned function object may be called.
@@ -1003,13 +1012,41 @@ pub struct Callable {
     /// guarantees that Rust FnMut needs to be called, e.g. an exclusive mutable reference. C++
     /// allows for non-exclusive calls to mutable function objects.
     pub rust_fn_trait: FnTrait,
+    pub is_noexcept: bool,
     pub return_type: Rc<RsTypeKind>,
     pub param_types: Rc<[RsTypeKind]>,
     pub invoker_ident: Ident,
-    pub manager_ident: Ident,
+    pub manager_ident: Option<Ident>,
 }
 
 impl Callable {
+    pub fn is_borrowed(&self) -> bool {
+        matches!(
+            self.backing_type,
+            BackingType::FunctionRef { .. }
+                | BackingType::FnRef { .. }
+                | BackingType::StdFunctionRef { .. }
+        )
+    }
+
+    pub fn lifetime(&self) -> Option<&Lifetime> {
+        match &self.backing_type {
+            BackingType::FunctionRef { lifetime }
+            | BackingType::FnRef { lifetime }
+            | BackingType::StdFunctionRef { lifetime } => Some(lifetime),
+            _ => None,
+        }
+    }
+
+    pub fn lifetime_mut(&mut self) -> Option<&mut Lifetime> {
+        match &mut self.backing_type {
+            BackingType::FunctionRef { lifetime }
+            | BackingType::FnRef { lifetime }
+            | BackingType::StdFunctionRef { lifetime } => Some(lifetime),
+            _ => None,
+        }
+    }
+
     /// Returns a `TokenStream` in the shape of `-> Output`, or None if the return type is void.
     pub fn rust_return_type_fragment(&self, db: &BindingsGenerator<'_>) -> Option<TokenStream> {
         if self.return_type.is_void() {
@@ -1020,18 +1057,51 @@ impl Callable {
         }
     }
 
-    /// Returns a `TokenStream` in the shape of `dyn Trait(Inputs) -> Output`.
+    /// Returns the `dyn Fn(...)` trait object spelling with `'static` substituted for any borrowed
+    /// lifetime, for use in `const` size expressions where outer generic lifetimes cannot be named.
+    pub fn dyn_fn_spelling_static(&self, db: &BindingsGenerator<'_>) -> TokenStream {
+        self.dyn_fn_spelling_with_borrowed_lifetime(db, &Lifetime::new("static"))
+    }
+
+    /// Returns a `TokenStream` in the shape of `dyn Trait(Inputs) -> Output + ...`.
     pub fn dyn_fn_spelling(&self, db: &BindingsGenerator<'_>) -> TokenStream {
+        match self.lifetime() {
+            Some(lifetime) => self.dyn_fn_spelling_with_borrowed_lifetime(db, lifetime),
+            None => self.dyn_fn_spelling_with_borrowed_lifetime(db, &Lifetime::new("static")),
+        }
+    }
+
+    fn dyn_fn_spelling_with_borrowed_lifetime(
+        &self,
+        db: &BindingsGenerator<'_>,
+        borrowed_lifetime: &Lifetime,
+    ) -> TokenStream {
         let rust_return_type_fragment = self.rust_return_type_fragment(db);
         let param_type_tokens =
             self.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
         let fn_trait = self.rust_fn_trait;
-        let sync_bound = match self.rust_fn_trait {
-            FnTrait::Fn | FnTrait::FnMut => Some(quote! { + ::core::marker::Sync }),
-            FnTrait::FnOnce => None,
-        };
-        quote! {
-            dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Send #sync_bound + 'static
+        match &self.backing_type {
+            // `absl::FunctionRef` and `std::function_ref` callees may invoke the callback
+            // concurrently from multiple threads during the call (e.g. parallel-for APIs), so the
+            // trait object requires `Sync` (`Send` is unnecessary because the closure is only
+            // shared by reference, never moved, and `&F: Send` iff `F: Sync`).
+            BackingType::FunctionRef { .. } | BackingType::StdFunctionRef { .. } => quote! {
+                dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Sync + #borrowed_lifetime
+            },
+            // `rs::FnRef` is Crubit's C++ form of Rust's `&dyn Fn` and must only be invoked on the
+            // calling thread, so it omits `Sync` to accept closures capturing `!Sync` state.
+            BackingType::FnRef { .. } => quote! {
+                dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + #borrowed_lifetime
+            },
+            BackingType::DynCallable | BackingType::AnyInvocable { .. } => {
+                let sync_bound = match self.rust_fn_trait {
+                    FnTrait::Fn | FnTrait::FnMut => Some(quote! { + ::core::marker::Sync }),
+                    FnTrait::FnOnce => None,
+                };
+                quote! {
+                    dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Send #sync_bound + 'static
+                }
+            }
         }
     }
 
@@ -1201,6 +1271,9 @@ impl BridgeRsTypeKind {
                 else {
                     return Ok(None);
                 };
+                if inner.contains_borrowed_callable().is_some() {
+                    bail!("borrowed callable type cannot be used inside std::optional");
+                }
                 BridgeRsTypeKind::StdOptional(Rc::new(inner))
             }
             BridgeType::StdPair(p) => {
@@ -1220,6 +1293,11 @@ impl BridgeRsTypeKind {
                 else {
                     return Ok(None);
                 };
+                if inner1.contains_borrowed_callable().is_some()
+                    || inner2.contains_borrowed_callable().is_some()
+                {
+                    bail!("borrowed callable type cannot be used inside std::pair");
+                }
                 BridgeRsTypeKind::StdPair(Rc::new(inner1), Rc::new(inner2))
             }
             BridgeType::StdString => {
@@ -1270,7 +1348,15 @@ impl BridgeRsTypeKind {
                         c_array.display_cc_type_name_for_rs_type(),
                     );
                 }
+                if std::iter::once(return_type.as_ref())
+                    .chain(param_types.iter())
+                    .find_map(RsTypeKind::contains_borrowed_callable)
+                    .is_some()
+                {
+                    bail!("borrowed callable type cannot be used inside another callable");
+                }
                 BridgeRsTypeKind::Callable(Rc::new(Callable {
+                    is_noexcept: c.is_noexcept(),
                     backing_type: match c.backing_type() {
                         ir::BackingType::DynCallable => BackingType::DynCallable,
                         ir::BackingType::AnyInvocable => BackingType::AnyInvocable {
@@ -1279,6 +1365,27 @@ impl BridgeRsTypeKind {
                                 record.rs_name().as_str(),
                             ),
                         },
+                        ir::BackingType::FunctionRef => {
+                            let lifetime = match lifetimes {
+                                [lt, ..] => lt.clone(),
+                                [] => Lifetime::elided(),
+                            };
+                            BackingType::FunctionRef { lifetime }
+                        }
+                        ir::BackingType::FnRef => {
+                            let lifetime = match lifetimes {
+                                [lt, ..] => lt.clone(),
+                                [] => Lifetime::elided(),
+                            };
+                            BackingType::FnRef { lifetime }
+                        }
+                        ir::BackingType::StdFunctionRef => {
+                            let lifetime = match lifetimes {
+                                [lt, ..] => lt.clone(),
+                                [] => Lifetime::elided(),
+                            };
+                            BackingType::StdFunctionRef { lifetime }
+                        }
                     },
                     cpp_fn_trait,
                     rust_fn_trait,
@@ -1289,11 +1396,18 @@ impl BridgeRsTypeKind {
                         record.rs_name().as_str(),
                         target_identifier,
                     ),
-                    manager_ident: format_ident!(
-                        "__crubit_manager_{}{}",
-                        record.rs_name().as_str(),
-                        target_identifier,
-                    ),
+                    manager_ident: match c.backing_type() {
+                        ir::BackingType::DynCallable | ir::BackingType::AnyInvocable => {
+                            Some(format_ident!(
+                                "__crubit_manager_{}{}",
+                                record.rs_name().as_str(),
+                                target_identifier,
+                            ))
+                        }
+                        ir::BackingType::FunctionRef
+                        | ir::BackingType::FnRef
+                        | ir::BackingType::StdFunctionRef => None,
+                    },
                 }))
             }
         };
@@ -1376,11 +1490,13 @@ impl BridgeRsTypeKind {
     /// both possible and unambiguous.
     pub fn is_aliasable(&self) -> bool {
         match self {
-            // `Box<dyn Fn...>` is anonymous, so the alias is the only way to name the type.
-            BridgeRsTypeKind::Callable(_)
+            // Owned callables (`Box<dyn Fn...>`) are anonymous, so the alias is the only way to
+            // name the type. Borrowed callables carry a lifetime that the alias would have to
+            // declare, which is currently unsupported.
+            BridgeRsTypeKind::Callable(c) => !c.is_borrowed(),
             // These spell out either to a path in another crate, or to a structural type. Neither
             // can collide with the name of the alias itself.
-            | BridgeRsTypeKind::Bridge { .. }
+            BridgeRsTypeKind::Bridge { .. }
             | BridgeRsTypeKind::ProtoMessageBridge { .. }
             | BridgeRsTypeKind::StdOptional(_)
             | BridgeRsTypeKind::StdPair(..) => true,
@@ -1428,6 +1544,9 @@ fn new_c9_co_record(
             "C-style array types are not supported in `c9::Co` yet: {} (b/575922365)",
             c_array.display_cc_type_name_for_rs_type(),
         );
+    }
+    if arg_type_kind.contains_borrowed_callable().is_some() {
+        bail!("borrowed callable type cannot be used inside `c9::Co`");
     }
     let lifetime = if options.assume_lifetimes {
         if lifetimes.is_empty() {
@@ -2187,6 +2306,18 @@ impl RsTypeKind {
         Ok(())
     }
 
+    /// If `self` is or contains a borrowed callable, returns the first such [`Callable`].
+    pub fn contains_borrowed_callable(&self) -> Option<&Callable> {
+        self.dfs_iter().find_map(|t| match t {
+            RsTypeKind::BridgeType { bridge_type: BridgeRsTypeKind::Callable(c), .. }
+                if c.is_borrowed() =>
+            {
+                Some(c.as_ref())
+            }
+            _ => None,
+        })
+    }
+
     /// If `self` is or contains a [`RsTypeKind::CArray`], returns the first such [`RsTypeKind`].
     pub fn contains_c_array(&self) -> Option<&RsTypeKind> {
         self.dfs_iter().find(|t| matches!(t, RsTypeKind::CArray { .. }))
@@ -2891,6 +3022,9 @@ impl RsTypeKind {
             Self::Reference { lifetime, .. } | Self::RvalueReference { lifetime, .. } => {
                 Some(lifetime.clone())
             }
+            Self::BridgeType { bridge_type: BridgeRsTypeKind::Callable(c), .. } => {
+                c.lifetime().cloned()
+            }
             Self::Record { uniform_repr_template_type: Some(template), .. } => template.lifetime(),
             // TODO(zarko): Extend to allow multiple lifetimes.
             Self::Record { lifetimes, .. } | Self::ExistingRustType { lifetimes, .. } => {
@@ -3304,15 +3438,16 @@ fn all_static_lifetimes_internal(
                     BridgeRsTypeKind::StdPair(recurse(first), recurse(second))
                 }
                 BridgeRsTypeKind::StdString { .. } => bridge_type.clone(),
-                BridgeRsTypeKind::Callable(k) => BridgeRsTypeKind::Callable(Rc::new(Callable {
-                    return_type: recurse(&k.return_type),
-                    param_types: k
-                        .param_types
-                        .iter()
-                        .map(|param_type| recurse(param_type).as_ref().clone())
-                        .collect(),
-                    ..k.as_ref().clone()
-                })),
+                BridgeRsTypeKind::Callable(k) => {
+                    let mut new_c = k.as_ref().clone();
+                    if let Some(lifetime) = new_c.lifetime_mut() {
+                        *lifetime = Lifetime::new("static");
+                    }
+                    new_c.return_type = Rc::new(recurse(&k.return_type).as_ref().clone());
+                    new_c.param_types =
+                        k.param_types.iter().map(|pt| recurse(pt).as_ref().clone()).collect();
+                    BridgeRsTypeKind::Callable(Rc::new(new_c))
+                }
                 BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime } => {
                     BridgeRsTypeKind::C9Co {
                         has_reference_param: *has_reference_param,
@@ -3846,7 +3981,12 @@ impl RsTypeKind {
                     }
                     BridgeRsTypeKind::Callable(callable) => {
                         let callable_spelling = callable.dyn_fn_spelling(db);
-                        quote! { ::alloc::boxed::Box<#callable_spelling> }
+                        if let Some(lifetime) = callable.lifetime() {
+                            let ref_lt = lifetime.format_for_reference();
+                            quote! { & #ref_lt ( #callable_spelling ) }
+                        } else {
+                            quote! { ::alloc::boxed::Box<#callable_spelling> }
+                        }
                     }
                     BridgeRsTypeKind::C9Co {
                         has_reference_param, result_type, lifetime, ..
@@ -4150,6 +4290,181 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                 Some(curr)
             }
         }
+    }
+}
+
+/// If `cc_type` is or transitively contains a borrowed callable — including through record
+/// fields, nested records, base classes exposed in the IR, and template arguments of container or
+/// bridge types — returns the C++ name of the first borrowed callable found.
+pub fn cc_type_contains_borrowed_callable(
+    db: &BindingsGenerator<'_>,
+    cc_type: &CcType,
+) -> Option<Rc<str>> {
+    let mut visited = HashSet::new();
+    cc_type_contains_borrowed_callable_impl(db, cc_type, &mut visited)
+}
+
+fn record_contains_borrowed_callable_impl(
+    db: &BindingsGenerator<'_>,
+    record: &Record,
+    visited: &mut HashSet<ItemId>,
+) -> Option<Rc<str>> {
+    if let Some(ir::BridgeType::Callable(c)) = record.bridge_type()
+        && matches!(
+            c.backing_type(),
+            ir::BackingType::FunctionRef | ir::BackingType::FnRef | ir::BackingType::StdFunctionRef
+        )
+    {
+        return Some(Rc::from(record.cc_name().as_str()));
+    }
+    if !visited.insert(record.id()) {
+        return None;
+    }
+    if let Some(bridge_type) = record.bridge_type() {
+        match bridge_type {
+            ir::BridgeType::Bridge(b) => {
+                for arg in b.template_args().iter() {
+                    if let Some(found) = cc_type_contains_borrowed_callable_impl(db, arg, visited) {
+                        return Some(found);
+                    }
+                }
+            }
+            ir::BridgeType::StdOptional(o) => {
+                if let Some(found) =
+                    cc_type_contains_borrowed_callable_impl(db, o.inner_type(), visited)
+                {
+                    return Some(found);
+                }
+            }
+            ir::BridgeType::StdPair(p) => {
+                for arg in [p.first_type(), p.second_type()] {
+                    if let Some(found) = cc_type_contains_borrowed_callable_impl(db, arg, visited) {
+                        return Some(found);
+                    }
+                }
+            }
+            ir::BridgeType::Callable(c) => {
+                if let Some(found) =
+                    cc_type_contains_borrowed_callable_impl(db, c.return_type(), visited)
+                {
+                    return Some(found);
+                }
+                for arg in c.param_types().iter() {
+                    if let Some(found) = cc_type_contains_borrowed_callable_impl(db, arg, visited) {
+                        return Some(found);
+                    }
+                }
+            }
+            ir::BridgeType::StdString | ir::BridgeType::ProtoMessageBridge(_) => {}
+        }
+    }
+    if let Some(ts) = record.template_specialization() {
+        let mut check = |arg: &CcType| cc_type_contains_borrowed_callable_impl(db, arg, visited);
+        let found = match ts.kind() {
+            ir::TemplateSpecializationKind::StdVector(v) => check(&v.element_type),
+            ir::TemplateSpecializationKind::StdOptional(o) => check(&o.element_type),
+            ir::TemplateSpecializationKind::StdSharedPtr(p) => check(&p.element_type),
+            ir::TemplateSpecializationKind::StdUniquePtr(p) => check(&p.element_type),
+            ir::TemplateSpecializationKind::StdVariant(v) => {
+                v.element_types.iter().find_map(&mut check)
+            }
+            ir::TemplateSpecializationKind::AbslSpan(s) => check(&s.element_type),
+            ir::TemplateSpecializationKind::C9Co(c) => check(&c.element_type),
+            ir::TemplateSpecializationKind::StdAtomic(a) => check(&a.element_type),
+            ir::TemplateSpecializationKind::AbslFlatHashMap(m) => {
+                check(&m.key_type).or_else(|| check(&m.value_type))
+            }
+            ir::TemplateSpecializationKind::AbslFlatHashSet(s) => check(&s.element_type),
+            ir::TemplateSpecializationKind::StdStringView
+            | ir::TemplateSpecializationKind::StdWStringView
+            | ir::TemplateSpecializationKind::NonSpecial => None,
+        };
+        if found.is_some() {
+            return found;
+        }
+    }
+    for field in record.fields().iter() {
+        if let Some(found) = cc_type_contains_borrowed_callable_impl(db, field.type_(), visited) {
+            return Some(found);
+        }
+    }
+    for base in record.unambiguous_public_bases().iter() {
+        if let Item::Record(base_record) = db.find_untyped_decl(base.base_record_id())
+            && let Some(found) = record_contains_borrowed_callable_impl(db, base_record, visited)
+        {
+            return Some(found);
+        }
+    }
+    None
+}
+
+fn cc_type_contains_borrowed_callable_impl(
+    db: &BindingsGenerator<'_>,
+    cc_type: &CcType,
+    visited: &mut HashSet<ItemId>,
+) -> Option<Rc<str>> {
+    match cc_type.variant() {
+        CcTypeVariant::Decl(id) => {
+            match db.find_untyped_decl(*id) {
+                Item::Record(record) => {
+                    if let Some(found) = record_contains_borrowed_callable_impl(db, record, visited)
+                    {
+                        return Some(found);
+                    }
+                }
+                Item::TypeAlias(alias) => {
+                    if visited.insert(alias.id())
+                        && let Some(found) = cc_type_contains_borrowed_callable_impl(
+                            db,
+                            alias.underlying_type(),
+                            visited,
+                        )
+                    {
+                        return Some(found);
+                    }
+                }
+                _ => {}
+            }
+            for arg in cc_type.template_args().iter() {
+                if let Some(found) = cc_type_contains_borrowed_callable_impl(db, arg, visited) {
+                    return Some(found);
+                }
+            }
+            None
+        }
+        CcTypeVariant::Pointer(ptr) => {
+            cc_type_contains_borrowed_callable_impl(db, ptr.pointee_type(), visited)
+        }
+        CcTypeVariant::ConstantArray(arr) => {
+            cc_type_contains_borrowed_callable_impl(db, arr.element_type(), visited)
+        }
+        CcTypeVariant::FuncPointer(fp) => fp
+            .param_and_return_types()
+            .iter()
+            .find_map(|t| cc_type_contains_borrowed_callable_impl(db, t, visited)),
+        CcTypeVariant::Primitive(_) | CcTypeVariant::Error(_) => None,
+    }
+}
+
+/// Checks whether a `Record` contains a borrowed callable in its fields or base classes.
+pub fn record_contains_borrowed_callable(
+    db: &BindingsGenerator<'_>,
+    record: &Record,
+) -> Option<Rc<str>> {
+    let mut visited = HashSet::new();
+    record_contains_borrowed_callable_impl(db, record, &mut visited)
+}
+
+/// Formats the rejection error message when a function return type is or contains a borrowed
+/// callable.
+pub fn borrowed_callable_return_type_error(return_type_name: &str, callable_name: &str) -> Error {
+    if return_type_name == callable_name {
+        anyhow!("borrowed callable type `{callable_name}` cannot be used as a return type")
+    } else {
+        anyhow!(
+            "return type `{return_type_name}` contains borrowed callable type `{callable_name}`, \
+            which cannot be used in a return type"
+        )
     }
 }
 

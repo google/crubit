@@ -346,12 +346,13 @@ const _: () = {
 #[rustfmt::skip]
 #[cfg(target_pointer_width = "64")]
 const _: () = {
-    assert!(core::mem::size_of::<ir::ir_generated::bridge_type::Callable>() == 168);
+    assert!(core::mem::size_of::<ir::ir_generated::bridge_type::Callable>() == 176);
     assert!(core::mem::align_of::<ir::ir_generated::bridge_type::Callable>() == 8);
     assert!(core::mem::offset_of!(ir::ir_generated::bridge_type::Callable, backing_type) == 0);
     assert!(core::mem::offset_of!(ir::ir_generated::bridge_type::Callable, fn_trait) == 4);
-    assert!(core::mem::offset_of!(ir::ir_generated::bridge_type::Callable, return_type) == 8);
-    assert!(core::mem::offset_of!(ir::ir_generated::bridge_type::Callable, param_types) == 144);
+    assert!(core::mem::offset_of!(ir::ir_generated::bridge_type::Callable, is_noexcept) == 8);
+    assert!(core::mem::offset_of!(ir::ir_generated::bridge_type::Callable, return_type) == 16);
+    assert!(core::mem::offset_of!(ir::ir_generated::bridge_type::Callable, param_types) == 152);
 };
 
 #[rustfmt::skip]
