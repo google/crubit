@@ -890,9 +890,8 @@ union CRUBIT_INTERNAL_RUST_TYPE(
 template <>
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generics_golden :: GenericWithDrop < :: generics_golden :: "
-    "NotPartialEqOrDefault >") alignas(4)
-    [[clang::trivial_abi]] ::generics::GenericWithDrop<
-        ::generics::NotPartialEqOrDefault> final {
+    "NotPartialEqOrDefault >") alignas(4)::generics::
+    GenericWithDrop<::generics::NotPartialEqOrDefault> final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 

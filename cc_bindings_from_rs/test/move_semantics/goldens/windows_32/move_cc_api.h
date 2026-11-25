@@ -81,7 +81,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(4)
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: UnmovableFoo") alignas(4)
-    [[clang::trivial_abi]] UnmovableFoo final {
+    UnmovableFoo final {
  public:
   // `move_golden::UnmovableFoo` doesn't implement the `Default` trait
   UnmovableFoo() = delete;

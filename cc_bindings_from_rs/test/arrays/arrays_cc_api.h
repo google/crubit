@@ -46,7 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct")
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: arrays_golden :: EmptyArrayDropStruct") alignas(4)
-    [[clang::trivial_abi]] EmptyArrayDropStruct final {
+    EmptyArrayDropStruct final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -112,7 +112,7 @@ EmptyArrayStruct final {
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
-    [[clang::trivial_abi]] HasDrop final {
+    HasDrop final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 

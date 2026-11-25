@@ -88,7 +88,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair")
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(4)
-    [[clang::trivial_abi]] Map final {
+    Map final {
  public:
   // `rs_index_golden::Map` doesn't implement the `Default` trait
   Map() = delete;

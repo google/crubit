@@ -2884,7 +2884,40 @@ fn test_non_bitwise_relocatable_cpp_field_omits_relocating_ctor_and_trivial_abi(
     });
     test_format_item(test_src, "StructWithBoxedCppDynamicField", |result| {
         let result = result.unwrap().unwrap();
-        assert_cc_matches!(result.main_api.tokens, quote! { [[clang::trivial_abi]] });
+        assert_cc_not_matches!(result.main_api.tokens, quote! { [[clang::trivial_abi]] });
         assert_cc_matches!(result.main_api.tokens, quote! { UnsafeRelocateTag });
+    });
+}
+
+#[test]
+fn test_format_item_struct_without_copy_or_move_omits_trivial_abi() {
+    let test_src = r#"
+        pub struct CustomDrop {
+            pub x: i32,
+        }
+        impl Drop for CustomDrop {
+            fn drop(&mut self) {}
+        }
+    "#;
+    test_format_item(test_src, "CustomDrop", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_not_matches!(result.main_api.tokens, quote! { [[clang::trivial_abi]] });
+    });
+}
+
+#[test]
+fn test_format_item_struct_with_drop_and_default_keeps_trivial_abi() {
+    let test_src = r#"
+        #[derive(Default)]
+        pub struct CustomDrop {
+            pub x: i32,
+        }
+        impl Drop for CustomDrop {
+            fn drop(&mut self) {}
+        }
+    "#;
+    test_format_item(test_src, "CustomDrop", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(result.main_api.tokens, quote! { [[clang::trivial_abi]] });
     });
 }
