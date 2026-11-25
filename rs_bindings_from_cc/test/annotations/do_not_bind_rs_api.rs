@@ -199,6 +199,82 @@ pub mod crubit {
                 }
             }
         }
+
+        #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+        #[cfi_encoding = "N6crubit4test34StructWithDoNotBindTemplateMembersE"]
+        #[repr(C)]
+        #[cfg_attr(
+            not(doc),
+            doc = "CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindTemplateMembers"
+        )]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+        pub struct StructWithDoNotBindTemplateMembers {
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+        }
+        unsafe impl ::cxx::ExternType for StructWithDoNotBindTemplateMembers {
+            type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindTemplateMembers");
+            type Kind = ::cxx::kind::Trivial;
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: StructWithDoNotBindTemplateMembers"),
+            crate::crubit::test::StructWithDoNotBindTemplateMembers
+        );
+        impl StructWithDoNotBindTemplateMembers {
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            #[inline(always)]
+            pub unsafe fn NonAllowListedDoNotBindMethodTemplate(
+                __this: *const Self,
+                __param_0: crate::crubit::test::ArgumentToBoundOverload,
+            ) {
+                unsafe {
+                    self::struct_with_do_not_bind_template_members::NonAllowListedDoNotBindMethodTemplate(__this,__param_0)
+                }
+            }
+        }
+
+        impl From<crate::crubit::test::ArgumentToBoundOverload> for StructWithDoNotBindTemplateMembers {
+            #[inline(always)]
+            fn from(args: crate::crubit::test::ArgumentToBoundOverload) -> Self {
+                let mut __param_0 = args;
+                let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test34StructWithDoNotBindTemplateMembersC1ENS0_23ArgumentToBoundOverloadE(&raw mut tmp as*mut _,__param_0.as_mut_ptr());
+                    tmp.assume_init()
+                }
+            }
+        }
+        impl ::ctor::CtorNew<crate::crubit::test::ArgumentToBoundOverload>
+            for StructWithDoNotBindTemplateMembers
+        {
+            type CtorType = Self;
+            type Error = ::ctor::Infallible;
+            #[inline(always)]
+            fn ctor_new(args: crate::crubit::test::ArgumentToBoundOverload) -> Self::CtorType {
+                <Self as From<crate::crubit::test::ArgumentToBoundOverload>>::from(args)
+            }
+        }
+
+        pub mod struct_with_do_not_bind_template_members {
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: do_not_bind=")]
+            #[inline(always)]
+            pub unsafe fn NonAllowListedDoNotBindMethodTemplate(
+                __this: *const crate::crubit::test::StructWithDoNotBindTemplateMembers,
+                __param_0: crate::crubit::test::ArgumentToBoundOverload,
+            ) {
+                let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
+                unsafe {
+                    crate::detail::__rust_thunk___ZNK6crubit4test34StructWithDoNotBindTemplateMembers37NonAllowListedDoNotBindMethodTemplateENS0_23ArgumentToBoundOverloadE(__this,__param_0.as_mut_ptr())
+                }
+            }
+        }
     }
 }
 
@@ -228,6 +304,14 @@ mod detail {
             __this: *mut crate::crubit::test::StructWithDoNotBindMethod,
             __param_0: *mut crate::crubit::test::ArgumentToBoundOverload,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test34StructWithDoNotBindTemplateMembersC1ENS0_23ArgumentToBoundOverloadE(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: *mut crate::crubit::test::ArgumentToBoundOverload,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZNK6crubit4test34StructWithDoNotBindTemplateMembers37NonAllowListedDoNotBindMethodTemplateENS0_23ArgumentToBoundOverloadE(
+            __this: *const crate::crubit::test::StructWithDoNotBindTemplateMembers,
+            __param_0: *mut crate::crubit::test::ArgumentToBoundOverload,
+        );
     }
 }
 
@@ -251,4 +335,11 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::crubit::test::StructWithDoNotBindMethod>() == 1);
     static_assertions::assert_impl_all!(crate::crubit::test::StructWithDoNotBindMethod: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::crubit::test::StructWithDoNotBindMethod: Drop);
+
+    assert!(::core::mem::size_of::<crate::crubit::test::StructWithDoNotBindTemplateMembers>() == 1);
+    assert!(
+        ::core::mem::align_of::<crate::crubit::test::StructWithDoNotBindTemplateMembers>() == 1
+    );
+    static_assertions::assert_impl_all!(crate::crubit::test::StructWithDoNotBindTemplateMembers: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::crubit::test::StructWithDoNotBindTemplateMembers: Drop);
 };

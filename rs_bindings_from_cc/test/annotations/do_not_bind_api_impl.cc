@@ -75,4 +75,29 @@ static_assert((void (::crubit::test::StructWithDoNotBindMethod::*)(
                   struct crubit::test::ArgumentToBoundOverload)) &
               ::crubit::test::StructWithDoNotBindMethod::DoNotBindMethod);
 
+static_assert(sizeof(struct crubit::test::StructWithDoNotBindTemplateMembers) ==
+              1);
+static_assert(
+    alignof(struct crubit::test::StructWithDoNotBindTemplateMembers) == 1);
+
+extern "C" void
+__rust_thunk___ZN6crubit4test34StructWithDoNotBindTemplateMembersC1ENS0_23ArgumentToBoundOverloadE(
+    struct crubit::test::StructWithDoNotBindTemplateMembers* __this,
+    struct crubit::test::ArgumentToBoundOverload* __param_0) {
+  crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(__param_0));
+}
+
+extern "C" void
+__rust_thunk___ZNK6crubit4test34StructWithDoNotBindTemplateMembers37NonAllowListedDoNotBindMethodTemplateENS0_23ArgumentToBoundOverloadE(
+    struct crubit::test::StructWithDoNotBindTemplateMembers const* __this,
+    struct crubit::test::ArgumentToBoundOverload* __param_0) {
+  __this->NonAllowListedDoNotBindMethodTemplate(
+      crubit::UnsafeTakeValue(__param_0));
+}
+
+static_assert((void (::crubit::test::StructWithDoNotBindTemplateMembers::*)(
+                  struct crubit::test::ArgumentToBoundOverload) const) &
+              ::crubit::test::StructWithDoNotBindTemplateMembers::
+                  NonAllowListedDoNotBindMethodTemplate);
+
 #pragma clang diagnostic pop
