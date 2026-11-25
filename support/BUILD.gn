@@ -8,6 +8,23 @@ import("../crubit.gni")
 import("//build/rust/rust_macro.gni")
 import("//build/rust/rust_static_library.gni")
 
+source_set("absl_hash_cpp") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "absl_hash.h",
+  ]
+  deps = [
+    "$crubit_absl_dep_target",
+  ]
+}
+
 source_set("annotations") {
   public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
@@ -328,6 +345,7 @@ rust_static_library("operator") {
 
 group("support_cpp") {
   public_deps = [
+    ":absl_hash_cpp",
     ":annotations",
     ":annotations_internal",
     ":bridge_cpp",

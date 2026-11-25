@@ -662,6 +662,7 @@ pub fn generated_items_to_tokens<'db>(
                     incomplete_definition,
                     upcast_impls,
                     display_impl,
+                    hash_impl,
                     debug_impl,
                     no_unique_address_accessors,
                     items,
@@ -865,6 +866,7 @@ pub fn generated_items_to_tokens<'db>(
                     #unpin_impl
                     #cxx_impl
                     #display_impl
+                    #hash_impl
                     #debug_impl
 
                     #incomplete_definition
@@ -1275,6 +1277,7 @@ pub struct Record {
     pub incomplete_definition: Option<TokenStream>,
     pub upcast_impls: Vec<Result<UpcastImpl, String>>,
     pub display_impl: Option<DisplayImpl>,
+    pub hash_impl: Option<TokenStream>,
     pub debug_impl: Option<DebugImpl>,
     pub no_unique_address_accessors: Vec<NoUniqueAddressAccessor>,
     pub items: Vec<ItemId>,
@@ -1813,6 +1816,8 @@ pub enum Thunk {
     Upcast { cast_fn_name: Ident, derived_name: TokenStream, base_name: TokenStream },
     /// Generates a thunk for formatting in C++.
     Fmt { fmt_fn_name: Ident, param_type: TokenStream },
+    /// Generates a thunk for hashing in C++.
+    Hash { hash_fn_name: Ident, param_type: TokenStream },
     /// Generates a thunk for a function.
     Function {
         mangled_name: Option<Rc<str>>,
@@ -1829,6 +1834,7 @@ impl Thunk {
         match self {
             Thunk::Upcast { cast_fn_name, .. } => cast_fn_name,
             Thunk::Fmt { fmt_fn_name, .. } => fmt_fn_name,
+            Thunk::Hash { hash_fn_name, .. } => hash_fn_name,
             Thunk::Function { thunk_ident, .. } => thunk_ident,
         }
     }
@@ -1848,6 +1854,12 @@ impl ToTokens for Thunk {
                     pub(crate) unsafe fn #fmt_fn_name(
                         value: &#param_type,
                         formatter: &mut ::lossy_formatter::LossyFormatter) -> bool;
+                }
+                .to_tokens(tokens);
+            }
+            Thunk::Hash { hash_fn_name, param_type } => {
+                quote! {
+                    pub(crate) unsafe fn #hash_fn_name(value: &#param_type) -> u64;
                 }
                 .to_tokens(tokens);
             }
@@ -1896,6 +1908,11 @@ pub enum ThunkImpl {
         fmt_fn_name: Ident,
         param_type: TokenStream,
     },
+    /// A function that hashes in C++, using `AbslHashValue`.
+    Hash {
+        hash_fn_name: Ident,
+        param_type: TokenStream,
+    },
     /// A function that implements a Rust function thunk.
     Function {
         return_type_name: TokenStream,
@@ -1933,6 +1950,7 @@ impl ThunkImpl {
             ThunkImpl::Function { needs_slot_header, .. } => *needs_slot_header,
             ThunkImpl::Upcast { .. }
             | ThunkImpl::Fmt { .. }
+            | ThunkImpl::Hash { .. }
             | ThunkImpl::LayoutAssertion { .. }
             | ThunkImpl::FunctionTypeAssertion { .. } => false,
         }
@@ -1955,6 +1973,14 @@ impl ToTokens for ThunkImpl {
                     extern "C" bool #fmt_fn_name(
                         const #param_type& value, ::lossy_formatter::LossyFormatter& formatter) {
                         return ::crubit::Fmt(value, formatter);
+                    }
+                }
+                .to_tokens(tokens);
+            }
+            ThunkImpl::Hash { hash_fn_name, param_type } => {
+                quote! {
+                    extern "C" uint64_t #hash_fn_name(const #param_type& value) {
+                        return ::crubit::AbslHash(value);
                     }
                 }
                 .to_tokens(tokens);

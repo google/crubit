@@ -174,14 +174,6 @@ bool IsSupportedArrayElementType(const clang::ASTContext& ctx,
          type->isEnumeralType();
 }
 
-bool IsTypeValueOrRefToConst(clang::QualType candidate,
-                             clang::CanQualType target) {
-  return candidate->getCanonicalTypeUnqualified() == target ||
-         (candidate->isLValueReferenceType() &&
-          candidate.getNonReferenceType().getCanonicalType() ==
-              target.withConst());
-}
-
 bool IsLvalueRefToUnqualified(clang::QualType type) {
   return type->isLValueReferenceType() &&
          !type.getNonReferenceType().getCanonicalType().hasQualifiers();

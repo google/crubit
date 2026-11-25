@@ -151,3 +151,34 @@ to implement the `Display` binding. See the macro's documentation:
 ```live-snippet
 cs/file:support/annotations.h symbol:CRUBIT_OVERRIDE_DISPLAY
 ```
+
+## One-way map into `Hash`
+
+For a C++ class, struct, or union `T`, Crubit maps one-way the following C++
+signatures into the Rust trait `Hash`:
+
+*   `template <typename H> H AbslHashValue(H, const T&)`
+*   `template <typename H> H AbslHashValue(H, T)`
+
+`AbslHashValue` must be a (hidden) friend of `T` or be declared in the namespace
+of `T`. The generated `Hash` impl writes the
+[`absl::Hash`](https://abseil.io/docs/cpp/guides/hash) of the value into the
+Rust `Hasher`. Like `absl::Hash`, the result is only stable within one process.
+This matches Rust's expectations: `Hash` output is
+[not portable across platforms or compiler versions](https://doc.rust-lang.org/std/hash/trait.Hash.html#portability),
+`Hasher` provides
+[no guarantees about its implementations](https://doc.rust-lang.org/std/hash/trait.Hasher.html#:~:text=This%20trait%20provides%20no,possible%2C%20for%20example%2C%20that),
+and `HashMap` by default uses
+[a randomly seeded hasher](https://doc.rust-lang.org/std/collections/struct.HashMap.html#:~:text=The%20algorithm%20is%20randomly%20seeded).
+
+For now, this requires the `absl_hash_value` Crubit
+feature .
+This lets existing Crubit users migrate gradually, if they have manual `Hash`
+impls that conflict with the generated impls.
+
+Known issues:
+
+*   Crubit doesn't implement `Hash` for class template instantiations, or for
+    constrained `AbslHashValue` overloads (b/584427138)
+*   Crubit doesn't implement `Hash` for `std::hash` specializations
+    (b/585677394)

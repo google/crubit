@@ -33,9 +33,11 @@
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/CXXInheritance.h"
+#include "clang/AST/CanonicalType.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclFriend.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
@@ -649,6 +651,66 @@ bool HasPrivateOrDeletedOperatorDelete(clang::CXXRecordDecl& record_decl) {
     }
   }
   return false;
+}
+
+// Returns true if `decl` is an `AbslHashValue` function template for
+// `hashed_type`: `template <typename H> H AbslHashValue(H, const T&)` (or with
+// `T` taken by value).
+bool IsAbslHashValueFunction(const clang::Decl& decl,
+                             clang::CanQualType hashed_type) {
+  const auto* function_template_decl =
+      clang::dyn_cast<clang::FunctionTemplateDecl>(&decl);
+  if (function_template_decl == nullptr ||
+      !function_template_decl->getDeclName().isIdentifier() ||
+      function_template_decl->getName() != "AbslHashValue" ||
+      // Constraints (including SFINAE via extra template parameters) usually
+      // depend on the hash state `H`, so Crubit can't check them.
+      // TODO(b/584427138): Support constrained `AbslHashValue` overloads.
+      function_template_decl->hasAssociatedConstraints() ||
+      function_template_decl->getTemplateParameters()->size() != 1) {
+    return false;
+  }
+  const clang::FunctionDecl* function_decl =
+      function_template_decl->getTemplatedDecl();
+  return !function_decl->isDeleted() && function_decl->getNumParams() == 2 &&
+         function_decl->getParamDecl(0)->getType()->isTemplateTypeParmType() &&
+         IsTypeValueOrRefToConst(
+             /*candidate=*/function_decl->getParamDecl(1)->getType(),
+             /*target=*/hashed_type);
+}
+
+// Returns how `record_decl` can be hashed.
+crubit::ffi::DetectedHasher DetectHasher(
+    const clang::CXXRecordDecl& record_decl) {
+  // Skip class template instantiations: their `AbslHashValue` may need the
+  // template arguments to be hashable, and then the generated C++ thunk fails
+  // to compile (e.g. for `Wrapper<NotHashable>`).
+  // TODO(b/584427138): Support class template instantiations.
+  if (record_decl.getTemplateInstantiationPattern() != nullptr) {
+    return crubit::ffi::DETECTED_HASHER_NONE;
+  }
+  clang::ASTContext& ast_context = record_decl.getASTContext();
+  clang::CanQualType type = ast_context.getCanonicalTypeDeclType(&record_decl);
+  // Hidden friends are only found by argument-dependent lookup, so they are
+  // checked separately. The namespace `lookup` below also returns hidden
+  // friends of other classes, which are skipped.
+  for (const clang::FriendDecl* _Nonnull friend_decl : record_decl.friends()) {
+    const clang::NamedDecl* friend_function = friend_decl->getFriendDecl();
+    if (friend_function != nullptr &&
+        IsAbslHashValueFunction(*friend_function, type)) {
+      return crubit::ffi::DETECTED_HASHER_ABSL_HASH_VALUE;
+    }
+  }
+  const clang::DeclContext* _Nonnull context =
+      record_decl.getDeclContext()->getEnclosingNamespaceContext();
+  for (const clang::NamedDecl* _Nonnull candidate :
+       context->lookup(&ast_context.Idents.get("AbslHashValue"))) {
+    if (candidate->isInIdentifierNamespace(clang::Decl::IDNS_Ordinary) &&
+        IsAbslHashValueFunction(*candidate, type)) {
+      return crubit::ffi::DETECTED_HASHER_ABSL_HASH_VALUE;
+    }
+  }
+  return crubit::ffi::DETECTED_HASHER_NONE;
 }
 
 llvm::Error PopulateTemplateSpecializationKind(
@@ -1630,6 +1692,7 @@ std::unique_ptr<crubit::ffi::Item> CXXRecordDeclImporter::Import(
   record->set_has_private_or_deleted_operator_delete(
       HasPrivateOrDeletedOperatorDelete(*record_decl));
   record->set_detected_formatter(*detected_formatter);
+  record->set_detected_hasher(DetectHasher(*record_decl));
   record->set_impl_debug(impl_debug);
   record->set_has_private_pointer_or_reference_fields(
       has_private_pointer_or_reference_fields);

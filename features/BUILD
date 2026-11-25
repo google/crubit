@@ -408,6 +408,17 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set under which C++ types that provide `AbslHashValue` implement `Hash`. This can
+# conflict with manual `Hash` impls. This flag only impacts rust_api_from_cpp users.
+#
+# See b/566184826
+crubit_feature_hint(
+    name = "absl_hash_value",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["absl_hash_value"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

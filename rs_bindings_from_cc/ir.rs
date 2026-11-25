@@ -35,8 +35,8 @@ pub use ir_generated::unsupported_item::{
 };
 pub use ir_generated::{
     AccessSpecifier, ArrayValue, BaseClass, Blocker, BridgeType, CallingConv as CcCallingConv,
-    CcType, Comment, Constant, DeclLocation, Enum, Enumerator, ExistingRustType, Field,
-    FloatConstant, FormattedError, Func, FuncParam, GlobalVar, HeaderName, Identifier,
+    CcType, Comment, Constant, DeclLocation, DetectedHasher, Enum, Enumerator, ExistingRustType,
+    Field, FloatConstant, FormattedError, Func, FuncParam, GlobalVar, HeaderName, Identifier,
     IncompleteRecord, InstanceMethodMetadata, IntegerConstant, Item, LifetimeName,
     MemberFuncSemantic, Namespace, Operator, OwnedPtrConfig, PointerTypeKind, Primitive, Record,
     RecordType, SafetyAnnotation, SizeAlign, SourceLocation, SpecialMemberFunc,

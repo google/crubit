@@ -960,11 +960,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         quote! { < #( #stubs ),* > }
     };
     let display_impl = if record.detected_formatter() {
-        let fmt_fn_name = make_rs_ident(&format!(
-            "__crubit_fmt__{type_name}_{odr_suffix}",
-            type_name = record.mangled_cc_name(),
-            odr_suffix = record.as_ref().owning_target().convert_to_cc_identifier(),
-        ));
+        let fmt_fn_name = record_thunk_ident(&record, "fmt");
         let thunk =
             Thunk::Fmt { fmt_fn_name: fmt_fn_name.clone(), param_type: qualified_ident.clone() };
         api_snippets.thunks.push(thunk);
@@ -973,6 +969,28 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
             param_type: cpp_type_name_for_record(&record, db)?,
         });
         Some(DisplayImpl { type_name: quote! { #ident #stubbed_lifetime_params }, fmt_fn_name })
+    } else {
+        None
+    };
+    let hash_impl = if record.detected_hasher() == DetectedHasher::AbslHashValue
+        && crubit_features.contains(crubit_feature::CrubitFeature::AbslHashValue)
+    {
+        let hash_fn_name = record_thunk_ident(&record, "hash");
+        api_snippets.thunks.push(Thunk::Hash {
+            hash_fn_name: hash_fn_name.clone(),
+            param_type: qualified_ident.clone(),
+        });
+        api_snippets.cc_details.push(ThunkImpl::Hash {
+            hash_fn_name: hash_fn_name.clone(),
+            param_type: cpp_type_name_for_record(&record, db)?,
+        });
+        Some(quote! {
+            impl ::core::hash::Hash for #ident #stubbed_lifetime_params {
+                fn hash<H: ::core::hash::Hasher>(&self, state: &mut H) {
+                    state.write_u64(unsafe { #crate_root_path::detail::#hash_fn_name(self) });
+                }
+            }
+        })
     } else {
         None
     };
@@ -1201,6 +1219,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         incomplete_definition,
         upcast_impls,
         display_impl,
+        hash_impl,
         debug_impl,
         no_unique_address_accessors,
         items,
@@ -1531,6 +1550,16 @@ fn cc_struct_upcast_impl(
     Ok(UpcastImplementation { upcast_impls, thunks, thunk_impls, upcastable_bases })
 }
 
+/// Returns the name of a `kind` thunk (e.g. `"fmt"`) for `record`. The name includes the owning
+/// target, so that the thunks of different targets don't collide (ODR).
+fn record_thunk_ident(record: &Record, kind: &str) -> Ident {
+    make_rs_ident(&format!(
+        "__crubit_{kind}__{}_{}",
+        record.mangled_cc_name(),
+        record.owning_target().convert_to_cc_identifier(),
+    ))
+}
+
 fn cc_struct_operator_delete_impl(
     db: &BindingsGenerator,
     record: &FfiRc<Record>,
@@ -1539,11 +1568,7 @@ fn cc_struct_operator_delete_impl(
     let crate_root_path = ir.crate_root_path_tokens();
     let record_type = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
 
-    let thunk_ident = make_rs_ident(&format!(
-        "__crubit_operator_delete__{}_{}",
-        record.mangled_cc_name(),
-        record.as_ref().owning_target().convert_to_cc_identifier(),
-    ));
+    let thunk_ident = record_thunk_ident(record, "operator_delete");
 
     let thunk = Thunk::Function {
         mangled_name: None,

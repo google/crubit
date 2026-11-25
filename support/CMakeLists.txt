@@ -4,6 +4,19 @@
 
 # Automatically @generated CMakeLists.txt.
 
+add_library(crubit_support_absl_hash_cpp INTERFACE
+"absl_hash.h"
+)
+set_target_properties(crubit_support_absl_hash_cpp PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_absl_hash_cpp INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+
+target_link_libraries(crubit_support_absl_hash_cpp INTERFACE
+absl::hash
+)
+
 add_library(crubit_support_annotations INTERFACE
 "annotations.h"
 )
