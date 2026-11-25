@@ -2548,8 +2548,10 @@ _Nullable std::unique_ptr<crubit::ffi::Item> Importer::ImportDecl(
         invocation_.do_not_bind_allowlist_;
     const clang::NamedDecl* named_decl =
         clang::dyn_cast<clang::NamedDecl>(decl);
-    // Function declarations do not need to be allowlisted.
-    if (named_decl && !clang::isa<clang::FunctionDecl>(decl) &&
+    // Function and function template declarations do not need to be
+    // allowlisted.
+    if (named_decl &&
+        !clang::isa<clang::FunctionDecl, clang::FunctionTemplateDecl>(decl) &&
         do_not_bind_allowlist.has_value()) {
       std::string decl_name = named_decl->getQualifiedNameAsString();
       if (!do_not_bind_allowlist->contains(decl_name)) {

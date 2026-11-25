@@ -40,6 +40,19 @@ struct StructWithDoNotBindMethod {
   void DoNotBindMethod(ArgumentToBoundOverload) {}
 };
 
+template <typename T>
+CRUBIT_DO_NOT_BIND inline void NonAllowListedDoNotBindFnTemplate(T) {}
+
+struct StructWithDoNotBindTemplateMembers {
+  template <typename T>
+  CRUBIT_DO_NOT_BIND explicit StructWithDoNotBindTemplateMembers(T) {}
+  explicit StructWithDoNotBindTemplateMembers(ArgumentToBoundOverload) {}
+
+  template <typename T>
+  CRUBIT_DO_NOT_BIND void NonAllowListedDoNotBindMethodTemplate(T) const {}
+  void NonAllowListedDoNotBindMethodTemplate(ArgumentToBoundOverload) const {}
+};
+
 }  // namespace crubit::test
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ANNOTATIONS_DO_NOT_BIND_H_
