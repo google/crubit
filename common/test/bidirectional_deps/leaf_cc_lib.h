@@ -5,8 +5,6 @@
 #ifndef CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_CC_LIB_H_
 #define CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_CC_LIB_H_
 
-#pragma clang lifetime_elision
-
 namespace crubit {
 
 struct LeafCcType final {

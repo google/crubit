@@ -5,8 +5,6 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_INHERITED_METHODS_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_INHERITED_METHODS_H_
 
-#pragma clang lifetime_elision
-
 #include "rs_bindings_from_cc/test/struct/inheritance/not_crubit_enabled.h"
 
 struct Nonmovable {

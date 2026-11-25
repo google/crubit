@@ -5,8 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_TYPE_ALIAS_TYPE_ALIAS_ACCESS_RULE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_TYPE_ALIAS_TYPE_ALIAS_ACCESS_RULE_H_
 
-#pragma clang lifetime_elision
-
 template <typename T>
 class A final {};
 

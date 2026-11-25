@@ -279,7 +279,7 @@ impl Default for MyInstantiation {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__c114dea5__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
+            crate::detail::__rust_thunk__92443893__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -307,7 +307,7 @@ impl Default for MySpecializedInstantiation {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__2a6ef96a__ZN10MyTemplateIfEC1Ev(&raw mut tmp as *mut _);
+            crate::detail::__rust_thunk__43bc7961__ZN10MyTemplateIfEC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -367,7 +367,7 @@ pub mod zz_template_instantiations {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk__2cd151a5__ZN13OuterTemplateIiEC1Ev(
+                crate::detail::__rust_thunk__5fc350e6__ZN13OuterTemplateIiEC1Ev(
                     &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
@@ -424,13 +424,13 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z3foov() -> ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk__c114dea5__ZN10MyTemplateIiEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__92443893__ZN10MyTemplateIiEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__2a6ef96a__ZN10MyTemplateIfEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__43bc7961__ZN10MyTemplateIfEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__2cd151a5__ZN13OuterTemplateIiEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__5fc350e6__ZN13OuterTemplateIiEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
     }

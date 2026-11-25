@@ -5,8 +5,6 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_VIRTUAL_BASE_CTOR_DTOR_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_VIRTUAL_BASE_CTOR_DTOR_H_
 
-#pragma clang lifetime_elision
-
 namespace virtual_base_ctor_dtor {
 
 struct VirtualBase {

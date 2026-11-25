@@ -51,7 +51,7 @@ impl Default for MyTypeAlias {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__de4d35d3__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
+            crate::detail::__rust_thunk__11cb6aaa__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -63,7 +63,7 @@ pub mod my_type_alias {
     pub fn Create(value: ::ffi_11::c_int) -> crate::MyTypeAlias {
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<crate::MyTypeAlias>::uninit();
-            crate::detail::__rust_thunk__5a9d55c6__ZN10MyTemplateIiE6CreateEi(
+            crate::detail::__rust_thunk__de4d35d3__ZN10MyTemplateIiE6CreateEi(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
                 value,
             );
@@ -75,7 +75,7 @@ pub mod my_type_alias {
     pub fn value<'__this>(
         __this: &'__this crate::MyTypeAlias,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
-        unsafe { crate::detail::__rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv(__this) }
+        unsafe { crate::detail::__rust_thunk__93e13b1a__ZNK10MyTemplateIiE5valueEv(__this) }
     }
 }
 
@@ -121,7 +121,7 @@ pub mod nested {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk__de4d35d3__ZN10MyTemplateIfEC1Ev(
+                crate::detail::__rust_thunk__11cb6aaa__ZN10MyTemplateIfEC1Ev(
                     &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
@@ -136,7 +136,7 @@ pub mod nested {
             unsafe {
                 let mut __crubit_return =
                     ::core::mem::MaybeUninit::<crate::nested::NestedAlias>::uninit();
-                crate::detail::__rust_thunk__5a9d55c6__ZN10MyTemplateIfE6CreateEf(
+                crate::detail::__rust_thunk__de4d35d3__ZN10MyTemplateIfE6CreateEf(
                     &raw mut __crubit_return as *mut ::core::ffi::c_void,
                     value,
                 );
@@ -148,7 +148,7 @@ pub mod nested {
         pub fn value<'__this>(
             __this: &'__this crate::nested::NestedAlias,
         ) -> ::cref::CRef<'__this, f32> {
-            unsafe { crate::detail::__rust_thunk__758630aa__ZNK10MyTemplateIfE5valueEv(__this) }
+            unsafe { crate::detail::__rust_thunk__93e13b1a__ZNK10MyTemplateIfE5valueEv(__this) }
         }
     }
 }
@@ -215,7 +215,7 @@ pub mod zz_template_instantiations {
                 let mut __crubit_return = ::core::mem::MaybeUninit::<
                     crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE,
                 >::uninit();
-                crate::detail::__rust_thunk__5a9d55c6__ZN10MyTemplateIdE6CreateEd(
+                crate::detail::__rust_thunk__de4d35d3__ZN10MyTemplateIdE6CreateEd(
                     &raw mut __crubit_return as *mut ::core::ffi::c_void,
                     value,
                 );
@@ -224,7 +224,7 @@ pub mod zz_template_instantiations {
         }
         #[inline(always)]
         pub fn value<'__this>(&'__this self) -> ::cref::CRef<'__this, f64> {
-            unsafe { crate::detail::__rust_thunk__758630aa__ZNK10MyTemplateIdE5valueEv(self) }
+            unsafe { crate::detail::__rust_thunk__93e13b1a__ZNK10MyTemplateIdE5valueEv(self) }
         }
     }
 
@@ -233,7 +233,7 @@ pub mod zz_template_instantiations {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk__de4d35d3__ZN10MyTemplateIdEC1Ev(
+                crate::detail::__rust_thunk__11cb6aaa__ZN10MyTemplateIdEC1Ev(
                     &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
@@ -251,24 +251,24 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk__de4d35d3__ZN10MyTemplateIiEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__11cb6aaa__ZN10MyTemplateIiEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__5a9d55c6__ZN10MyTemplateIiE6CreateEi(
+        pub(crate) unsafe fn __rust_thunk__de4d35d3__ZN10MyTemplateIiE6CreateEi(
             __return: *mut ::core::ffi::c_void,
             value: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv<'__this>(
+        pub(crate) unsafe fn __rust_thunk__93e13b1a__ZNK10MyTemplateIiE5valueEv<'__this>(
             __this: &'__this crate::MyTypeAlias,
         ) -> ::cref::CRef<'__this, ::ffi_11::c_int>;
-        pub(crate) unsafe fn __rust_thunk__de4d35d3__ZN10MyTemplateIfEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__11cb6aaa__ZN10MyTemplateIfEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__5a9d55c6__ZN10MyTemplateIfE6CreateEf(
+        pub(crate) unsafe fn __rust_thunk__de4d35d3__ZN10MyTemplateIfE6CreateEf(
             __return: *mut ::core::ffi::c_void,
             value: f32,
         );
-        pub(crate) unsafe fn __rust_thunk__758630aa__ZNK10MyTemplateIfE5valueEv<'__this>(
+        pub(crate) unsafe fn __rust_thunk__93e13b1a__ZNK10MyTemplateIfE5valueEv<'__this>(
             __this: &'__this crate::nested::NestedAlias,
         ) -> ::cref::CRef<'__this, f32>;
         pub(crate) unsafe fn __rust_thunk___Z8GetValue10MyTemplateIiE(
@@ -281,14 +281,14 @@ mod detail {
             __return: *mut ::core::ffi::c_void,
             value: f64,
         );
-        pub(crate) unsafe fn __rust_thunk__de4d35d3__ZN10MyTemplateIdEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__11cb6aaa__ZN10MyTemplateIdEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__5a9d55c6__ZN10MyTemplateIdE6CreateEd(
+        pub(crate) unsafe fn __rust_thunk__de4d35d3__ZN10MyTemplateIdE6CreateEd(
             __return: *mut ::core::ffi::c_void,
             value: f64,
         );
-        pub(crate) unsafe fn __rust_thunk__758630aa__ZNK10MyTemplateIdE5valueEv<'__this>(
+        pub(crate) unsafe fn __rust_thunk__93e13b1a__ZNK10MyTemplateIdE5valueEv<'__this>(
             __this: &'__this crate::zz_template_instantiations::__CcTemplateInst10MyTemplateIdE,
         ) -> ::cref::CRef<'__this, f64>;
     }
