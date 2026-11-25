@@ -591,6 +591,7 @@ pub fn generated_items_to_tokens<'db>(
             GeneratedItem::GlobalCpp(global_cpp_tokens) => global_cpp_tokens.to_tokens(tokens),
             GeneratedItem::Record(record_item) => {
                 let Record {
+                    warning_comments,
                     doc_comment_attr,
                     derive_attr,
                     recursively_pinned_attr,
@@ -797,6 +798,7 @@ pub fn generated_items_to_tokens<'db>(
                     None
                 };
                 quote! {
+                    #( __COMMENT__ #warning_comments )*
                     #doc_comment_attr
                     #derive_attr
                     #recursively_pinned_attr
@@ -1200,6 +1202,8 @@ pub enum SendSyncImpl {
 
 #[derive(Clone, Debug)]
 pub struct Record {
+    /// Warnings emitted as comments above the struct (e.g. for a reserved lifetime name).
+    pub warning_comments: Vec<String>,
     pub doc_comment_attr: Option<DocCommentAttr>,
     /// Whether to hide the struct from the documentation, because its name is mangled.
     pub derive_attr: DeriveAttr,

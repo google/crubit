@@ -8,7 +8,9 @@ use crubit_feature::CrubitFeature;
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{format_generic_params, Lifetime};
 use generate_function_thunk::thunk_ident;
-use googletest::prelude::{assert_that, contains_substring, expect_that, gtest, not, OrFail as _};
+use googletest::prelude::{
+    assert_that, contains_substring, eq, expect_that, gtest, not, OrFail as _,
+};
 
 use ir::{Func, Item, UnqualifiedIdentifier};
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func, with_lifetime_macros};
@@ -5635,6 +5637,116 @@ fn test_thread_safe_references_in_functions_and_methods() -> Result<()> {
             pub fn Identity<'s>(s: &'s crate::ThreadSafe) -> ::cref::CRef<'s, crate::ThreadSafe> {
                 unsafe { crate::detail::...(s) }
             }
+        }
+    );
+    Ok(())
+}
+
+/// Returns the Rust bindings of `annotated` with the warnings about reserved names removed, after
+/// checking that every name in `reserved` is warned about and that none becomes a lifetime.
+fn rs_api_without_reserved_warnings(annotated: &str, reserved: &[&str]) -> Result<String> {
+    let rs_api = generate_bindings_tokens_from_assumed_lifetimes_cc(annotated)?.rs_api.to_string();
+    let mut stripped = rs_api.clone();
+    for name in reserved {
+        let warning = format!("warning: '${name}' is reserved (no effect yet); ignored");
+        expect_that!(rs_api, contains_substring(warning.as_str()));
+        stripped = stripped.replace(&format!("__COMMENT__ \"{warning}\""), "");
+        expect_that!(stripped, not(contains_substring(format!("'{name}").as_str())));
+    }
+    expect_that!(stripped, not(contains_substring("is reserved")));
+    Ok(stripped.split_whitespace().collect::<Vec<_>>().join(" "))
+}
+
+/// The bindings of `twin` (the same code without the reserved names), normalized like
+/// `rs_api_without_reserved_warnings`.
+fn rs_api_normalized(twin: &str) -> Result<String> {
+    let rs_api = generate_bindings_tokens_from_assumed_lifetimes_cc(twin)?.rs_api.to_string();
+    Ok(rs_api.split_whitespace().collect::<Vec<_>>().join(" "))
+}
+
+/// A reserved name (`$solo`) is ignored as if absent, with a warning: each annotated program
+/// binds exactly like its unannotated twin.
+#[gtest]
+fn test_reserved_lifetime_name_is_ignored_as_if_absent() -> Result<()> {
+    let cases = [
+        // A pointer level with only the reserved name: elided, so a raw pointer as before.
+        ("void f(int* $solo p);", "void f(int* p);"),
+        // A reference level with only the reserved name: elided, so the result is tied to `r`.
+        ("int& $solo f(int& $solo r);", "int& f(int& r);"),
+        // Another name on the level is kept.
+        (
+            r#"LIFETIME_PARAMS("a") int& $a f(int& $a $solo r, int& s);"#,
+            r#"LIFETIME_PARAMS("a") int& $a f(int& $a r, int& s);"#,
+        ),
+        // A declared lifetime parameter, in the public spelling and the test-local one.
+        (
+            r#"struct $lifetime_param("solo") S final { int x; }; void f(S& s);"#,
+            r#"struct S final { int x; }; void f(S& s);"#,
+        ),
+        (
+            r#"struct LIFETIME_PARAMS("solo") S final { int x; }; void f(S& s);"#,
+            r#"struct S final { int x; }; void f(S& s);"#,
+        ),
+        // A reserved entry next to a real one: the record has one lifetime, not two.
+        (
+            r#"struct $lifetime_param("p", "solo") V final { int* $p p; };
+               V MakeV(int& $p x [[clang::lifetimebound]]);"#,
+            r#"struct $lifetime_param("p") V final { int* $p p; };
+               V MakeV(int& $p x [[clang::lifetimebound]]);"#,
+        ),
+        // A record parameter written with the reserved name binds like the plain one (whose
+        // soundness is row K3's; see the probe in cl/1027824779).
+        (
+            r#"struct $lifetime_param("p") V final { int* $p p; }; void g(V $solo& v);"#,
+            r#"struct $lifetime_param("p") V final { int* $p p; }; void g(V& v);"#,
+        ),
+        // A field.
+        (
+            r#"struct $lifetime_param("p") W final { int* $p $solo p; };"#,
+            r#"struct $lifetime_param("p") W final { int* $p p; };"#,
+        ),
+    ];
+    for (annotated, twin) in cases {
+        let actual = rs_api_without_reserved_warnings(annotated, &["solo"])?;
+        let expected = rs_api_normalized(twin)?;
+        expect_that!(actual, eq(expected.as_str()), "annotated: {annotated}");
+    }
+    Ok(())
+}
+
+/// The warning is a comment directly above the function, and the item is still bound.
+#[gtest]
+fn test_reserved_lifetime_name_warning_on_function() -> Result<()> {
+    let BindingsTokens { rs_api, .. } =
+        generate_bindings_tokens_from_assumed_lifetimes_cc("int& $solo f(int& $solo r);")?;
+    let warning = "warning: '$solo' is reserved (no effect yet); ignored";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[inline(always)]
+            pub fn f<'r>(r: &'r mut ::ffi_11::c_int) -> ::cref::CMut<'r, ::ffi_11::c_int> { ... }
+        }
+    );
+    Ok(())
+}
+
+/// A record whose lifetime parameters name a reserved name gets the warning above the struct.
+#[gtest]
+fn test_reserved_lifetime_name_warning_on_record() -> Result<()> {
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_from_assumed_lifetimes_cc(
+        r#"struct $lifetime_param("solo") S final { int x; };"#,
+    )?;
+    let warning = "warning: '$solo' is reserved (no effect yet); ignored";
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            __COMMENT__ #warning
+            #[doc = ...]
+            #[derive(Clone, Copy, ...)]
+            ...
+            pub struct S { ... }
         }
     );
     Ok(())

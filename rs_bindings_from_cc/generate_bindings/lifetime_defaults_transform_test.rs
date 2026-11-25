@@ -2164,3 +2164,99 @@ fn test_self_types_of_class_template_with_argument_lifetime_are_tied() -> Result
     );
     Ok(())
 }
+
+/// A reserved name is stripped before binding: with no other name on a level, the level is
+/// elided (here tied to `r`), not unknown; another name on the level is kept.
+#[gtest]
+fn test_reserved_lifetime_name_is_stripped() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      int& $solo f(int& $solo r);
+      LIFETIME_PARAMS("a") int& $a g(int& $a $solo r, int* $solo p);
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["r"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["r"] ... },
+                        identifier: "r", ...
+                    }
+                ],
+                ...
+                lifetime_inputs: ["r"],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "g",
+                rs_name: "g", ...
+                return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["a"] ... },
+                        identifier: "r", ...
+                    },
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: [] ... },
+                        identifier: "p", ...
+                    },
+                ],
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+/// A reserved entry in a declared lifetime parameter list (in either spelling) is dropped before
+/// the arity is computed.
+#[gtest]
+fn test_reserved_lifetime_param_is_dropped() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+      struct $lifetime_param("solo") S { int x; };
+      struct LIFETIME_PARAMS("p", "solo") V { int* $p p; };
+      "#,
+    )?;
+
+    let dir = transform_from_proto(&proto)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "S",
+                ...
+                lifetime_inputs: [],
+                ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                ...
+                cc_name: "V",
+                ...
+                lifetime_inputs: ["p"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}

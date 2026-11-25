@@ -63,6 +63,19 @@ inline leaf_rs_lib::StaticLeafRsLifetime MakeStaticLifetimeAlias() {
   return leaf_rs_lib::static_lifetime();
 }
 
+// `LeafRsSolo<'solo>`: the name of its lifetime parameter is reserved in C++
+// (`$solo`), but a Rust type's own parameters are not C++ annotations, so it
+// binds like `LeafRsLifetime`, with no reserved-name warning.
+inline leaf_rs_lib::LeafRsSolo $a WrapSolo(const unsigned char& $a x) {
+  return leaf_rs_lib::wrap_solo(&x);
+}
+inline leaf_rs_lib::LeafRsSolo WrapSoloElided(const unsigned char& x) {
+  return leaf_rs_lib::wrap_solo(&x);
+}
+inline unsigned char UnwrapSolo(leaf_rs_lib::LeafRsSolo x) {
+  return leaf_rs_lib::unwrap_solo(std::move(x));
+}
+
 // `LeafRsBounded<'a, 'b: 'a, 'c>` has three lifetime parameters, two of them
 // related by an outlives bound. C++ cannot state the bound; the Rust signatures
 // below must still satisfy it.

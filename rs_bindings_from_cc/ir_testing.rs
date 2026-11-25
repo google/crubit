@@ -59,6 +59,10 @@ pub fn with_full_lifetime_macros() -> String {
     }
     result.push_str("#define $static $(static)\n");
     result.push_str("#define $unknown $(unknown)\n");
+    result.push_str("#define $solo $(solo)\n");
+    result.push_str(
+        "#define $lifetime_param(...) [[clang::annotate(\"lifetime_params\", __VA_ARGS__)]]\n",
+    );
     result
 }
 

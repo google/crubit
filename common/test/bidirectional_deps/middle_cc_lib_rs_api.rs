@@ -187,6 +187,45 @@ pub mod crubit {
         }
     }
 
+    /// `LeafRsSolo<'solo>`: the name of its lifetime parameter is reserved in C++
+    /// (`$solo`), but a Rust type's own parameters are not C++ annotations, so it
+    /// binds like `LeafRsLifetime`, with no reserved-name warning.
+    #[inline(always)]
+    pub fn WrapSolo<'a>(x: &'a ::ffi_11::c_uchar) -> ::leaf_rs_lib::LeafRsSolo<'a> {
+        unsafe {
+            let mut __crubit_return =
+                ::core::mem::MaybeUninit::<::leaf_rs_lib::LeafRsSolo<'a>>::uninit();
+            crate::detail::__rust_thunk___ZN6crubit8WrapSoloERKh(
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                x,
+            );
+            __crubit_return.assume_init()
+        }
+    }
+
+    #[inline(always)]
+    pub fn WrapSoloElided<'x>(x: &'x ::ffi_11::c_uchar) -> ::leaf_rs_lib::LeafRsSolo<'x> {
+        unsafe {
+            let mut __crubit_return =
+                ::core::mem::MaybeUninit::<::leaf_rs_lib::LeafRsSolo<'x>>::uninit();
+            crate::detail::__rust_thunk___ZN6crubit14WrapSoloElidedERKh(
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                x,
+            );
+            __crubit_return.assume_init()
+        }
+    }
+
+    #[inline(always)]
+    pub fn UnwrapSolo<'x>(x: ::leaf_rs_lib::LeafRsSolo<'x>) -> ::ffi_11::c_uchar {
+        let mut x = ::core::mem::MaybeUninit::new(x);
+        unsafe {
+            crate::detail::__rust_thunk___ZN6crubit10UnwrapSoloEN11leaf_rs_lib10LeafRsSoloE(
+                x.as_mut_ptr(),
+            )
+        }
+    }
+
     /// `LeafRsBounded<'a, 'b: 'a, 'c>` has three lifetime parameters, two of them
     /// related by an outlives bound. C++ cannot state the bound; the Rust signatures
     /// below must still satisfy it.
@@ -401,6 +440,17 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN6crubit23MakeStaticLifetimeAliasEv(
             __return: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit8WrapSoloERKh<'a>(
+            __return: *mut ::core::ffi::c_void,
+            x: &'a ::ffi_11::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit14WrapSoloElidedERKh<'x>(
+            __return: *mut ::core::ffi::c_void,
+            x: &'x ::ffi_11::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit10UnwrapSoloEN11leaf_rs_lib10LeafRsSoloE<'x>(
+            x: *mut ::leaf_rs_lib::LeafRsSolo<'x>,
+        ) -> ::ffi_11::c_uchar;
         pub(crate) unsafe fn __rust_thunk___ZN6crubit11WrapBoundedERKhS1_<'a, 'c>(
             __return: *mut ::core::ffi::c_void,
             x: &'a ::ffi_11::c_uchar,

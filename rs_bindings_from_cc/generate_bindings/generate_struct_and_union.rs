@@ -911,6 +911,20 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
     // Computed before `record` is shadowed by its lifetime-transformed copy, so that it agrees
     // with `type_has_repr_align`, which sees the untransformed record.
     let has_repr_align = record_has_repr_align(db, &record);
+    // A reserved name (`$solo`, ...) in the record's lifetime parameters or field types is ignored
+    // as if absent; warn, and record it.
+    let reserved_name_warnings: Vec<String> = if assume_lifetimes {
+        lifetime_defaults_transform::strip_reserved_from_record(&record)
+            .reserved_names
+            .iter()
+            .map(|name| lifetime_defaults_transform::reserved_lifetime_name_warning(name))
+            .collect()
+    } else {
+        vec![]
+    };
+    if !reserved_name_warnings.is_empty() {
+        db.errors().add_category(error_report::Category::ReservedLifetimeName);
+    }
     let record = if assume_lifetimes {
         db.lifetime_defaults_transform_record(record.clone())?
     } else {
@@ -1124,6 +1138,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
     let full_doc_opt = if full_doc.is_empty() { None } else { Some(full_doc.as_str()) };
 
     let record_tokens = database::code_snippet::Record {
+        warning_comments: reserved_name_warnings,
         doc_comment_attr: generate_doc_comment(
             full_doc_opt,
             record_safety.as_deref(),

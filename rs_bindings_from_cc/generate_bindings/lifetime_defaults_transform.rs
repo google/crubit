@@ -166,6 +166,124 @@ fn tie_self_types_to_template_argument_lifetime(
     tied
 }
 
+/// Names that are reserved for attributes Crubit does not implement yet, written like lifetimes
+/// (`$solo` is `$(solo)`; see `support/lifetime_annotations.h`). They are not lifetimes.
+///
+/// A reserved name is ignored as if it were absent, with a warning: it is stripped from every
+/// type of a function (parameters, `__this`, result) and of a record (fields) or type alias, and
+/// from their declared lifetime parameters (the `lifetime_params` annotation, in any spelling),
+/// before lifetimes are bound or arities computed. If every name written on a level is reserved,
+/// the level has no explicit lifetime and is elided as usual; it is not treated as unknown. So
+/// `int& $a $solo` is `int& $a`, and `int& $solo` is `int&`.
+pub const RESERVED_ATTRIBUTES: &[&str] = &["solo"];
+
+/// Returns true if `name` is reserved (see `RESERVED_ATTRIBUTES`).
+pub fn is_reserved_lifetime_name(name: &str) -> bool {
+    RESERVED_ATTRIBUTES.contains(&name)
+}
+
+/// The warning emitted (as a comment above the item) for a reserved name.
+pub fn reserved_lifetime_name_warning(name: &str) -> String {
+    format!("warning: '${name}' is reserved (no effect yet); ignored")
+}
+
+/// Keeps the names in `names` that are not reserved, appending the reserved ones to `found`
+/// (without duplicates).
+fn strip_reserved_names(names: &[FfiString], found: &mut Vec<Rc<str>>) -> Vec<FfiString> {
+    names
+        .iter()
+        .filter(|name| {
+            if !is_reserved_lifetime_name(name.as_str()) {
+                return true;
+            }
+            if !found.iter().any(|f| f.as_ref() == name.as_str()) {
+                found.push(Rc::from(name.as_str()));
+            }
+            false
+        })
+        .cloned()
+        .collect()
+}
+
+/// Removes reserved names from every level of `ty`, appending them to `found`.
+fn strip_reserved_from_type(ty: &mut CcType, found: &mut Vec<Rc<str>>) {
+    if ty.explicit_lifetimes().iter().any(|l| is_reserved_lifetime_name(l.as_str())) {
+        let kept = strip_reserved_names(ty.explicit_lifetimes(), found);
+        *ty.explicit_lifetimes_mut() = kept.into();
+    }
+    match ty.variant_mut() {
+        CcTypeVariant::Pointer(pty) => {
+            let mut pointee = pty.pointee_type().clone();
+            strip_reserved_from_type(&mut pointee, found);
+            pty.set_pointee_type(pointee);
+        }
+        CcTypeVariant::ConstantArray(arr) => {
+            let mut element = arr.element_type().clone();
+            strip_reserved_from_type(&mut element, found);
+            arr.set_element_type(element);
+        }
+        CcTypeVariant::FuncPointer(fp) => {
+            let mut types = fp.param_and_return_types().to_vec();
+            types.iter_mut().for_each(|t| strip_reserved_from_type(t, found));
+            fp.set_param_and_return_types(types.into());
+        }
+        _ => {}
+    }
+    for arg in ty.template_args_mut().iter_mut() {
+        strip_reserved_from_type(arg, found);
+    }
+}
+
+/// An item with the reserved names (see `RESERVED_ATTRIBUTES`) removed, and the names removed.
+pub struct StrippedOfReserved<T> {
+    /// The item without reserved names.
+    pub item: T,
+    /// The reserved names it had, in order of appearance.
+    pub reserved_names: Vec<Rc<str>>,
+}
+
+/// Returns a copy of `func` without reserved names (see `RESERVED_ATTRIBUTES`), and the reserved
+/// names it had, in order of appearance.
+pub fn strip_reserved_from_func(func: &Func) -> StrippedOfReserved<Func> {
+    let mut found = vec![];
+    let mut new_func = func.clone();
+    let kept = strip_reserved_names(func.lifetime_inputs(), &mut found);
+    *new_func.lifetime_inputs_mut() = kept.into();
+    for param in new_func.params_mut().iter_mut() {
+        strip_reserved_from_type(param.type_mut(), &mut found);
+    }
+    strip_reserved_from_type(new_func.return_type_mut(), &mut found);
+    StrippedOfReserved { item: new_func, reserved_names: found }
+}
+
+/// Returns a copy of `record` without reserved names in its lifetime parameters and field types,
+/// and the reserved names it had. Member functions are stripped when they are transformed.
+pub fn strip_reserved_from_record(record: &Record) -> StrippedOfReserved<Record> {
+    let mut found = vec![];
+    let mut new_record = record.clone();
+    let kept = strip_reserved_names(record.lifetime_inputs(), &mut found);
+    *new_record.lifetime_inputs_mut() = kept.into();
+    for field in new_record.fields_mut().iter_mut() {
+        strip_reserved_from_type(field.type_mut(), &mut found);
+    }
+    StrippedOfReserved { item: new_record, reserved_names: found }
+}
+
+/// Returns a copy of `type_alias` without reserved names, and the reserved names it had.
+fn strip_reserved_from_type_alias(type_alias: &TypeAlias) -> (TypeAlias, Vec<Rc<str>>) {
+    let mut found = vec![];
+    let mut new_type_alias = type_alias.clone();
+    let kept = strip_reserved_names(type_alias.lifetime_inputs(), &mut found);
+    *new_type_alias.lifetime_inputs_mut() = kept.into();
+    strip_reserved_from_type(new_type_alias.underlying_type_mut(), &mut found);
+    (new_type_alias, found)
+}
+
+/// The declared lifetime parameters of `names` that are not reserved.
+fn unreserved(names: &[FfiString]) -> impl Iterator<Item = &FfiString> {
+    names.iter().filter(|name| !is_reserved_lifetime_name(name.as_str()))
+}
+
 #[cfg_attr(enable_heap_profiling, inline(never))]
 pub fn record_lifetime_arity(
     db: &BindingsGenerator,
@@ -180,9 +298,11 @@ pub fn record_lifetime_arity(
         return Ok(0);
     }
 
-    // If the record has explicit lifetime inputs set, use those.
-    if !rc.lifetime_inputs().is_empty() {
-        return Ok(rc.lifetime_inputs().len());
+    // If the record has explicit lifetime inputs set, use those. Reserved names are not
+    // lifetimes (see `RESERVED_ATTRIBUTES`).
+    let declared = unreserved(rc.lifetime_inputs()).count();
+    if declared > 0 {
+        return Ok(declared);
     }
 
     // TODO(b/498977848): string_view shouldn't be special.
@@ -889,19 +1009,19 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         self.bind_lifetime_inputs(item.enclosing_item_id())?;
         match item {
             Item::Func(func) => {
-                func.lifetime_inputs().iter().for_each(|name| {
+                unreserved(func.lifetime_inputs()).for_each(|name| {
                     self.bindings.push_new_binding(&Rc::from(name.as_str()));
                 });
             }
             Item::Record(record) => {
                 let arity = record_lifetime_arity(self.db, record)?;
-                if arity != record.lifetime_inputs().len() {
+                if arity != unreserved(record.lifetime_inputs()).count() {
                     for _ in 0..arity {
                         this_lifetimebound_names
                             .push(self.bindings.push_new_binding(&Rc::from("__implicit")));
                     }
                 } else {
-                    record.lifetime_inputs().iter().for_each(|name| {
+                    unreserved(record.lifetime_inputs()).for_each(|name| {
                         this_lifetimebound_names
                             .push(self.bindings.push_new_binding(&Rc::from(name.as_str())));
                     });
@@ -981,6 +1101,10 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
 
     /// Transforms a function to use default lifetime rules.
     fn add_lifetime_to_func(&mut self, func: &Func) -> Result<Func> {
+        // Reserved names are ignored as if absent (see `RESERVED_ATTRIBUTES`);
+        // `generate_function` warns about them.
+        let func = strip_reserved_from_func(func).item;
+        let func = &func;
         let template_argument_record = func
             .enclosing_item_id()
             .and_then(|record_id| record_with_template_argument_lifetime(self.db, record_id));
@@ -1078,6 +1202,8 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
 
     /// Transforms a record to use default lifetime rules.
     fn add_lifetime_to_record(&mut self, record: &Record) -> Result<Record> {
+        let record = strip_reserved_from_record(record).item;
+        let record = &record;
         let mut new_record = record.clone();
         self.bind_lifetime_inputs(record.enclosing_item_id())?;
         if new_record.lifetime_inputs().is_empty() {
@@ -1102,6 +1228,8 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
 
     /// Transforms a type alias to use default lifetime rules.
     fn add_lifetime_to_type_alias(&mut self, type_alias: &TypeAlias) -> Result<TypeAlias> {
+        let (type_alias, _) = strip_reserved_from_type_alias(type_alias);
+        let type_alias = &type_alias;
         let mut new_type_alias = type_alias.clone();
         self.bind_lifetime_inputs(type_alias.enclosing_item_id())?;
         // TODO(b/517949862): Right now we don't allow users to explicitly bind lifetime parameters.

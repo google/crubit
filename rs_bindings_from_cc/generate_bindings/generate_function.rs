@@ -2125,6 +2125,19 @@ fn rs_type_kinds_for_func(
     Ok((param_types, return_type.unwrap()))
 }
 
+/// Returns the reserved names (`$solo`, ...) written on `func`, which the lifetime transform
+/// ignores as if absent. Empty unless `assume_lifetimes` is on.
+fn reserved_lifetime_names(db: &BindingsGenerator, func: &Func) -> Vec<Rc<str>> {
+    let assume_lifetimes = db
+        .ir()
+        .target_crubit_features(func.owning_target())
+        .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
+    if !assume_lifetimes {
+        return vec![];
+    }
+    lifetime_defaults_transform::strip_reserved_from_func(func).reserved_names
+}
+
 /// Generate the safety documentation for an unsafe function.
 ///
 /// Returns `None` if the function is not unsafe.
@@ -2402,6 +2415,20 @@ pub fn generate_function(
         db.is_golden_test(),
         db.kythe_annotations(),
     );
+    // A reserved name (`$solo`, ...) is ignored as if absent; warn, and record it.
+    let reserved_names = reserved_lifetime_names(db, &func);
+    let doc_comment = if reserved_names.is_empty() {
+        quote! { #doc_comment }
+    } else {
+        db.errors().add_category(error_report::Category::ReservedLifetimeName);
+        let warnings = reserved_names
+            .iter()
+            .map(|name| lifetime_defaults_transform::reserved_lifetime_name_warning(name));
+        quote! {
+            #( __COMMENT__ #warnings )*
+            #doc_comment
+        }
+    };
 
     let deprecated_attr = func.deprecated().map(|s| DeprecatedAttr(Rc::from(s)));
     let must_use_attr = func.nodiscard().map(|s| MustUseAttr(Rc::from(s)));

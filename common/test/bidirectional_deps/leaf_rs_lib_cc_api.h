@@ -196,6 +196,36 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+//  A lifetime parameter whose name, `'solo`, is reserved on the C++ side
+//  (`$solo`). As a lifetime parameter of a Rust type it is an ordinary name,
+//  and must round-trip unchanged.
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: leaf_rs_lib_golden :: LeafRsSolo < { 'solo } >")
+    $lifetime_params("solo") alignas(1)
+        [[clang::trivial_abi]] LeafRsSolo final {
+ public:
+  // `leaf_rs_lib_golden::LeafRsSolo` doesn't implement the `Default` trait
+  LeafRsSolo() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~LeafRsSolo() = default;
+  LeafRsSolo(LeafRsSolo&&) = default;
+  LeafRsSolo& operator=(LeafRsSolo&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  LeafRsSolo(const LeafRsSolo&) = default;
+  LeafRsSolo& operator=(const LeafRsSolo&) = default;
+  LeafRsSolo(::crubit::UnsafeRelocateTag, LeafRsSolo && value);
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 1> field;
+  // Field `_marker` omitted: C++ does not support zero-sized types.
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 //  A lifetime parameter that must be `'static`.
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: leaf_rs_lib_golden :: LeafRsStaticBound < { 'a } >")
@@ -264,6 +294,8 @@ using StaticLeafRsLifetime CRUBIT_INTERNAL_RUST_TYPE(
 
 ::std::uint8_t unwrap_lifetime(::leaf_rs_lib::LeafRsLifetime x);
 
+::std::uint8_t unwrap_solo(::leaf_rs_lib::LeafRsSolo x);
+
 ::std::uint8_t unwrap_static_bound(::leaf_rs_lib::LeafRsStaticBound x);
 
 ::leaf_rs_lib::LeafRsType wrap(::std::uint8_t x);
@@ -276,6 +308,9 @@ using StaticLeafRsLifetime CRUBIT_INTERNAL_RUST_TYPE(
 
 ::leaf_rs_lib::LeafRsLifetime wrap_lifetime(
     ::std::uint8_t const* $a crubit_nonnull x);
+
+::leaf_rs_lib::LeafRsSolo wrap_solo(::std::uint8_t const* $(solo)
+                                        crubit_nonnull x);
 
 ::leaf_rs_lib::LeafRsStaticBound wrap_static_bound(
     ::std::uint8_t const* $static crubit_nonnull x);
@@ -346,6 +381,27 @@ inline ::leaf_rs_lib::LeafRsLifetime::LeafRsLifetime(
 }
 inline void ::leaf_rs_lib::LeafRsLifetime::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::leaf_rs_lib::LeafRsLifetime;
+  static_assert(0 == offsetof(__crubit_assert_type, field));
+}
+static_assert(
+    sizeof(::leaf_rs_lib::LeafRsSolo) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::leaf_rs_lib::LeafRsSolo) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<::leaf_rs_lib::LeafRsSolo>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsSolo>);
+static_assert(::std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsSolo>);
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsSolo>);
+static_assert(::std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsSolo>);
+inline ::leaf_rs_lib::LeafRsSolo::LeafRsSolo(::crubit::UnsafeRelocateTag,
+                                             LeafRsSolo&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void ::leaf_rs_lib::LeafRsSolo::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::leaf_rs_lib::LeafRsSolo;
   static_assert(0 == offsetof(__crubit_assert_type, field));
 }
 static_assert(
@@ -449,6 +505,14 @@ inline ::std::uint8_t unwrap_lifetime(::leaf_rs_lib::LeafRsLifetime x) {
 }
 
 namespace __crubit_internal {
+extern "C" ::std::uint8_t __crubit_thunk_unwrap_usolo(
+    ::leaf_rs_lib::LeafRsSolo*);
+}
+inline ::std::uint8_t unwrap_solo(::leaf_rs_lib::LeafRsSolo x) {
+  return __crubit_internal::__crubit_thunk_unwrap_usolo(&x);
+}
+
+namespace __crubit_internal {
 extern "C" ::std::uint8_t __crubit_thunk_unwrap_ustatic_ubound(
     ::leaf_rs_lib::LeafRsStaticBound*);
 }
@@ -504,6 +568,19 @@ inline ::leaf_rs_lib::LeafRsLifetime wrap_lifetime(
   crubit::Slot<::leaf_rs_lib::LeafRsLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_wrap_ulifetime(x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_wrap_usolo(::std::uint8_t const* $(solo)
+                                              crubit_nonnull,
+                                          ::leaf_rs_lib::LeafRsSolo* __ret_ptr);
+}
+inline ::leaf_rs_lib::LeafRsSolo wrap_solo(::std::uint8_t const* $(solo)
+                                               crubit_nonnull x) {
+  crubit::Slot<::leaf_rs_lib::LeafRsSolo> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_wrap_usolo(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 

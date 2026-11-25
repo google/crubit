@@ -267,6 +267,10 @@ pub enum Category {
 
     /// This item is a constant
     Constant = 1 << 10,
+
+    /// This item got bindings, with a warning: it writes a reserved name (`$solo`, ...) where a
+    /// lifetime goes. Crubit ignores the name as if it were absent.
+    ReservedLifetimeName = 1 << 11,
     // TODO(b/468093766): Abstract? base classes, public inheritance
 }
 

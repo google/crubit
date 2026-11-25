@@ -61,6 +61,22 @@ pub fn static_lifetime() -> LeafRsLifetime<'static> {
 pub use LeafRsLifetime as LeafRsLifetimeAlias;
 pub type StaticLeafRsLifetime = LeafRsLifetime<'static>;
 
+/// A lifetime parameter whose name, `'solo`, is reserved on the C++ side (`$solo`). As a lifetime
+/// parameter of a Rust type it is an ordinary name, and must round-trip unchanged.
+#[derive(Copy, Clone)]
+pub struct LeafRsSolo<'solo> {
+    field: u8,
+    _marker: core::marker::PhantomData<&'solo u8>,
+}
+
+pub fn wrap_solo<'solo>(x: &'solo u8) -> LeafRsSolo<'solo> {
+    LeafRsSolo { field: *x, _marker: core::marker::PhantomData }
+}
+
+pub fn unwrap_solo(x: LeafRsSolo<'_>) -> u8 {
+    x.field
+}
+
 /// Several lifetime parameters: `'b` must outlive `'a`, and `'c` is unrelated to both.
 #[derive(Copy, Clone)]
 pub struct LeafRsBounded<'a, 'b: 'a, 'c> {

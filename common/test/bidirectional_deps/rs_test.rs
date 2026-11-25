@@ -70,6 +70,20 @@ fn test_lifetime_round_trip() {
     assert_eq!(middle_cc_lib::crubit::UnwrapLifetime(alias_borrowed), 7);
 }
 
+/// A Rust lifetime parameter named `'solo` (reserved as `$solo` in C++) round-trips unchanged.
+#[gtest]
+fn test_lifetime_named_solo_round_trip() {
+    let x: u8 = 7;
+    let wrapped: leaf_rs_lib::LeafRsSolo<'_> = middle_cc_lib::crubit::WrapSolo(&x);
+    assert_eq!(middle_cc_lib::crubit::UnwrapSolo(wrapped), 7);
+
+    let elided: leaf_rs_lib::LeafRsSolo<'_> = middle_cc_lib::crubit::WrapSoloElided(&x);
+    assert_eq!(leaf_rs_lib::unwrap_solo(elided), 7);
+
+    let from_rust: leaf_rs_lib::LeafRsSolo<'_> = leaf_rs_lib::wrap_solo(&x);
+    assert_eq!(middle_cc_lib::crubit::UnwrapSolo(from_rust), 7);
+}
+
 #[gtest]
 fn test_lifetime_round_trip_no_assume_lifetimes() {
     // SAFETY: `MakeNoAssumeLifetime` returns a `'static` `LeafRsLifetime`.
