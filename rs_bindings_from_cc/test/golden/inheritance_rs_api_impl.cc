@@ -154,6 +154,51 @@ static_assert((class VirtualDerived &
                (::VirtualDerived::*)(class VirtualDerived&&)) &
               ::VirtualDerived::operator=);
 
+static_assert(CRUBIT_SIZEOF(struct VirtualDerivedWithField) == 32);
+static_assert(alignof(struct VirtualDerivedWithField) == 8);
+static_assert(CRUBIT_OFFSET_OF(derived_1, struct VirtualDerivedWithField) == 8);
+
+extern "C" void __rust_thunk___ZN23VirtualDerivedWithFieldC1Ev(
+    struct VirtualDerivedWithField* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN23VirtualDerivedWithFieldC1ERKS_(
+    struct VirtualDerivedWithField* __this,
+    struct VirtualDerivedWithField const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" void __rust_thunk___ZN23VirtualDerivedWithFieldC1EOS_(
+    struct VirtualDerivedWithField* __this,
+    struct VirtualDerivedWithField* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct VirtualDerivedWithField*
+__rust_thunk___ZN23VirtualDerivedWithFieldaSERKS_(
+    struct VirtualDerivedWithField* __this,
+    struct VirtualDerivedWithField const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+static_assert(
+    (struct VirtualDerivedWithField &
+     (::VirtualDerivedWithField::*)(struct VirtualDerivedWithField const&)) &
+    ::VirtualDerivedWithField::operator=);
+
+extern "C" struct VirtualDerivedWithField*
+__rust_thunk___ZN23VirtualDerivedWithFieldaSEOS_(
+    struct VirtualDerivedWithField* __this,
+    struct VirtualDerivedWithField* __param_0) {
+  return std::addressof(__this->operator=(std::move(*__param_0)));
+}
+
+static_assert(
+    (struct VirtualDerivedWithField &
+     (::VirtualDerivedWithField::*)(struct VirtualDerivedWithField&&)) &
+    ::VirtualDerivedWithField::operator=);
+
 static_assert(CRUBIT_SIZEOF(class MyAbstractClass) == 8);
 static_assert(alignof(class MyAbstractClass) == 8);
 

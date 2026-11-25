@@ -477,6 +477,125 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualDerived {
     }
 }
 
+/// Not Rust-movable: type has virtual bases
+#[::ctor::recursively_pinned]
+#[cfi_encoding = "23VirtualDerivedWithField"]
+#[repr(C, align(8))]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=VirtualDerivedWithField")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_move_constructible=")]
+pub struct VirtualDerivedWithField {
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    pub derived_1: ::ffi_11::c_char,
+    __trailing_non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 23],
+}
+/// Cannot infer `Send` because:
+/// * base class subobjects are not represented as Rust fields
+impl !Send for VirtualDerivedWithField {}
+/// Cannot infer `Sync` because:
+/// * base class subobjects are not represented as Rust fields
+impl !Sync for VirtualDerivedWithField {}
+unsafe impl ::cxx::ExternType for VirtualDerivedWithField {
+    type Id = ::cxx::type_id!("VirtualDerivedWithField");
+    type Kind = ::cxx::kind::Opaque;
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("VirtualDerivedWithField"),
+    crate::VirtualDerivedWithField
+);
+
+impl ::ctor::CtorNew<()> for VirtualDerivedWithField {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
+                crate::detail::__rust_thunk___ZN23VirtualDerivedWithFieldC1Ev(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                );
+            })
+        }
+    }
+}
+
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for VirtualDerivedWithField {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
+                crate::detail::__rust_thunk___ZN23VirtualDerivedWithFieldC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for VirtualDerivedWithField {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
+
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
+    for VirtualDerivedWithField
+{
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
+                crate::detail::__rust_thunk___ZN23VirtualDerivedWithFieldC1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
+    for VirtualDerivedWithField
+{
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
+
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for VirtualDerivedWithField {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23VirtualDerivedWithFieldaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualDerivedWithField {
+    #[inline(always)]
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23VirtualDerivedWithFieldaSEOS_(self, __param_0);
+        }
+    }
+}
+
 /// Not Rust-movable: type is polymorphic
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "15MyAbstractClass"]
@@ -739,6 +858,28 @@ mod detail {
             __this: ::core::pin::Pin<&'__this mut crate::VirtualDerived>,
             __param_0: ::ctor::RvalueReference<'_, crate::VirtualDerived>,
         ) -> ::core::pin::Pin<&'__this mut crate::VirtualDerived>;
+        pub(crate) unsafe fn __rust_thunk___ZN23VirtualDerivedWithFieldC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN23VirtualDerivedWithFieldC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::VirtualDerivedWithField,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN23VirtualDerivedWithFieldC1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::VirtualDerivedWithField>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN23VirtualDerivedWithFieldaSERKS_<
+            '__param_0,
+            '__this,
+        >(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualDerivedWithField>,
+            __param_0: &'__param_0 crate::VirtualDerivedWithField,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualDerivedWithField>;
+        pub(crate) unsafe fn __rust_thunk___ZN23VirtualDerivedWithFieldaSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::VirtualDerivedWithField>,
+            __param_0: ::ctor::RvalueReference<'_, crate::VirtualDerivedWithField>,
+        ) -> ::core::pin::Pin<&'__this mut crate::VirtualDerivedWithField>;
         pub(crate) unsafe fn __rust_thunk___ZN15MyAbstractClassaSERKS_<'__param_0, '__this>(
             __this: ::core::pin::Pin<&'__this mut crate::MyAbstractClass>,
             __param_0: &'__param_0 crate::MyAbstractClass,
@@ -808,6 +949,10 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::VirtualDerived>() == 8);
     static_assertions::assert_not_impl_any!(crate::VirtualDerived: Copy,Drop);
 
+    assert!(::core::mem::size_of::<crate::VirtualDerivedWithField>() == 32);
+    assert!(::core::mem::align_of::<crate::VirtualDerivedWithField>() == 8);
+    static_assertions::assert_not_impl_any!(crate::VirtualDerivedWithField: Copy,Drop);
+    assert!(::core::mem::offset_of!(crate::VirtualDerivedWithField, derived_1) == 8);
     assert!(::core::mem::size_of::<crate::MyAbstractClass>() == 8);
     assert!(::core::mem::align_of::<crate::MyAbstractClass>() == 8);
     static_assertions::assert_not_impl_any!(crate::MyAbstractClass: Copy,Drop);

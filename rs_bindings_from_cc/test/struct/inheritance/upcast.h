@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_UPCAST_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_UPCAST_H_
 #include <stddef.h>
-
+#include <stdint.h>
 
 class Base0 {};
 
@@ -77,6 +77,80 @@ class VirtualDerived : public virtual VirtualBase2,
     const VirtualBase3* base = this;
     return reinterpret_cast<size_t>(base);
   }
+};
+
+struct VirtualBaseWithData {
+  int64_t base_value = 100;
+  mutable int counter = 0;
+
+  void increment_counter() const { ++counter; }
+  int get_counter() const { return counter; }
+};
+
+struct DerivedWithFieldAndVirtualBase : public virtual VirtualBaseWithData {
+  DerivedWithFieldAndVirtualBase() = default;
+  DerivedWithFieldAndVirtualBase(int8_t derived, int64_t base)
+      : derived_field(derived) {
+    base_value = base;
+  }
+
+  size_t base_address() const {
+    const VirtualBaseWithData* base = this;
+    return reinterpret_cast<size_t>(base);
+  }
+
+  int64_t read_base_value() const { return base_value; }
+
+  int8_t derived_field = 42;
+};
+
+struct DiamondLeft : public virtual VirtualBaseWithData {
+  int left_field = 10;
+};
+
+struct DiamondRight : public virtual VirtualBaseWithData {
+  int right_field = 20;
+};
+
+struct DiamondFinal : public DiamondLeft, public DiamondRight {
+  DiamondFinal() = default;
+  DiamondFinal(int left, int right, int8_t final_val, int64_t shared)
+      : final_field(final_val) {
+    left_field = left;
+    right_field = right;
+    base_value = shared;
+  }
+
+  size_t vbase_address() const {
+    const VirtualBaseWithData* base = this;
+    return reinterpret_cast<size_t>(base);
+  }
+
+  size_t left_address() const {
+    const DiamondLeft* base = this;
+    return reinterpret_cast<size_t>(base);
+  }
+
+  size_t right_address() const {
+    const DiamondRight* base = this;
+    return reinterpret_cast<size_t>(base);
+  }
+
+  int8_t final_field = 30;
+};
+
+struct alignas(32) OveralignedVirtualBase {
+  int64_t data = 77;
+};
+
+struct DerivedFromOveralignedVirtualBase
+    : public virtual OveralignedVirtualBase {
+  size_t base_address() const {
+    const OveralignedVirtualBase* base = this;
+    return reinterpret_cast<size_t>(base);
+  }
+
+  int8_t derived_field = 5;
 };
 
 }  // namespace virtual_inheritance

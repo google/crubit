@@ -656,6 +656,7 @@ pub fn generated_items_to_tokens<'db>(
                     id,
                     head_padding,
                     field_definitions,
+                    tail_padding,
                     send,
                     sync,
                     cxx_impl,
@@ -722,6 +723,15 @@ pub fn generated_items_to_tokens<'db>(
                             quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n_literal], }
                         }
                     });
+                    let tail_padding = tail_padding.map(|n| {
+                        let n_literal = Literal::usize_unsuffixed(n);
+                        // TODO(b/481405536): Do this unconditionally.
+                        if *internally_mutable_unknown_fields {
+                            quote! { __trailing_non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n_literal], }
+                        } else {
+                            quote! { __trailing_non_field_data: [::core::mem::MaybeUninit<u8>; #n_literal], }
+                        }
+                    });
                     let lifetime_markers: Vec<TokenStream> = lifetime_params
                         .iter()
                         .filter(|lt| {
@@ -743,6 +753,7 @@ pub fn generated_items_to_tokens<'db>(
                     quote! {
                         #head_padding
                         #( #field_definitions )*
+                        #tail_padding
                         #( #lifetime_markers )*
                     }
                 };
@@ -1271,6 +1282,7 @@ pub struct Record {
     pub id: ItemId,
     pub head_padding: Option<usize>,
     pub field_definitions: Vec<FieldDefinition>,
+    pub tail_padding: Option<usize>,
     pub send: SendSyncImpl,
     pub sync: SendSyncImpl,
     pub cxx_impl: Option<CxxExternTypeImpl>,
