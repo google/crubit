@@ -7,7 +7,7 @@ extern crate alloc;
 use crate::crubit_cc_std_internal::std_allocator::{
     self, shared_weak_count, DynControlBlock, FunctionToCall,
 };
-use crate::std::{unique_ptr, virtual_unique_ptr, Delete, NonNull, StableNullness, TryDeref};
+use crate::std::{unique_ptr, virtual_unique_ptr, Delete};
 use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::c_void;
@@ -417,28 +417,6 @@ impl<T: Delete> From<virtual_unique_ptr<T>> for shared_ptr<T> {
 // SAFETY: `self.ptr` is a plain pointer field with no interior mutability, so it can only change
 // through a `&mut shared_ptr<T>` or a C++ move. Sharing ownership with other `shared_ptr`s cannot
 // null it out, because each `shared_ptr` holds its own pointer and a strong reference count.
-unsafe impl<T: Sized> StableNullness for shared_ptr<T> {
-    fn is_null(&self) -> bool {
-        self.ptr.is_null()
-    }
-}
-
-impl<T: Sized> TryDeref for shared_ptr<T> {
-    type Target = T;
-
-    /// # Safety
-    ///
-    /// In addition to `self` being non-null, the caveat on
-    /// [`try_as_ref`](shared_ptr::try_as_ref) applies: if the inner object is not thread safe and
-    /// is mutated by C++ in a nonlocally-synchronized way, it's unsafe to hold references to `&T`
-    /// across the mutations.
-    unsafe fn deref_unchecked(&self) -> &Self::Target {
-        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `shared_ptr` invariants
-        // it points to an initialized `T` whose lifetime is managed by `self`.
-        unsafe { &*self.ptr }
-    }
-}
-
 /// Dereferences the `shared_ptr`.
 ///
 /// See the [type documentation](shared_ptr#mutation) for when it is valid to hold the returned
@@ -486,18 +464,6 @@ impl<T: Sized> Drop for shared_ptr<T> {
         unsafe {
             std_allocator::shared_ptr_unref(self.cntrl);
         }
-    }
-}
-
-impl<T> From<NonNull<shared_ptr<T>>> for shared_ptr<T> {
-    fn from(value: NonNull<shared_ptr<T>>) -> Self {
-        NonNull::into_inner(value)
-    }
-}
-
-impl<'a, T> From<&'a NonNull<shared_ptr<T>>> for &'a shared_ptr<T> {
-    fn from(value: &'a NonNull<shared_ptr<T>>) -> Self {
-        NonNull::as_inner(value)
     }
 }
 
