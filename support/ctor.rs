@@ -31,11 +31,13 @@ extern crate alloc;
 use alloc::boxed::Box;
 use alloc::rc::Rc;
 use alloc::sync::Arc;
+use core::alloc::Allocator;
 use core::fmt::Debug;
 use core::marker::{PhantomData, Unpin};
 use core::mem::{DropGuard, ManuallyDrop, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
+use core::ptr::NonNull;
 
 pub use ctor_proc_macros::{
     project_pin_type, project_ref_type, recursively_pinned, CtorFrom_Default, MoveAndAssignViaCopy,
@@ -630,26 +632,45 @@ impl<T> Emplace<T> for Arc<T> {
 /// # Why is `SelfCtor` not implemented for my type?
 ///
 /// `SelfCtor` is an auto trait, which means it is automatically implemented for a type if
-/// it is implemented for all of its fields.
+/// it is implemented for all of its fields. References, raw pointers, `NonNull`, `Box`, `Rc`,
+/// and `Arc` implement `SelfCtor` unconditionally, so standard smart pointers and pointer
+/// handles containing `dyn Trait` behind indirection also implement `SelfCtor`.
 ///
-/// However, trait objects (`dyn Trait`) do not implement auto traits unless they are
-/// explicitly listed in the trait bounds (e.g. `dyn Trait + SelfCtor`). Since `SelfCtor` is
-/// a custom auto trait, it cannot be listed in trait bounds in general.
-///
-/// Consequently, any type containing a trait object (such as `Box<dyn Trait>`, `Rc<dyn Trait>`,
-/// or a struct containing these) will also fail to implement `SelfCtor`.
+/// A type may still fail to implement `SelfCtor` if it is (or directly contains by value):
+/// * an unconstrained generic type parameter `T` (without a `SelfCtor` bound),
+/// * a dedicated `!SelfCtor` constructor type (such as `FnCtor`), or a closure/future that captures
+///   one,
+/// * a `PhantomData<T>` where `T` does not implement `SelfCtor` (for example, a custom smart
+///   pointer holding `PhantomData<dyn Trait>`), or
+/// * a bare `dyn Trait` (which does not implement `SelfCtor` unless listed in its trait bounds).
 ///
 /// If you encounter a compile error about `SelfCtor` not being implemented for a type `T`,
 /// and you are trying to use a value of type `T` as a `Ctor` (for example, in a `ctor!` macro),
-/// you can work around this by wrapping the value in `RustMoveCtor::new(value)`. This will
-/// wrap the value in a constructor that constructs the type via a Rust move.
+/// you can wrap the value in `RustMoveCtor::new(value)` to construct it via a Rust move.
 #[diagnostic::on_unimplemented(
     message = "`{Self}` cannot be used as a direct initializer in `ctor!`",
-    label = "does not implement `SelfCtor` (often due to containing `dyn Trait`)",
-    note = "Types containing trait objects (like `dyn Trait`) do not implement `SelfCtor` by default.",
-    note = "To use this value in `ctor!`, wrap it in `RustMoveCtor::new(value)`."
+    label = "does not implement `SelfCtor`",
+    note = "Generic type parameters and types directly containing `!SelfCtor` values do not implement `SelfCtor` automatically.",
+    note = "consider wrapping the value in `ctor::RustMoveCtor::new(value)`"
 )]
 pub auto trait SelfCtor {}
+
+// References, raw pointers, `NonNull`, and standard owning smart pointers are values in their own
+// right regardless of their pointee type. Implementing `SelfCtor` unconditionally mirrors `Unpin`
+// while keeping `PhantomData` transparent to `SelfCtor`. `NonNull<T>` needs an explicit impl
+// because its inner field is `pattern_type!(*const T is !null)`, whose structural auto-impl is
+// suppressed by the explicit impl for `*const T`.
+//
+// `Rc<T>` and `Arc<T>` use the default global allocator because custom allocators on `Rc`/`Arc`
+// still require unstable `allocator_ext`.
+impl<T: ?Sized> SelfCtor for &T {}
+impl<T: ?Sized> SelfCtor for &mut T {}
+impl<T: ?Sized> SelfCtor for *const T {}
+impl<T: ?Sized> SelfCtor for *mut T {}
+impl<T: ?Sized> SelfCtor for NonNull<T> {}
+impl<T: ?Sized, A: Allocator> SelfCtor for Box<T, A> {}
+impl<T: ?Sized> SelfCtor for Rc<T> {}
+impl<T: ?Sized> SelfCtor for Arc<T> {}
 
 #[must_use = must_use_ctor!()]
 pub struct FnCtor<Output, F: FnOnce(*mut Output)>(F, PhantomData<fn(Output)>);

@@ -802,14 +802,144 @@ fn test_ctor_macro_generic_tuple_struct() {
     assert_eq!(my_struct.0, 42);
 }
 
-// Test workaround for b/491021357
+// Test workaround for types that do not implement `SelfCtor` (e.g. unconstrained generics).
 #[gtest]
 fn test_self_ctor_workaround() {
-    struct HasDyn {
-        field: Box<dyn std::any::Any>,
+    fn construct_generic<T>(x: T) -> T
+    where
+        T: Unpin,
+    {
+        ctor::construct(ctor::RustMoveCtor::new(x))
     }
-    let x = HasDyn { field: Box::new(42) };
-    // We wrap it in RustMoveCtor to construct it.
-    let constructed = ctor::construct(ctor::RustMoveCtor::new(x));
-    assert_eq!(*constructed.field.downcast_ref::<i32>().unwrap(), 42);
+    assert_eq!(construct_generic(42), 42);
+}
+
+// Regression test for b/491021357: references, raw pointers, `NonNull`, `Box`, `Rc`, and `Arc`
+// implement `SelfCtor` unconditionally (while `PhantomData` remains transparent to `SelfCtor`).
+#[gtest]
+fn test_self_ctor_pointers_and_dyn_trait() {
+    use std::alloc::{AllocError, Allocator, Layout};
+    use std::any::Any;
+    use std::collections::HashMap;
+    use std::marker::PhantomData;
+    use std::mem::MaybeUninit;
+    use std::ops::Deref;
+    use std::ptr::NonNull;
+    use std::sync::atomic::AtomicPtr;
+
+    struct DummyAlloc;
+    // SAFETY: delegates to `std::alloc::System`, upholding all `Allocator` invariants.
+    unsafe impl Allocator for DummyAlloc {
+        fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
+            std::alloc::System.allocate(layout)
+        }
+        unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
+            // SAFETY: forwarded from caller with matching allocator (`System`).
+            unsafe { std::alloc::System.deallocate(ptr, layout) }
+        }
+    }
+
+    // Mirrors `DynTask` -> `JoinableHandle<RawTask<..., dyn Trait>>` -> `Pin<Irc<...>>` ->
+    // `NonNull<...>` from b/491021357.
+    struct CustomSmartPtr<T: ?Sized>(NonNull<T>);
+    impl<T: ?Sized> Deref for CustomSmartPtr<T> {
+        type Target = T;
+        fn deref(&self) -> &Self::Target {
+            // SAFETY: only used with valid stack references in this test.
+            unsafe { self.0.as_ref() }
+        }
+    }
+
+    #[recursively_pinned]
+    struct PinnedWithDyn<'a> {
+        boxed: Box<dyn Any>,
+        boxed_custom_alloc: Box<dyn Any, DummyAlloc>,
+        rc: Rc<dyn Any>,
+        rc_weak: std::rc::Weak<dyn Any>,
+        arc: Arc<dyn Any + Send + Sync>,
+        arc_weak: std::sync::Weak<dyn Any + Send + Sync>,
+        shared_ref: &'a dyn Any,
+        mut_ref: &'a mut dyn Any,
+        const_ptr: *const dyn Any,
+        mut_ptr: *mut dyn Any,
+        non_null: NonNull<dyn Any>,
+        maybe_uninit_custom_handle: MaybeUninit<Pin<CustomSmartPtr<dyn Any + Send>>>,
+        map: HashMap<String, Pin<Box<dyn Any>>>,
+    }
+
+    let val: i32 = 1;
+    let mut val_mut: i32 = 2;
+    let mut raw_val: i32 = 3;
+    let mut nn_val: i32 = 4;
+    let rc: Rc<dyn Any> = Rc::new(10i32);
+    let rc_weak = Rc::downgrade(&rc);
+    let arc: Arc<dyn Any + Send + Sync> = Arc::new(20i32);
+    let arc_weak = Arc::downgrade(&arc);
+    let non_null: NonNull<dyn Any> = NonNull::from(&mut nn_val);
+    let mut send_val: i32 = 5;
+    let send_handle: CustomSmartPtr<dyn Any + Send> = CustomSmartPtr(NonNull::from(&mut send_val));
+
+    let pinned = emplace!(ctor!(PinnedWithDyn {
+        boxed: Box::new(42i32) as Box<dyn Any>,
+        boxed_custom_alloc: Box::new_in(99i32, DummyAlloc) as Box<dyn Any, DummyAlloc>,
+        rc: rc,
+        rc_weak: rc_weak,
+        arc: arc,
+        arc_weak: arc_weak,
+        shared_ref: &val as &dyn Any,
+        mut_ref: &mut val_mut as &mut dyn Any,
+        const_ptr: &raw_val as *const dyn Any,
+        mut_ptr: &mut raw_val as *mut dyn Any,
+        non_null: non_null,
+        maybe_uninit_custom_handle: MaybeUninit::new(
+            // SAFETY: `send_val` is pinned for the lifetime of this test.
+            unsafe { Pin::new_unchecked(send_handle) },
+        ),
+        map: HashMap::new(),
+    }));
+    assert_eq!(*pinned.boxed.downcast_ref::<i32>().unwrap(), 42);
+    assert_eq!(*pinned.boxed_custom_alloc.downcast_ref::<i32>().unwrap(), 99);
+    assert_eq!(*pinned.rc.downcast_ref::<i32>().unwrap(), 10);
+    assert_eq!(*pinned.arc.downcast_ref::<i32>().unwrap(), 20);
+    assert_eq!(*pinned.shared_ref.downcast_ref::<i32>().unwrap(), 1);
+    assert_eq!(*pinned.mut_ref.downcast_ref::<i32>().unwrap(), 2);
+
+    fn assert_self_ctor<X: SelfCtor>() {}
+
+    struct NotSelfCtor;
+    impl !SelfCtor for NotSelfCtor {}
+
+    fn check_generic_indirections<T: ?Sized, U>() {
+        assert_self_ctor::<&T>();
+        assert_self_ctor::<&mut T>();
+        assert_self_ctor::<*const T>();
+        assert_self_ctor::<*mut T>();
+        assert_self_ctor::<NonNull<T>>();
+        assert_self_ctor::<Box<T>>();
+        assert_self_ctor::<Box<T, DummyAlloc>>();
+        assert_self_ctor::<Rc<T>>();
+        assert_self_ctor::<std::rc::Weak<T>>();
+        assert_self_ctor::<Arc<T>>();
+        assert_self_ctor::<std::sync::Weak<T>>();
+        assert_self_ctor::<Pin<&mut T>>();
+        assert_self_ctor::<Pin<Box<T>>>();
+        assert_self_ctor::<AtomicPtr<U>>();
+        assert_self_ctor::<Vec<Box<T>>>();
+    }
+
+    check_generic_indirections::<dyn Any, i32>();
+    check_generic_indirections::<NotSelfCtor, NotSelfCtor>();
+
+    // `PhantomData<T>` stays transparent to `SelfCtor`: it implements `SelfCtor` iff `T` does.
+    trait IsSelfCtorFallback {
+        const VALUE: bool = false;
+    }
+    impl<T: ?Sized> IsSelfCtorFallback for T {}
+    struct IsSelfCtor<T: ?Sized>(PhantomData<T>);
+    impl<T: ?Sized + SelfCtor> IsSelfCtor<T> {
+        const VALUE: bool = true;
+    }
+    assert!(IsSelfCtor::<PhantomData<i32>>::VALUE);
+    assert!(!IsSelfCtor::<PhantomData<NotSelfCtor>>::VALUE);
+    assert!(!IsSelfCtor::<PhantomData<dyn Any>>::VALUE);
 }
