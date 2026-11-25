@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#![feature(rustc_private)]
+
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
 
 #[test]

@@ -365,7 +365,7 @@ pub mod crubit {
         >,
     ) -> ::ffi_11::c_uchar {
         unsafe {
-            crate::detail::__rust_thunk___ZN6crubit16CallWithLifetimeEN4absl12AnyInvocableIKFhN11leaf_rs_lib14LeafRsLifetimeEEEE(::crubit_support::bridge::unstable_encode!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::Fn(::leaf_rs_lib::LeafRsLifetime<'_>)->::ffi_11::c_uchar+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::leaf_rs_lib::LeafRsLifetime<'_>|->::ffi_11::c_uchar{ ::core::panic!("moved-from value") }),|raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|->::alloc::boxed::Box<dyn::core::ops::Fn(::leaf_rs_lib::LeafRsLifetime<'_>)->::ffi_11::c_uchar+::core::marker::Send+::core::marker::Sync+'static>{ ::alloc::boxed::Box::new(move|param_0: ::leaf_rs_lib::LeafRsLifetime<'_>|->::ffi_11::c_uchar{ unsafe{ crate::detail::__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFhN11leaf_rs_lib14LeafRsLifetimeEEEE__2f_2fthird_5fparty_2fcrubit_2fcommon_2ftest_2fbidirectional_5fdeps_3amiddle_5fcc_5flib(::cc_std::std::unique_ptr::as_ptr(&raw_any_invocable)as*mut _,::core::mem::MaybeUninit::new(param_0).as_mut_ptr()) } }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::Fn(::leaf_rs_lib::LeafRsLifetime<'_>)->::ffi_11::c_uchar+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8)
+            crate::detail::__rust_thunk___ZN6crubit16CallWithLifetimeEN2rs11DynCallableIKFhN11leaf_rs_lib14LeafRsLifetimeEEEE(::crubit_support::bridge::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::Fn(::leaf_rs_lib::LeafRsLifetime<'_>)->::ffi_11::c_uchar+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::leaf_rs_lib::LeafRsLifetime<'_>|->::ffi_11::c_uchar{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::Fn(::leaf_rs_lib::LeafRsLifetime<'_>)->::ffi_11::c_uchar+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8)
         }
     }
 }
@@ -491,7 +491,7 @@ mod detail {
         >(
             x: *mut ::leaf_rs_lib::LeafRsStaticBound<'x>,
         ) -> ::ffi_11::c_uchar;
-        pub(crate) unsafe fn __rust_thunk___ZN6crubit16CallWithLifetimeEN4absl12AnyInvocableIKFhN11leaf_rs_lib14LeafRsLifetimeEEEE(
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit16CallWithLifetimeEN2rs11DynCallableIKFhN11leaf_rs_lib14LeafRsLifetimeEEEE(
             f: *const ::core::ffi::c_uchar,
         ) -> ::ffi_11::c_uchar;
     }
@@ -533,5 +533,38 @@ mod detail {
             f: *mut ::any_invocable::RawAnyInvocable,
             param_0: *mut ::leaf_rs_lib::LeafRsLifetime<'_>,
         ) -> ::ffi_11::c_uchar;
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_invoker___CcTemplateInstN2rs11DynCallableIKFhN11leaf_rs_lib14LeafRsLifetimeEEEE__2f_2fthird_5fparty_2fcrubit_2fcommon_2ftest_2fbidirectional_5fdeps_3amiddle_5fcc_5flib(
+        f: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::leaf_rs_lib::LeafRsLifetime<'_>) -> ::ffi_11::c_uchar
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        param_0: *mut ::leaf_rs_lib::LeafRsLifetime<'_>,
+    ) -> ::ffi_11::c_uchar {
+        let param_0 = unsafe { ::core::ptr::read(param_0) };
+        (unsafe { &*f })(param_0)
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __crubit_manager___CcTemplateInstN2rs11DynCallableIKFhN11leaf_rs_lib14LeafRsLifetimeEEEE__2f_2fthird_5fparty_2fcrubit_2fcommon_2ftest_2fbidirectional_5fdeps_3amiddle_5fcc_5flib(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::leaf_rs_lib::LeafRsLifetime<'_>) -> ::ffi_11::c_uchar
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::leaf_rs_lib::LeafRsLifetime<'_>) -> ::ffi_11::c_uchar
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        unsafe {
+            ::dyn_callable_rs::manager(operation, from, to);
+        }
     }
 }

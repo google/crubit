@@ -50,7 +50,7 @@ crubit_test_cc_library(
     deps = [
         ":leaf_rs_lib_cc_api",
         "//support:lifetime_annotations",
-        "@abseil-cpp//absl/functional:any_invocable",
+        "//support/rs:dyn_callable",
     ],
 )
 
