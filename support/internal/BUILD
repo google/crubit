@@ -32,6 +32,15 @@ cc_library(
     ],
 )
 
+crubit_cc_test(
+    name = "check_test",
+    srcs = ["check_test.cc"],
+    deps = [
+        ":bindings_support",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_test(
     name = "check_no_mutable_aliasing_test",
     srcs = ["check_no_mutable_aliasing_test.cc"],
