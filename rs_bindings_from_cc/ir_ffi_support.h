@@ -818,6 +818,17 @@ class CRUBIT_FFI_TRIVIAL_ABI FormattedError final {
         format, llvm::formatv(format, std::forward<Ts>(args)...).str());
   }
 
+  // Returns `cause` with `context` prepended to its message, as
+  // `"<context>: <message>"`. The format string stays that of `cause`, so that
+  // the error is aggregated with the reason it wraps.
+  static FormattedError WithContext(std::string_view context,
+                                    const FormattedError& cause) {
+    std::string message(context);
+    message.append(": ");
+    message.append(cause.message());
+    return FormattedError(cause.fmt(), message);
+  }
+
   // Extracts a format string from a status payload, if present.
   static FormattedError FromStatus(llvm::Error error);
 

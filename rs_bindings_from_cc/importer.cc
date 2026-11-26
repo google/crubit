@@ -4154,8 +4154,7 @@ CcType Importer::ConvertQualType(
                                 llvm::toString(type.takeError())));
   }
   if (type->variant().has_error()) {
-    // TODO(jeanpierreda): The most-specific type should go at the start, and
-    // be something we can aggregate by somehow.
+    // TODO(jeanpierreda): The most-specific type should go at the start.
     // TODO(jeanpierreda): This produces pretty verbose errors.
     const auto& inner = type->variant().error();
     std::optional<Blocker> blocker;
@@ -4163,8 +4162,8 @@ CcType Importer::ConvertQualType(
       blocker = inner.blocked_by();
     }
     return CcTypeError(
-        FormattedError::Formatv("Unsupported type '{0}': {1}", type_string,
-                                inner.error().message()),
+        FormattedError::WithContext("Unsupported type '" + type_string + "'",
+                                    inner.error()),
         std::move(blocker));
   }
 

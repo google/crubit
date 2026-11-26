@@ -4004,7 +4004,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
                   type_: CcType {
                       variant: Error(ErrorType {
                           error: FormattedError {
-                              fmt: "Unsupported type '{0}': {1}",
+                              fmt: "No generated bindings found for '{0}'",
                               message: "Unsupported type 'Self': No generated bindings found for 'Self'",
                           },
                           blocked_by: None,
