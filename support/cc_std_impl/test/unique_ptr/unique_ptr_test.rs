@@ -2,9 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use cc_std::std::{
-    unique_ptr, virtual_unique_ptr, Allocator, NonNull, TryDeref, TryDerefMut, TryDerefPin,
-};
+use cc_std::std::{unique_ptr, virtual_unique_ptr, Allocator};
 use googletest::{expect_eq, expect_true, gtest};
 use std::marker::PhantomPinned;
 use std::sync::Arc;
@@ -153,101 +151,6 @@ fn test_covariance() {
     fn _assert_unique_ptr_covariance<'a: 'b, 'b>(x: unique_ptr<&'a i32>) -> unique_ptr<&'b i32> {
         x
     }
-}
-
-#[gtest]
-fn test_unique_ptr_deref() {
-    let up = test_helpers::unique_ptr_test::create_unique_ptr();
-    let nn = NonNull::new(up).unwrap();
-    let r: &i32 = &nn;
-    expect_eq!(*r, 1);
-    expect_eq!(*nn, 1);
-}
-
-#[gtest]
-fn test_unique_ptr_deref_mut() {
-    let up = test_helpers::unique_ptr_test::create_unique_ptr();
-    let mut nn = NonNull::new(up).unwrap();
-    *nn = 654321;
-    expect_eq!(*nn, 654321);
-}
-
-#[gtest]
-fn test_unique_ptr_non_null_ref_and_mut() {
-    let mut up = test_helpers::unique_ptr_test::create_unique_ptr();
-    expect_eq!(*up.try_deref().unwrap(), 1);
-
-    let nn_ref = NonNull::from_ref(&up).unwrap();
-    expect_eq!(**nn_ref, 1);
-
-    *up.try_deref_mut().unwrap() = 42;
-    expect_eq!(*up.try_deref().unwrap(), 42);
-
-    let nn_mut = NonNull::from_mut(&mut up).unwrap();
-    **nn_mut = 100;
-    expect_eq!(**nn_mut, 100);
-}
-
-#[gtest]
-fn test_unique_ptr_deref_pin() {
-    let up = test_helpers::unique_ptr_test::create_unique_ptr();
-    let mut nn = NonNull::new(up).unwrap();
-    let mut pin = NonNull::deref_pin(&mut nn);
-    *pin = 999;
-    expect_eq!(*pin, 999);
-}
-
-#[gtest]
-fn test_unique_ptr_null_returns_none() {
-    let mut up = unsafe { unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
-    expect_true!(up.try_deref().is_none());
-    expect_true!(up.try_deref_mut().is_none());
-    expect_true!(up.try_deref_pin().is_none());
-    expect_true!(NonNull::from_ref(&up).is_none());
-    expect_true!(NonNull::from_mut(&mut up).is_none());
-    expect_true!(NonNull::new(up).is_none());
-}
-
-#[gtest]
-fn test_virtual_unique_ptr_deref() {
-    let p = test_helpers::unique_ptr_test::create_virtual_base();
-    let nn = NonNull::new(p).unwrap();
-    let r: &test_helpers::unique_ptr_test::Base = &nn;
-    expect_true!(r.is_derived());
-    expect_true!(nn.is_derived());
-}
-
-#[gtest]
-fn test_unique_ptr_non_null_into() {
-    let nn = NonNull::new(test_helpers::unique_ptr_test::create_unique_ptr()).unwrap();
-    let r: &unique_ptr<i32> = (&nn).into();
-    expect_eq!(*r.try_deref().unwrap(), 1);
-    let up: unique_ptr<i32> = nn.into();
-    expect_eq!(*up.try_deref().unwrap(), 1);
-}
-
-#[gtest]
-fn test_virtual_unique_ptr_non_null_into() {
-    let nn = NonNull::new(test_helpers::unique_ptr_test::create_virtual_base()).unwrap();
-    let r: &virtual_unique_ptr<test_helpers::unique_ptr_test::Base> = (&nn).into();
-    expect_true!(r.try_deref().unwrap().is_derived());
-    let vp: virtual_unique_ptr<test_helpers::unique_ptr_test::Base> = nn.into();
-    expect_true!(vp.try_deref().unwrap().is_derived());
-}
-
-#[gtest]
-fn test_virtual_unique_ptr_null_returns_none() {
-    let mut vp = unsafe {
-        virtual_unique_ptr::<test_helpers::unique_ptr_test::CustomDelete>::from_raw(
-            std::ptr::null_mut(),
-        )
-    };
-    expect_true!(vp.try_deref().is_none());
-    expect_true!(vp.try_deref_mut().is_none());
-    expect_true!(vp.try_deref_pin().is_none());
-    expect_true!(NonNull::from_ref(&vp).is_none());
-    expect_true!(NonNull::from_mut(&mut vp).is_none());
-    expect_true!(NonNull::new(vp).is_none());
 }
 
 #[gtest]

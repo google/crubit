@@ -81,36 +81,4 @@ TEST(UniquePtrBridging, Option) {
   EXPECT_NE(ptr2, nullptr);
 }
 
-// Tests that a `NonNull`-wrapped `unique_ptr` round-trips. The C++ signature is
-// a plain `std::unique_ptr<T>` carrying the `crubit_nonnull` attribute, so
-// ownership transfer is unaffected.
-TEST(NonNullUniquePtrBridging, Roundtrip) {
-  auto token = std::make_shared<int32_t>(0);
-
-  {
-    auto ptr = unique_ptr::create_unique_ptr(token);
-
-    auto ptr2 = unique_ptr::roundtrip_nonnull_unique_ptr(std::move(ptr));
-    EXPECT_NE(ptr2, nullptr);
-
-    EXPECT_EQ(token.use_count(), 2);
-  }
-  EXPECT_EQ(token.use_count(), 1);
-}
-
-TEST(NonNullVirtualUniquePtrBridging, Roundtrip) {
-  auto token = std::make_shared<int32_t>(0);
-
-  {
-    auto ptr = unique_ptr::create_virtual_unique_ptr(token);
-
-    auto ptr2 =
-        unique_ptr::roundtrip_nonnull_virtual_unique_ptr(std::move(ptr));
-    EXPECT_NE(ptr2, nullptr);
-
-    EXPECT_EQ(token.use_count(), 2);
-  }
-  EXPECT_EQ(token.use_count(), 1);
-}
-
 }  // namespace

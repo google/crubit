@@ -3,9 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 //! Tests that `Nullable<Ptr>` is bridged to C++ as `Ptr crubit_nullable`.
-//!
-//! This crate deliberately does not enable `nonnull_smart_pointers`: unlike `NonNull`, the
-//! `Nullable` bridge is not gated on it.
 
 use cc_std::std::shared_ptr;
 use cc_std::std::unique_ptr;
