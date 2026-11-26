@@ -34,7 +34,7 @@ use ir::*;
 use itertools::Itertools;
 use kythe_metadata::rs_embed_provenance_map;
 
-use proc_macro2::{Ident, Literal, TokenStream};
+use proc_macro2::{Ident, Literal, Spacing, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsStr;
@@ -688,12 +688,18 @@ pub fn generate_bindings_tokens(
                 "//support/rs_std:rs_alloc",
             ))
             .is_empty();
-        // `rs::Box`, `PinBox`, `SliceBox` and `StrBox` are spelled with `::alloc::boxed::Box`.
-        let has_box = ir.items().any(|item| {
-            matches!(item, ir::Item::ExistingRustType(e) if e.rs_name().contains("::alloc::"))
+        // `rs::Box`, `PinBox`, `SliceBox`, `StrBox`, and `cc_bindings_from_rs`-generated
+        // specializations (such as `rs::Vec<T>`, spelled `:: alloc :: vec :: Vec < ... >`) can
+        // reference `::alloc::...`.
+        let has_alloc_existing_rust_type = ir.items().any(|item| {
+            matches!(
+                item,
+                ir::Item::ExistingRustType(e)
+                    if existing_rust_type_references_extern_alloc(e.rs_name())
+            )
         });
 
-        (has_callables || has_rs_alloc || has_box)
+        (has_callables || has_rs_alloc || has_alloc_existing_rust_type)
             .then(|| quote! { extern crate alloc; __NEWLINE__ __NEWLINE__  })
     };
 
@@ -2518,6 +2524,50 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
     } else {
         false
     }
+}
+
+/// Returns whether an `ExistingRustType`'s `rs_name` references the external `alloc` crate
+/// via a root `::alloc::` path (handling tokenized whitespace such as `":: alloc :: vec :: Vec"`
+/// without false positives on `::my_alloc::`, `::alloc_utils::`, or `::my_crate::alloc::`).
+fn existing_rust_type_references_extern_alloc(rs_name: &str) -> bool {
+    rs_name
+        .parse::<TokenStream>()
+        .map(token_stream_references_extern_alloc)
+        .unwrap_or_else(|_| rs_name.contains("::alloc::"))
+}
+
+fn token_stream_references_extern_alloc(tokens: TokenStream) -> bool {
+    let tokens: Vec<TokenTree> = tokens.into_iter().collect();
+    for (i, window) in tokens.windows(5).enumerate() {
+        if let [TokenTree::Punct(c1), TokenTree::Punct(c2), TokenTree::Ident(ident), TokenTree::Punct(c3), TokenTree::Punct(c4)] =
+            window
+            && c1.as_char() == ':'
+            && c1.spacing() == Spacing::Joint
+            && c2.as_char() == ':'
+            && ident == "alloc"
+            && c3.as_char() == ':'
+            && c3.spacing() == Spacing::Joint
+            && c4.as_char() == ':'
+        {
+            // `::alloc::` is only an external-crate root path if it isn't continuing a preceding
+            // path segment (such as `::my_crate::alloc::Foo` or `Foo<T>::alloc::Bar`).
+            let continues_path =
+                i.checked_sub(1).and_then(|prev| tokens.get(prev)).is_some_and(|prev| match prev {
+                    TokenTree::Ident(prev_ident) => {
+                        !matches!(prev_ident.to_string().as_str(), "mut" | "const" | "dyn" | "impl")
+                    }
+                    TokenTree::Punct(p) => p.as_char() == '>',
+                    _ => false,
+                });
+            if !continues_path {
+                return true;
+            }
+        }
+    }
+    tokens.into_iter().any(|tt| match tt {
+        TokenTree::Group(group) => token_stream_references_extern_alloc(group.stream()),
+        _ => false,
+    })
 }
 
 /// Only to be used in a `CrubitAbiType::Transmute` context.

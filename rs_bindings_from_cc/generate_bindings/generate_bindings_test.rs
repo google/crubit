@@ -3306,3 +3306,58 @@ fn test_generate_bindings_constant_with_failed_type() -> Result<()> {
     assert_rs_not_matches!(rs_api.rs_api, quote! { Incomplete });
     Ok(())
 }
+
+#[gtest]
+fn test_extern_crate_alloc_emitted_for_tokenized_existing_rust_type() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_rust_type", ":: alloc :: vec :: Vec < u8 >")]] VecU8 {
+          void* ptr;
+          unsigned long cap;
+          unsigned long len;
+        };
+        void UseVec(VecU8& v);
+        "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { extern crate alloc; });
+    Ok(())
+}
+
+#[gtest]
+fn test_extern_crate_alloc_emitted_for_nested_alloc_existing_rust_type() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_rust_type", ":: core :: option :: Option < :: alloc :: string :: String >")]] OptString {
+          void* ptr;
+          unsigned long cap;
+          unsigned long len;
+        };
+        void UseOptString(OptString& s);
+        "#,
+    )?
+    .rs_api;
+    assert_rs_matches!(rs_api, quote! { extern crate alloc; });
+    Ok(())
+}
+
+#[gtest]
+fn test_extern_crate_alloc_not_emitted_for_non_alloc_crates() -> Result<()> {
+    let rs_api = generate_bindings_tokens_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_rust_type", "::my_alloc::Foo")]] MyAllocFoo {
+          int x;
+        };
+        struct [[clang::annotate("crubit_internal_rust_type", "::alloc_utils::Bar")]] AllocUtilsBar {
+          int x;
+        };
+        struct [[clang::annotate("crubit_internal_rust_type", "::my_crate::alloc::Baz")]] NestedAllocBaz {
+          int x;
+        };
+        void UseTypes(MyAllocFoo a, AllocUtilsBar b, NestedAllocBaz c);
+        "#,
+    )?
+    .rs_api;
+    assert_rs_not_matches!(rs_api, quote! { extern crate alloc; });
+    Ok(())
+}
