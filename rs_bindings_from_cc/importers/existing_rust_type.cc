@@ -336,7 +336,7 @@ std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
   for (llvm::StringRef lifetime : *lifetime_inputs) {
     existing->add_lifetime_inputs(std::string(lifetime));
   }
-  existing->set_owning_target(ictx_.GetOwningTarget(*type_decl).value());
+  existing->set_owning_target(ictx_.GetOwningTarget(*type_decl));
   if (!cpp_type->isIncompleteType()) {
     auto* size_align = existing->mutable_size_align();
     size_align->set_size(context.getTypeSizeInChars(cpp_type).getQuantity());

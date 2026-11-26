@@ -4,14 +4,20 @@
 
 #include "rs_bindings_from_cc/ir_ffi_support.h"
 
+#include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseMapInfo.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace {
 
+using ::crubit::ffi::BazelLabel;
 using ::crubit::ffi::FfiMap;
 using ::crubit::ffi::FfiRc;
 using ::crubit::ffi::FfiString;
@@ -29,6 +35,8 @@ bool crubit_test_ffi_rc_equals(const FfiRc<FfiString>* lhs,
                                const FfiRc<FfiString>* rhs);
 void crubit_test_roundtrip_ffi_map(FfiMap<FfiString, FfiString>* map,
                                    FfiMap<FfiString, FfiString>* out);
+void crubit_test_roundtrip_bazel_label_map(FfiMap<BazelLabel, FfiString>* map,
+                                           FfiMap<BazelLabel, FfiString>* out);
 }
 
 TEST(IrFfiSupportTest, FfiStringRoundtripAcrossRust) {
@@ -152,6 +160,109 @@ TEST(IrFfiSupportTest, FfiMapMaintainsSortedOrderAcrossLanguages) {
   EXPECT_EQ(int_map.at(20), 200);
   EXPECT_EQ(int_map.entries()[0].first, 10);
   EXPECT_EQ(int_map.entries()[1].first, 20);
+}
+
+TEST(IrFfiSupportTest, BazelLabelStripsCanonicalMainRepoPrefix) {
+  BazelLabel from_cstr("@@//foo/bar:baz");
+  BazelLabel from_str(std::string("@@//foo/bar:baz"));
+  BazelLabel from_sv(std::string_view("@@//foo/bar:baz"));
+  BazelLabel from_ref(llvm::StringRef("@@//foo/bar:baz"));
+  BazelLabel from_ffi(FfiString::FromUtf8("@@//foo/bar:baz"));
+  BazelLabel shorthand("//foo/bar:baz");
+
+  for (const BazelLabel& label :
+       {from_cstr, from_str, from_sv, from_ref, from_ffi}) {
+    EXPECT_EQ(label.value(), "//foo/bar:baz");
+    EXPECT_EQ(label.AsView(), "//foo/bar:baz");
+    EXPECT_EQ(label.package_name(), "//foo/bar");
+    EXPECT_EQ(label.target_name(), "baz");
+    EXPECT_EQ(label, shorthand);
+    std::ostringstream os;
+    os << label;
+    EXPECT_EQ(os.str(), "//foo/bar:baz");
+  }
+
+  // Non-main-repo prefixes must be preserved verbatim.
+  EXPECT_EQ(BazelLabel("@repo//foo:bar").value(), "@repo//foo:bar");
+  EXPECT_EQ(BazelLabel("@@repo//foo:bar").value(), "@@repo//foo:bar");
+  EXPECT_EQ(BazelLabel("@@").value(), "@@");
+
+  // Shorthand package label matches explicit target name across `@@//` forms.
+  EXPECT_EQ(BazelLabel("@@//foo/bar"), BazelLabel("//foo/bar:bar"));
+  EXPECT_EQ(BazelLabel("//foo/bar:bar"), "@@//foo/bar");
+  EXPECT_EQ(BazelLabel("//foo/bar"), "@@//foo/bar:bar");
+}
+
+TEST(IrFfiSupportTest, DenseMapInfoSentinelsAndOperations) {
+  using StringInfo = llvm::DenseMapInfo<FfiString>;
+  EXPECT_FALSE(StringInfo::isEqual(StringInfo::getEmptyKey(), FfiString("")));
+  EXPECT_FALSE(
+      StringInfo::isEqual(StringInfo::getTombstoneKey(), FfiString("")));
+  EXPECT_FALSE(StringInfo::isEqual(StringInfo::getEmptyKey(),
+                                   StringInfo::getTombstoneKey()));
+  EXPECT_TRUE(StringInfo::isEqual(StringInfo::getEmptyKey(),
+                                  StringInfo::getEmptyKey()));
+  EXPECT_TRUE(StringInfo::isEqual(StringInfo::getTombstoneKey(),
+                                  StringInfo::getTombstoneKey()));
+
+  using LabelInfo = llvm::DenseMapInfo<BazelLabel>;
+  EXPECT_FALSE(LabelInfo::isEqual(LabelInfo::getEmptyKey(), BazelLabel("")));
+  EXPECT_FALSE(
+      LabelInfo::isEqual(LabelInfo::getTombstoneKey(), BazelLabel("")));
+  EXPECT_FALSE(LabelInfo::isEqual(LabelInfo::getEmptyKey(),
+                                  LabelInfo::getTombstoneKey()));
+  EXPECT_TRUE(
+      LabelInfo::isEqual(LabelInfo::getEmptyKey(), LabelInfo::getEmptyKey()));
+  EXPECT_TRUE(LabelInfo::isEqual(LabelInfo::getTombstoneKey(),
+                                 LabelInfo::getTombstoneKey()));
+
+  llvm::DenseMap<FfiString, int> str_map;
+  str_map[FfiString("")] = 1;
+  str_map[FfiString("a")] = 2;
+  str_map[FfiString("b")] = 3;
+  EXPECT_EQ(str_map.lookup(FfiString("")), 1);
+  str_map.erase(FfiString("a"));
+  EXPECT_FALSE(str_map.contains(FfiString("a")));
+  EXPECT_EQ(str_map.lookup(FfiString("")), 1);
+  EXPECT_EQ(str_map.lookup(FfiString("b")), 3);
+  llvm::DenseMap<FfiString, int> str_map_copy = str_map;
+  EXPECT_EQ(str_map_copy.lookup(FfiString("")), 1);
+  EXPECT_EQ(str_map_copy.lookup(FfiString("b")), 3);
+
+  llvm::DenseMap<BazelLabel, int> label_map;
+  label_map[BazelLabel("")] = 10;
+  for (int i = 0; i < 64; ++i) {
+    label_map[BazelLabel("//pkg:t" + std::to_string(i))] = i;
+  }
+  label_map[BazelLabel("//foo/bar:bar")] = 99;
+  for (int i = 0; i < 32; ++i) {
+    EXPECT_TRUE(label_map.erase(BazelLabel("//pkg:t" + std::to_string(i))));
+  }
+  EXPECT_EQ(label_map.lookup(BazelLabel("")), 10);
+  EXPECT_EQ(label_map.lookup(BazelLabel("@@//foo/bar")), 99);
+  EXPECT_EQ(label_map.lookup(BazelLabel(FfiString::FromUtf8("@@//foo/bar"))),
+            99);
+  for (int i = 32; i < 64; ++i) {
+    EXPECT_EQ(label_map.lookup(BazelLabel("//pkg:t" + std::to_string(i))), i);
+  }
+  llvm::DenseMap<BazelLabel, int> label_map_copy = label_map;
+  EXPECT_EQ(label_map_copy.lookup(BazelLabel("")), 10);
+  EXPECT_EQ(label_map_copy.lookup(BazelLabel("@@//foo/bar")), 99);
+}
+
+TEST(IrFfiSupportTest, BazelLabelFfiMapRoundtripAcrossRust) {
+  FfiMap<BazelLabel, FfiString> map;
+  map["@@//z/pkg:beta"] = FfiString("2");
+  map["//a/pkg:alpha"] = FfiString("1");
+  map[BazelLabel(FfiString::FromUtf8("@@//b/foo"))] = FfiString("3");
+
+  FfiMap<BazelLabel, FfiString> out;
+  crubit_test_roundtrip_bazel_label_map(&map, &out);
+  EXPECT_TRUE(map.empty());
+  EXPECT_EQ(out.at("//a/pkg:alpha").AsView(), "1");
+  EXPECT_EQ(out.at("//z/pkg:beta").AsView(), "2");
+  EXPECT_EQ(out.at("@@//b/foo:foo").AsView(), "3");
+  EXPECT_EQ(out.at("//rust/pkg:added").AsView(), "4");
 }
 
 }  // namespace

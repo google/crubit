@@ -222,8 +222,7 @@ cc_library(
     srcs = [],
     hdrs = ["bazel_types.h"],
     deps = [
-        "//common:string_type",
-        "@llvm-project//llvm:Support",
+        ":cc_ir",
     ],
 )
 
@@ -456,7 +455,6 @@ cc_library(
     ],
     visibility = ["//:__subpackages__"],
     deps = [
-        ":bazel_types",
         "//common:cc_ffi_types",
         "//common:check",
         "//common:status",
@@ -531,6 +529,7 @@ crubit_cc_test(
         ":cc_ir",
         ":ir_ffi_support_test_rust",  # build_cleaner: keep
         "@googletest//:gtest_main",
+        "@llvm-project//llvm:Support",
     ],
 )
 

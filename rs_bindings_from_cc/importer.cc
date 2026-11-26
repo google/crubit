@@ -2279,8 +2279,7 @@ void Importer::Import(
   // Populate top-level items for each Bazel label in the IR protobuf. This
   // preserves the source order recorded in top_level_item_ids_.
   for (const auto& [target, item_ids] : invocation_.top_level_item_ids_) {
-    auto& target_items =
-        (*invocation_.ir_.mutable_top_level_items())[target.value()];
+    auto& target_items = (*invocation_.ir_.mutable_top_level_items())[target];
     for (ItemId id : item_ids) {
       auto it = id_to_item.find(id);
       // Remove any unsupported alien (to the current target) items.
@@ -2840,7 +2839,7 @@ bool Importer::IsFromProtoTarget(const clang::Decl& decl) const {
 
 bool Importer::IsFeatureEnabledForTarget(const BazelLabel& label,
                                          llvm::StringRef feature) const {
-  if (auto i = invocation_.ir_.crubit_features().find(label.value());
+  if (auto i = invocation_.ir_.crubit_features().find(label);
       i != invocation_.ir_.crubit_features().end()) {
     for (const auto& f : i->second) {
       if (f == feature) return true;
@@ -3049,7 +3048,7 @@ llvm::Expected<std::optional<bool>> Importer::DetectFormatterForType(
 }
 
 bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
-  if (auto i = invocation_.ir_.crubit_features().find(label.value());
+  if (auto i = invocation_.ir_.crubit_features().find(label);
       i != invocation_.ir_.crubit_features().end()) {
     return !i->second.empty();
   }
@@ -3145,7 +3144,7 @@ std::unique_ptr<crubit::ffi::Item> Importer::ImportUnsupportedItem(
   *unsupported->mutable_decl_loc() =
       ConvertDeclLocation(original_decl.getBeginLoc(), nullptr);
   unsupported->set_id(GenerateItemId(original_decl).value());
-  unsupported->set_defining_target(GetOwningTarget(original_decl).value());
+  unsupported->set_defining_target(GetOwningTarget(original_decl));
   unsupported->set_must_bind(
       is_hard_error ||
       (invocation_.carcinize_mode() == CarcinizeMode::kStrict && !is_macro));
@@ -3414,7 +3413,7 @@ std::optional<CcType> Importer::CheckTemplateCrubitEnabled(
   if (std::string usr = GetUniqueName(*resolved_decl); !usr.empty()) {
     blocker.set_unique_name(usr);
   }
-  blocker.set_defining_target(target.value());
+  blocker.set_defining_target(target);
 
   if (std::optional<llvm::StringRef> header = HeaderOfUnknownTarget(target);
       header.has_value()) {
@@ -4529,7 +4528,7 @@ void Importer::NameTemplateInstantiationsAfterTypeAliases(
       crubit::ffi::TypeAlias& alias = *item->mutable_type_alias();
       const crubit::ffi::CcType& type = alias.underlying_type();
       if (!type.variant().has_decl() || type.is_const() ||
-          alias.owning_target() != invocation_.target_.value() ||
+          alias.owning_target() != invocation_.target_ ||
           alias.has_deprecated() || alias.has_unknown_attr() ||
           !alias.lifetime_inputs().empty()) {
         continue;

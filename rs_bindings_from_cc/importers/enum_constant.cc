@@ -91,8 +91,7 @@ std::unique_ptr<crubit::ffi::Item> EnumConstantDeclImporter::Import(
   *constant->mutable_rs_name() = enumerator_name->rs_identifier();
   constant->set_unique_name(ictx_.GetUniqueName(*enum_constant_decl));
   constant->set_id(ictx_.GenerateItemId(*enum_constant_decl).value());
-  constant->set_owning_target(
-      ictx_.GetOwningTarget(*enum_constant_decl).value());
+  constant->set_owning_target(ictx_.GetOwningTarget(*enum_constant_decl));
   *constant->mutable_decl_loc() =
       ictx_.ConvertDeclLocation(enum_constant_decl->getBeginLoc(), nullptr);
   *constant->mutable_type() = *std::move(type);

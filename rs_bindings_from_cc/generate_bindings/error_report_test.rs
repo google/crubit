@@ -178,7 +178,8 @@ fn test_blocked_by_type_alias() -> Result<()> {
 #[gtest]
 fn test_blocked_by_error_type_blocker() -> Result<()> {
     let mut proto = ir_proto_from_cc("void TakesUnowned(int* t);")?;
-    let mut items = proto.top_level_items.get(TESTING_TARGET).expect("target items").clone();
+    let target = BazelLabel::from(TESTING_TARGET);
+    let mut items = proto.top_level_items.get(&target).expect("target items").clone();
     let func = items
         .iter_mut()
         .find_map(|item| match item {
@@ -207,7 +208,7 @@ fn test_blocked_by_error_type_blocker() -> Result<()> {
         panic!("expected pointer parameter");
     }
     *func = ir::FfiRc::new(updated_func);
-    proto.top_level_items.insert(TESTING_TARGET.into(), items);
+    proto.top_level_items.insert(target, items);
 
     let entries = parse_report(&generate_error_report_json_for_test(make_test_ir(&proto)?)?);
     expect_that!(
