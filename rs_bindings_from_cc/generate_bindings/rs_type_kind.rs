@@ -394,17 +394,9 @@ fn rs_type_kind_with_lifetime_elision_impl(
             let type_kind =
                 RsTypeKind::from_item_raw(db, item, &lifetime_options, &template_args, &lifetimes)?;
 
-            let nonnull_smart_pointers = db
-                .ir()
-                .target_crubit_features(db.ir().current_target())
-                .contains(crubit_feature::CrubitFeature::NonnullSmartPointers);
-            // Under `nonnull_smart_pointers`, a smart pointer is non-null (bare `Ptr`) only if its
-            // use site promises so; every other use may be null (`Nullable<Ptr>`).
-            Ok(if nonnull_smart_pointers && !ty.is_nonnull() {
-                type_kind.into_nullable_smart_pointer()
-            } else {
-                type_kind
-            })
+            // A smart pointer is non-null (bare `Ptr`) only if its use site promises so; every
+            // other use may be null (`Nullable<Ptr>`).
+            Ok(if !ty.is_nonnull() { type_kind.into_nullable_smart_pointer() } else { type_kind })
         }
         CcTypeVariant::Error(e) => {
             let err: Error = error_report::FormattedError::new(

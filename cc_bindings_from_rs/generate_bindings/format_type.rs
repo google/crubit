@@ -1301,15 +1301,11 @@ fn format_ty_for_cc_impl<'tcx>(
                     }
                 };
 
-                // Under `nonnull_smart_pointers`, a bare smart pointer is non-null, and
-                // `Nullable<Ptr>` is the spelling for one that may be null. Bridged raw C++
-                // pointers (`CcType::Pointer`) may be null unless explicitly wrapped.
+                // A bare smart pointer is non-null, and `Nullable<Ptr>` is the spelling for one
+                // that may be null. Bridged raw C++ pointers (`CcType::Pointer`) may be null
+                // unless explicitly wrapped.
                 if apply_default_nullability {
-                    if db
-                        .crate_features(db.source_crate_num())
-                        .contains(CrubitFeature::NonnullSmartPointers)
-                        && is_smart_pointer(db, ty)?
-                    {
+                    if is_smart_pointer(db, ty)? {
                         prereqs
                             .includes
                             .insert(db.support_header("annotations_internal.h"));
@@ -2402,22 +2398,6 @@ pub fn cpp_layout_equivalent_type<'tcx>(
 
     let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
         .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
-
-    // `cpp_std::NonNull<Ptr>` (**not** `core::ptr::NonNull<T>`) is spelled `Ptr crubit_nonnull`.
-    // Gate that on `nonnull_smart_pointers`, which is also what makes a bare `Ptr` mean non-null
-    // (spelled `Ptr crubit_nonnull`) in both directions. Without the feature, treat `NonNull` as
-    // unmapped, which is how it behaved before it was annotated. `NonNull` is being removed
-    // (crubit.rs-nullable); new code should use a bare `Ptr` instead.
-    //
-    // `Nullable<Ptr>` (spelled `Ptr crubit_nullable`) is not gated: it means the same thing as an
-    // unannotated C++ smart pointer, so mapping it is correct with or without the feature.
-    if attrs.cpp_type.is_some_and(|cpp_type| cpp_type.as_str().contains("crubit_nonnull"))
-        && !db
-            .crate_features(db.source_crate_num())
-            .contains(crubit_feature::CrubitFeature::NonnullSmartPointers)
-    {
-        return Ok(None);
-    }
 
     let Some(CppLayoutEquivalentAttrs { include_paths, cpp_type }) =
         attrs.get_cpp_layout_equivalent_attrs(db.crubit_support_path_format())?
