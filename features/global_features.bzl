@@ -14,7 +14,6 @@ SUPPORTED_FEATURES = [
     "always_specialize_generics_in_cpp_api_from_rust",
     "forward_declare",
     "iterator_item_references",
-    "nonnull_smart_pointers",
     "reserve_standard_macros",
     "constant_arrays",
     "enum_api_v2",
