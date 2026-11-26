@@ -886,14 +886,20 @@ pub enum RsTypeKind {
 /// Ways of customizing a type's methods rather than directly binding its C++ methods.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum CustomizeMethodsKind {
+    /// absl::flat_hash_map<K, V, ...>
     AbslFlatHashMap { key_type: RsTypeKind, value_type: RsTypeKind },
 }
 
 impl CustomizeMethodsKind {
     /// Returns the `CustomizeMethodsKind` for a `TemplateSpecialization`.
-    /// Returns an error if the template arguments (if any) fail to db.rs_type_kind(T).
+    /// Returns an error if the template arguments (if any) fail to db.rs_type_kind(T), or if the
+    /// resulting type can't be used at all (e.g. because the element type can't be destroyed).
     /// Returns none if the template specialization is not for a known type corresponding with one
     /// of `CustomizeMethodsKind`s variants.
+    ///
+    /// Element types which can be named but not accessed from Rust (e.g. non-layout-compatible
+    /// bridged types) are not an error: the generated bindings omit the methods which would access
+    /// elements.
     fn new(
         db: &BindingsGenerator<'_>,
         container_name: &str,
@@ -903,15 +909,18 @@ impl CustomizeMethodsKind {
     ) -> Result<Option<Rc<Self>>> {
         let type_arg = |template_arg: &CcType| -> Result<RsTypeKind> {
             // Importantly, `is_return_type` and `is_param` are not propagated through inner types.
-            let arg_type_kind = db.rs_type_kind_with_lifetime_elision(
+            let mut arg_type_kind = db.rs_type_kind_with_lifetime_elision(
                 template_arg.clone(),
-                LifetimeOptions { is_return_type: false, is_param: false, ..*options },
+                LifetimeOptions {
+                    is_return_type: false,
+                    is_param: false,
+                    requires_layout_compatible: true,
+                    ..*options
+                },
             )?;
-            ensure!(
-                !arg_type_kind.pass_by_value_bridges(),
-                "`{}` cannot be used as a template argument because it is a non-layout-compatible bridged type\nSee crubit.rs/types.",
-                arg_type_kind.display(db),
-            );
+            // Elements are accessed in place, so use the layout-compatible representation of the
+            // element type if there is one.
+            arg_type_kind.force_layout_compatible();
             arg_type_kind.ensure_complete_type_arg(db, container_name)?;
             Ok(arg_type_kind)
         };

@@ -392,6 +392,17 @@ cc_test(
     ],
 )
 
+rust_library(
+    name = "map",
+    srcs = ["map.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [":ctor"],
+)
+
 # Used to fix SWIG syntax errors when you see Crubit annotations.
 filegroup(
     name = "annotations_swig",

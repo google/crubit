@@ -28,6 +28,10 @@ use std::iter;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
 
+mod generate_customized_methods;
+
+use crate::generate_customized_methods::generate_customized_methods;
+
 /// Returns whether fields of type `ty` need to be wrapped in `ManuallyDrop<T>`
 /// to prevent the fields from being destructed twice (once by the C++
 /// destructor calkled from the `impl Drop` of the struct and once by `drop` on
@@ -1119,6 +1123,23 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         })
     };
 
+    let trait_impls =
+        if let RsTypeKind::Record { customize_methods: Some(customize_methods), .. } =
+            &record_rs_type_kind
+        {
+            generate_customized_methods(
+                db,
+                &mut api_snippets,
+                &record,
+                &qualified_ident,
+                customize_methods,
+            )
+            .into_iter()
+            .collect()
+        } else {
+            vec![]
+        };
+
     let owned_ptr_config =
         record.owned_ptr_config().as_ref().map(|cfg| database::code_snippet::OwnedPtrConfig {
             owned_type_name: make_rs_ident(cfg.owned_ptr_type()),
@@ -1228,6 +1249,7 @@ pub fn generate_record(db: &BindingsGenerator, record: FfiRc<Record>) -> Result<
         indirect_functions,
         owned_ptr_config,
         member_methods,
+        trait_impls,
         free_functions,
         delete: operator_delete_impl,
         lifetime_params,
