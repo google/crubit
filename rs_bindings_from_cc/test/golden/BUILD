@@ -91,10 +91,6 @@ REQUIRES_HEADER_MODULES = [
 
 # True when `rs_bindings_from_cc` doesn't use precompiled header modules in
 # Crubit's tests. See `requires_header_modules` in `golden_test.bzl`.
-#
-# TODO(b/573160048): Once header modules are on by default, key this on
-# `//rs_bindings_from_cc/bazel_support:use_header_modules`
-# being False instead.
 config_setting(
     name = "header_modules_off",
     flag_values = {

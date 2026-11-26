@@ -220,9 +220,6 @@ bool_flag(
 # from source. (The compile of the generated `*_rust_api_impl.cc` uses header
 # modules regardless of this flag.)
 #
-# TODO(b/573160048): Turn this on by default once a crosstool release contains
-# the corresponding changes to `rs_bindings_from_cc`.
-#
 # `scope = "universal"` makes a value set on the command line also apply to
 # tools built in the exec configuration. `rs_bindings_from_cc` can only load
 # `.pcm`s built by a Clang of the same LLVM revision. Builds that pair it with
@@ -230,7 +227,7 @@ bool_flag(
 # too (b/589661615).
 bool_flag(
     name = "use_header_modules",
-    build_setting_default = False,
+    build_setting_default = True,
     scope = "universal",
     visibility = ["//visibility:public"],
 )
