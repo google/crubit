@@ -33,7 +33,7 @@
 namespace async_fn {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: async_fn_golden :: NotCppMovable") alignas(
-    4) [[clang::trivial_abi]] NotCppMovable final {
+    4) NotCppMovable final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 

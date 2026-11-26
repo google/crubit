@@ -125,8 +125,7 @@ DefaultNoCopyNoClone final {
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuple_structs_golden :: DontMoveMe") alignas(8) [[clang::trivial_abi]]
-DontMoveMe final {
+    ":: tuple_structs_golden :: DontMoveMe") alignas(8) DontMoveMe final {
  public:
   // Type is not a C++ aggregate: Field `value` requires drop glue but is not
   // C++-movable
@@ -324,7 +323,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithCloneNoDefault") alignas(8)
-    [[clang::trivial_abi]] TupleStructWithCloneNoDefault final {
+    TupleStructWithCloneNoDefault final {
  public:
   // Type is not a C++ aggregate: Field `0` is not default-constructible in C++
 
@@ -373,7 +372,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithCppImmovableType") alignas(8)
-    [[clang::trivial_abi]] TupleStructWithCppImmovableType final {
+    TupleStructWithCppImmovableType final {
  public:
   // Type is not a C++ aggregate: Field `1` is not default-constructible in C++
 

@@ -196,8 +196,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: aggregate_initialization :: "
-    "CustomDropStruct") alignas(4) [[clang::trivial_abi]]
-CustomDropStruct final {
+    "CustomDropStruct") alignas(4) CustomDropStruct final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -336,8 +335,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: aggregate_initialization :: "
-    "UnannotatedTwoDrops") alignas(4) [[clang::trivial_abi]]
-UnannotatedTwoDrops final {
+    "UnannotatedTwoDrops") alignas(4) UnannotatedTwoDrops final {
  public:
   // Type is not a C++ aggregate: Multiple fields require drop glue (annotate
   // with `#[crubit_annotate::field_drop_order_does_not_matter]` if field drop
@@ -555,8 +553,7 @@ namespace structs::non_cpp_movable {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: non_cpp_movable :: Point") alignas(4)
-    [[clang::trivial_abi]] Point final {
+    ":: structs_golden :: non_cpp_movable :: Point") alignas(4) Point final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 

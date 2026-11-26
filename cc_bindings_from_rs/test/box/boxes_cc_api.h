@@ -131,7 +131,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: Tracked") alignas(8)
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: boxes_golden :: UnmovableHolder") alignas(
-    8) [[clang::trivial_abi]] UnmovableHolder final {
+    8) UnmovableHolder final {
  public:
   // Type is not a C++ aggregate: Field `b` requires drop glue but is not
   // C++-movable

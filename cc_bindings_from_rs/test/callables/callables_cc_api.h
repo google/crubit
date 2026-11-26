@@ -119,8 +119,7 @@ CppMovableDrop final {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: callables_golden :: NonCppMovable") alignas(4) [[clang::trivial_abi]]
-NonCppMovable final {
+    ":: callables_golden :: NonCppMovable") alignas(4) NonCppMovable final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 

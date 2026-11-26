@@ -93,8 +93,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetimeAndDropGlue < { 'a } >")
-    $lifetime_params("a") alignas(8)
-        [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
+    $lifetime_params("a") alignas(8) StructWithLifetimeAndDropGlue final {
  public:
   // Type is not a C++ aggregate: Field `field_with_lifetime` is not
   // default-constructible in C++

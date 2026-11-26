@@ -2405,7 +2405,12 @@ pub fn generate_adt<'tcx>(
         if needs_explicit_alignas {
             attributes.push(quote! {alignas(#alignment)});
         }
-        if db.is_bitwise_relocatable(core.common.self_ty) {
+        if db.is_bitwise_relocatable(core.common.self_ty)
+            && (is_aggregate
+                || db
+                    .move_ctor_and_assignment_operator_codegen_style(core.common.self_ty)
+                    .is_some())
+        {
             attributes.push(quote! {[[clang::trivial_abi]]});
         }
         if is_packed {

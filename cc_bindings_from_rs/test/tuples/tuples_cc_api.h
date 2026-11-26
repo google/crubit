@@ -130,7 +130,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault")
 //  The same as NontrivialDrop, but without a C++ move operation. This can be
 //  returned by value, even inside a tuple!
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
-    [[clang::trivial_abi]] NonCppMovable final {
+    NonCppMovable final {
  public:
   // Type is not a C++ aggregate: Type implements `Drop`
 
@@ -1832,7 +1832,7 @@ namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefaultTuple") alignas(
-    8) [[clang::trivial_abi]] HasDefaultTuple final {
+    8) HasDefaultTuple final {
  public:
   // Type is not a C++ aggregate: Multiple fields require drop glue (annotate
   // with `#[crubit_annotate::field_drop_order_does_not_matter]` if field drop
@@ -1959,8 +1959,8 @@ namespace tuples {
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: tuples_golden :: HasNoDefaultTuple") alignas(8) [[clang::trivial_abi]]
-HasNoDefaultTuple final {
+    ":: tuples_golden :: HasNoDefaultTuple") alignas(8)
+    HasNoDefaultTuple final {
  public:
   // Type is not a C++ aggregate: Field `in_tuple1` is not default-constructible
   // in C++
@@ -2463,7 +2463,7 @@ namespace tuples {
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: StructWithOptionTuple") alignas(8)
-    [[clang::trivial_abi]] StructWithOptionTuple final {
+    StructWithOptionTuple final {
  public:
   // Type is not a C++ aggregate: Field `opt_tuple` is not default-constructible
   // in C++
