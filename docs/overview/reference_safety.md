@@ -29,23 +29,60 @@ Incorrect lifetime annotations may lead to UB. Rust's borrow checker prevents
 incorrect lifetime annotations, but lifetime annotations of C++ APIs are not
 verified by the C++ compiler and Crubit's optional lifetime analysis can't
 detect all incorrect annotations. Note that Crubit assumes that lifetime
-annotations are correct both for explicit annotations (e.g. `int& $a f2(int&
-$a);`) as well as for annotations provided by `#pragma clang lifetime_elision`.
+annotations are correct both for explicit annotations (e.g.
+`int& $a f2(int& $a);`) as well as for annotations provided by
+`#pragma clang lifetime_elision`.
 
 ## C++ mutating values referenced by Rust
 
-Mutating a value in C++ is UB if the mutation happens while Rust holds a
-references to that value. This applies to Rust shared references (e.g. `&T`) and
-to exclusive references (e.g. `&mut T`).
+Mutating a value in C++ is UB if the mutation happens while Rust holds a live
+reference (`&T` or `&mut T`) to that value, unless the mutated bytes are inside
+an `UnsafeCell` (such as `core::cell::Cell` or a `CRUBIT_THREAD_SAFE` type) and
+any concurrent access is properly synchronized.
 
 Examples of C++ features that may mutate a value that Rust holds a reference to:
 
 *   Using copy or move assignment operator of C++ value that Rust has a
     reference to.
 *   Mutating public fields of a C++ struct that Rust has a reference to.
+*   Calling a C++ `const` method that mutates non-`mutable` fields (e.g., via
+    `const_cast`) or mutating an unannotated value through an aliased C++
+    pointer while Rust holds `&T`.
 
-TODO: Try to succinctly mention the idea that short-lived / non-retained
-references are safe from the mutation risk.
+Short-lived, non-retained references are safe from concurrent mutation across
+separate operations: Rust aliasing UB only applies while a `&T` or `&mut T` is
+live. If Rust borrows `&T` briefly, drops the reference before external
+synchronization allows C++ to mutate `T`, and never retains `&T` across the
+mutation window, no aliasing violation occurs.
+
+### How Crubit models C++ interior mutability (`UnsafeCell` and `Cell`) {#interior_mutability}
+
+C++ has no direct equivalent to Rust's `UnsafeCell`: in C++, `const` expresses
+logical non-mutability, whereas in Rust `&T` forbids any mutation of the
+referenced bytes unless they are wrapped in `UnsafeCell`. To bridge the two
+models without silently causing UB, Crubit models C++ interior mutability as
+follows:
+
+*   **`CRUBIT_THREAD_SAFE` types:** Crubit replaces the generated Rust struct
+    body with an opaque `core::cell::UnsafeCell`, making all bytes of the type
+    valid to mutate behind `&T` (provided the C++ object is never created as a
+    top-level `const` without `mutable` fields).
+*   **`mutable` fields and opaque state on non-`Copy` types:** Crubit wraps
+    `mutable` public fields—and opaque byte blobs (private fields and padding)
+    on non-`Copy` records—in `core::cell::Cell`. As a result, C++ `const`
+    methods that mutate `mutable` fields (or opaque private fields on non-`Copy`
+    types) do not violate Rust's `&T` rules.
+*   **All other fields and `Copy` records:** These are *not* wrapped in
+    `UnsafeCell` or `Cell`. Mutating them while Rust holds `&T` is UB.
+*   **Pointer fields and smart pointers (`std::unique_ptr`,
+    `std::shared_ptr`):** Mutating the *pointee* behind a pointer stored inside
+    a struct does not mutate the struct's own bytes. However, dereferencing
+    `&cpp_std::unique_ptr<T>` or `&cpp_std::shared_ptr<T>` produces a Rust `&T`
+    (deep-const semantics); mutating `T` in C++ while that `&T` is live is UB
+    unless `T` is annotated `CRUBIT_THREAD_SAFE`.
+
+See [Behavior objects](../cpp/cookbook.md#behavior_objects) and
+[Thread-safety](../cpp/cookbook.md#thread_safety) for practical guidance.
 
 ## Dangling or null references
 
@@ -90,10 +127,31 @@ TODO: b/296287315: Support `MaybeUninit<T>`.
 
 ## Breaking Rust aliasing rules
 
-Constructing a Rust references that aliases the same address as an already
-existing exclusive reference `&mut T` is UB.
+Constructing a Rust reference that aliases the same memory as an already
+existing exclusive reference `&mut T` (or mutating memory reachable through a
+live `&T` outside of an `UnsafeCell`) is UB.
 
-TODO: Provide FFI-related examples.
+Common FFI pitfalls include:
 
-TODO: Document what runtime checks are provided by Crubit (and link to a
-separate md document that explains why general checks are infeasible).
+*   **Aliasing `&mut T` from C++ pointers:** Turning two C++ pointers (`T*`)
+    that point to the same object into `&mut T` simultaneously in `unsafe` Rust.
+*   **Holding `&T` across C++ mutation of an unannotated type:** Dereferencing
+    `&cpp_std::shared_ptr<T>` or `&cpp_std::unique_ptr<T>` yields a Rust `&T`.
+    If C++ concurrently mutates `T` through another `std::shared_ptr<T>` or
+    pointer while that `&T` is live, it is UB unless `T` is annotated
+    `CRUBIT_THREAD_SAFE` (so that its representation lives in `UnsafeCell`).
+*   **Mutating a `CRUBIT_THREAD_SAFE` object declared `const` in C++:** If a C++
+    caller defines a `const MyThreadSafeType x;` without marking mutated fields
+    `mutable` and passes it to Rust (or invokes a mutating method through a
+    `CRUBIT_THREAD_SAFE` binding), mutating non-`mutable` fields of a `const`
+    object is UB in C++.
+
+Crubit enforces what it can statically through generated types—wrapping
+`CRUBIT_THREAD_SAFE` structs in `UnsafeCell`, emitting non-`const` `T&`
+parameters in `cc_bindings_from_rs` for `&T` on `CRUBIT_THREAD_SAFE` types,
+wrapping `mutable` and non-`Copy` opaque fields in `Cell`, and only exposing
+`Deref` (never `DerefMut`) on `cpp_std::shared_ptr<T>`. General runtime aliasing
+checks across the C++/Rust boundary are infeasible because C++ does not track
+borrow state or pointer provenance at runtime for arbitrary heap or stack
+objects; avoiding these aliasing violations is therefore an API and `unsafe`
+review responsibility (see [Memory Safety](./safety.md)).

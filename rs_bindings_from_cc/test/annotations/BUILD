@@ -195,6 +195,7 @@ crubit_test_cc_library(
     hdrs = ["thread_safe.h"],
     deps = [
         "//support:annotations",
+        "@abseil-cpp//absl/base:nullability",
     ],
 )
 
@@ -208,6 +209,7 @@ crubit_rust_test(
     srcs = ["thread_safe_test.rs"],
     deps = [
         ":thread_safe_rust",
+        "//support:cpp_std",
         "//support:ctor",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
