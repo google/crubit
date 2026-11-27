@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use cc_std::std::shared_ptr;
 use destructors::{DestructionOrderRecorder, FieldDestructionOrderTester};
 use googletest::{expect_eq, gtest};
 
@@ -20,22 +21,27 @@ fn test_field_destruction_order() {
     // destructor is executed, the compiler calls the destructors for all
     // non-static non-variant members of the class, in **reverse order of
     // declaration**.
-    DestructionOrderRecorder::ClearDestructionRecord();
-    FieldDestructionOrderTester::DestructFromCpp(field1_value, field2_value, field3_value);
-    expect_eq!(expected_destruction_order_in_cpp, DestructionOrderRecorder::GetDestructionRecord());
+    let record = shared_ptr::new(0);
+    FieldDestructionOrderTester::DestructFromCpp(
+        field1_value,
+        field2_value,
+        field3_value,
+        record.clone(),
+    );
+    expect_eq!(expected_destruction_order_in_cpp, *record);
 
     // The main test is below - it tries to confirm that the destruction
     // order of the C++ object is preserved when the destruction is
     // triggered from Rust, via `impl Drop` emitted by the bindings
     // generator.
-    DestructionOrderRecorder::ClearDestructionRecord();
+    let record = shared_ptr::new(0);
     {
         // The code below constructs the same FieldDestructionOrderTester object
         // as done internally in DestructFromCpp above.
         let tester = FieldDestructionOrderTester::from((
-            DestructionOrderRecorder::from(field1_value),
-            DestructionOrderRecorder::from(field2_value),
-            DestructionOrderRecorder::from(field3_value),
+            DestructionOrderRecorder::from((field1_value, record.clone())),
+            DestructionOrderRecorder::from((field2_value, record.clone())),
+            DestructionOrderRecorder::from((field3_value, record.clone())),
         ));
         // Dropping the `tester` should invoke destructors of field1/2/3 in the
         // same order as C++ (e.g. by calling into the C++ destructor of
@@ -44,18 +50,16 @@ fn test_field_destruction_order() {
         // The fields of a struct are dropped in **declaration order**.
         drop(tester);
     }
-    expect_eq!(
-        expected_destruction_order_in_rust,
-        DestructionOrderRecorder::GetDestructionRecord()
-    );
+    expect_eq!(expected_destruction_order_in_rust, *record);
 }
 
 #[gtest]
 fn test_private_operator_delete() {
-    DestructionOrderRecorder::ClearDestructionRecord();
+    let token = shared_ptr::new(0);
     {
-        let tester = destructors::PrivateOperatorDelete::from(42);
+        let tester = destructors::PrivateOperatorDelete::from(token.clone());
+        expect_eq!(shared_ptr::use_count(&token), 2);
         drop(tester);
     }
-    expect_eq!(42, DestructionOrderRecorder::GetDestructionRecord());
+    expect_eq!(shared_ptr::use_count(&token), 1);
 }

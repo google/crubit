@@ -5,38 +5,49 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_DESTRUCTORS_FIELD_DESTRUCTION_ORDER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_DESTRUCTORS_FIELD_DESTRUCTION_ORDER_H_
 
+#include <memory>
 #include <utility>
 
-class [[clang::trivial_abi]] DestructionOrderRecorder final {
+#include "absl/base/nullability.h"
+#include "support/annotations.h"
+
+// When destroyed, appends `int_field` to `*record` as a decimal digit, so that
+// a test can check the order in which objects were destroyed. Each test passes
+// in its own `record`.
+//
+// `std::shared_ptr` isn't trivial-ABI on every platform, and where it isn't,
+// Clang ignores `[[clang::trivial_abi]]` on this class. Moving it with `memcpy`
+// is still sound, so `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` keeps it Rust-movable
+// there too.
+class CRUBIT_UNSAFE_BITWISE_RELOCATABLE [[clang::trivial_abi]]
+DestructionOrderRecorder final {
  public:
-  explicit DestructionOrderRecorder(int int_field) : int_field_(int_field) {}
+  DestructionOrderRecorder(int int_field,
+                           absl_nonnull std::shared_ptr<int> record)
+      : int_field_(int_field), record_(std::move(record)) {}
   DestructionOrderRecorder(const DestructionOrderRecorder& other) = delete;
   DestructionOrderRecorder& operator=(const DestructionOrderRecorder& other) =
       delete;
   DestructionOrderRecorder(DestructionOrderRecorder&& other)
-      : int_field_(other.int_field_) {
-    other.int_field_ = 0;
-  }
+      : int_field_(other.int_field_), record_(std::move(other.record_)) {}
   DestructionOrderRecorder& operator=(DestructionOrderRecorder&& other) {
-    if (int_field_ != 0) {
-      RecordDestruction(int_field_);
-    }
+    RecordDestruction();
     int_field_ = other.int_field_;
-    other.int_field_ = 0;
+    record_ = std::move(other.record_);
     return *this;
   }
-  ~DestructionOrderRecorder() {
-    if (int_field_ != 0) {
-      RecordDestruction(int_field_);
+  ~DestructionOrderRecorder() { RecordDestruction(); }
+
+ private:
+  void RecordDestruction() {
+    if (record_ != nullptr) {
+      *record_ = *record_ * 10 + int_field_;
     }
   }
 
-  static void RecordDestruction(int int_field);
-  static int GetDestructionRecord();
-  static void ClearDestructionRecord();
-
- private:
   int int_field_;
+  // Null if this object has been moved from.
+  std::shared_ptr<int> record_;
 };
 
 class [[clang::trivial_abi]] FieldDestructionOrderTester final {
@@ -48,10 +59,12 @@ class [[clang::trivial_abi]] FieldDestructionOrderTester final {
         field2_(std::move(field2)),
         field3_(std::move(field3)) {}
 
-  static void DestructFromCpp(int field1, int field2, int field3) {
-    auto tester = FieldDestructionOrderTester(DestructionOrderRecorder(field1),
-                                              DestructionOrderRecorder(field2),
-                                              DestructionOrderRecorder(field3));
+  static void DestructFromCpp(int field1, int field2, int field3,
+                              absl_nonnull std::shared_ptr<int> record) {
+    auto tester =
+        FieldDestructionOrderTester(DestructionOrderRecorder(field1, record),
+                                    DestructionOrderRecorder(field2, record),
+                                    DestructionOrderRecorder(field3, record));
   }
 
  private:
@@ -60,16 +73,16 @@ class [[clang::trivial_abi]] FieldDestructionOrderTester final {
   DestructionOrderRecorder field3_;
 };
 
+// Shares ownership of `token`, so that a test can tell from `token`'s use count
+// whether this object has been destroyed.
 class [[clang::trivial_abi]] PrivateOperatorDelete final {
  public:
-  explicit PrivateOperatorDelete(int int_field) : int_field_(int_field) {}
-  ~PrivateOperatorDelete() {
-    DestructionOrderRecorder::RecordDestruction(int_field_);
-  }
+  explicit PrivateOperatorDelete(absl_nonnull std::shared_ptr<int> token)
+      : token_(std::move(token)) {}
 
  private:
   void operator delete(void*);
-  int int_field_;
+  std::shared_ptr<int> token_;
 };
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_DESTRUCTORS_FIELD_DESTRUCTION_ORDER_H_

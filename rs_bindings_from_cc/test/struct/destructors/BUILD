@@ -12,9 +12,12 @@ package(default_applicable_licenses = ["//:license"])
 
 cc_library(
     name = "destructors",
-    srcs = ["destructors.cc"],
     hdrs = ["destructors.h"],
     aspect_hints = ["//features:supported"],
+    deps = [
+        "//support:annotations",
+        "@abseil-cpp//absl/base:nullability",
+    ],
 )
 
 rust_api_from_cpp(
@@ -35,6 +38,7 @@ crubit_rust_test(
     srcs = ["destructors_test.rs"],
     deps = [
         ":destructors_rust",
+        "//support/cc_std",
         "@crate_index//:googletest",
     ],
 )
