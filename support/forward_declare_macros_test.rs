@@ -125,6 +125,18 @@ fn test_conversions() {
         assert_eq!(slice_location(complete_slice), loc);
     }
 
+    // Vec<&[]> <-> Vec<&[]>
+    {
+        let complete_array = [MyType, MyType];
+        let loc = slice_location(&complete_array);
+        let complete_vec: Vec<&[MyType]> = vec![&complete_array];
+
+        let incomplete_vec: Vec<&[MyTypeIncomplete]> = complete_vec.cpp_cast();
+        assert_eq!(slice_location(incomplete_vec[0]), loc);
+        let complete_vec: Vec<&[MyType]> = incomplete_vec.cpp_cast();
+        assert_eq!(slice_location(complete_vec[0]), loc);
+    }
+
     // [&; N] <-> [&; N]
     {
         let complete_array: [&MyType; 2] = [&complete, &complete];
