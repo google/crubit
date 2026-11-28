@@ -19,6 +19,11 @@ For instance:
     ABI using `CRUBIT_UNSAFE_BITWISE_RELOCATABLE` (or `_IF_ELIGIBLE` for
     templates, `_FIELD` for fields, and `CRUBIT_NEVER_BITWISE_RELOCATABLE` to
     force pinning).
+*   A C++ type can be mapped directly to a layout-equivalent existing Rust type
+    (suppressing automated Rust bindings for the C++ declaration) using the
+    unsafe `CRUBIT_RUST_LAYOUT_EQUIVALENT("crate::MyRustType")` annotation
+    (and, when needed for external crates in separate build targets,
+    `CRUBIT_RUST_LAYOUT_EQUIVALENT_LABEL_HINT("//pkg:target")`).
 
 <!-- TODO(jeanpierreda): should we fully enumerate everything, on this page? -->
 
