@@ -60,7 +60,7 @@ use status::{err, ok, Status, StatusOr};
 
 let success: Status = ok(());
 let value: StatusOr<i32> = ok(42);
-let failure: Status = err(status::internal("error message"));
+let failure: Status = err(status::internal!("error message"));
 ```
 
 Existing Rust `Result` types can be converted using
