@@ -1,0 +1,37 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+name: Notify Chat on New Issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  notify:
+    name: Notify Google Chat
+    runs-on: ubuntu-latest
+    env:
+      GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
+    steps:
+      - name: Send Google Chat notification
+        if: env.GCHAT_WEBHOOK_URL != ''
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          jq -n \
+            --arg number "$ISSUE_NUMBER" \
+            --arg title "$ISSUE_TITLE" \
+            --arg author "$ISSUE_AUTHOR" \
+            --arg url "$ISSUE_URL" \
+            '{text: "*New GitHub Issue <\($url)|#\($number)>*: \($title)\nOpened by \($author)\n\($url)"}' | \
+          curl --fail --silent --show-error \
+            -X POST \
+            -H 'Content-Type: application/json' \
+            --data-binary @- \
+            "$GCHAT_WEBHOOK_URL"
