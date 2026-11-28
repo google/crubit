@@ -1945,7 +1945,7 @@ fn test_generated_bindings_standard_macro_names_are_always_reserved() {
                 pub fn errno() {}
             }
         "#;
-    // `test_generated_bindings` doesn't enable `ReserveStandardMacros`, like open-source Crubit.
+    // Standard C macro names are reserved regardless of the crate's features.
     test_generated_bindings(test_src, |bindings| {
         let bindings = bindings.unwrap();
         assert_cc_matches!(
