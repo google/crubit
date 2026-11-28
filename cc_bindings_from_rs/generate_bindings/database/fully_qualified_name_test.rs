@@ -133,6 +133,7 @@ fn exported_path(path: &[&str], name: &str) -> ExportedPath {
         is_doc_hidden: false,
         is_reexport: false,
         krate: LOCAL_CRATE,
+        cc_alias_name: None,
     }
 }
 
@@ -160,6 +161,15 @@ fn spellings<'a>(paths: impl Iterator<Item = &'a ExportedPath>) -> Vec<String> {
     paths.map(spelling).collect()
 }
 
+/// The paths that each module of `krate` exports, a module at a time.
+fn module_spellings(paths: &MergedPublicPaths, krate: CrateNum) -> Vec<Vec<String>> {
+    paths
+        .modules(krate)
+        .into_iter()
+        .map(|module| module.map(|index| spelling(paths.path(index))).collect())
+        .collect()
+}
+
 /// The smallest path of a definition is its canonical path, whatever the order the paths arrive
 /// in, and the others are its aliases in sorted order.
 #[test]
@@ -168,14 +178,14 @@ fn test_crate_public_paths_picks_canonical_path_and_sorts_aliases() {
         let item = LOCAL_CRATE.as_def_id();
         let other_item = DefId { krate: LOCAL_CRATE, index: DefIndex::from_u32(1) };
         let mut paths = CratePublicPaths::default();
-        paths.insert(exported_path(&["b", "c"], "Item"));
-        paths.insert(exported_path(&["z"], "Item"));
-        paths.insert(ExportedPath { is_doc_hidden: true, ..exported_path(&[], "Item") });
-        paths.insert(exported_path(&["a"], "Renamed"));
-        paths.insert(exported_path(&["a"], "Item"));
-        paths.insert(ExportedPath { def_id: other_item, ..exported_path(&[], "Other") });
+        paths.insert_module([exported_path(&["b", "c"], "Item")]);
+        paths.insert_module([exported_path(&["z"], "Item")]);
+        paths.insert_module([ExportedPath { is_doc_hidden: true, ..exported_path(&[], "Item") }]);
+        paths.insert_module([exported_path(&["a"], "Renamed")]);
+        paths.insert_module([exported_path(&["a"], "Item")]);
+        paths.insert_module([ExportedPath { def_id: other_item, ..exported_path(&[], "Other") }]);
         // A path equal to an alias is not stored again.
-        paths.insert(exported_path(&["z"], "Item"));
+        paths.insert_module([exported_path(&["z"], "Item")]);
 
         assert_eq!(spelling(paths.canonical(item).unwrap()), "a::Item");
         assert_eq!(spellings(paths.aliases(item)), ["a::Renamed", "z::Item", "b::c::Item", "Item"]);
@@ -187,6 +197,10 @@ fn test_crate_public_paths_picks_canonical_path_and_sorts_aliases() {
         assert!(paths.canonical(unknown_item).is_none());
         assert_eq!(paths.aliases(unknown_item).count(), 0);
     });
+}
+
+fn crate_named(tcx: TyCtxt<'_>, name: &str) -> CrateNum {
+    *tcx.crates(()).iter().find(|krate| tcx.crate_name(**krate).as_str() == name).unwrap()
 }
 
 /// The paths of a definition, with each path's crate, after the crates in `krate_paths` have been
@@ -211,13 +225,10 @@ fn combined_paths(
 #[test]
 fn test_merged_public_paths_extend_respects_crate_ownership() {
     run_compiler_for_testing("", |tcx| {
-        let crate_named = |name: &str| {
-            *tcx.crates(()).iter().find(|krate| tcx.crate_name(**krate).as_str() == name).unwrap()
-        };
-        let (core, std) = (crate_named("core"), crate_named("std"));
+        let (core, std) = (crate_named(tcx, "core"), crate_named(tcx, "std"));
         let table = |paths: &[ExportedPath]| {
             let mut table = CratePublicPaths::default();
-            paths.iter().cloned().for_each(|path| table.insert(path));
+            table.insert_module(paths.iter().cloned());
             table
         };
         let path = |def_id: DefId, krate: CrateNum, path: &[&str], name: &str| ExportedPath {
@@ -295,5 +306,114 @@ fn test_merged_public_paths_extend_respects_crate_ownership() {
             assert_eq!(canonical, (first_krate, "Item".into()));
             assert_eq!(aliases, ["Item"]);
         }
+    });
+}
+
+/// The paths inserted together as one module are listed together, in the order they were given.
+#[test]
+fn test_merged_public_paths_lists_paths_by_module() {
+    run_compiler_for_testing("", |tcx| {
+        let item = LOCAL_CRATE.as_def_id();
+        let other_item = DefId { krate: LOCAL_CRATE, index: DefIndex::from_u32(1) };
+        let mut paths = CratePublicPaths::default();
+        paths.insert_module([
+            exported_path(&[], "Item"),
+            ExportedPath { def_id: other_item, ..exported_path(&[], "Other") },
+        ]);
+        // A module that exports nothing is not listed.
+        paths.insert_module([]);
+        paths.insert_module([
+            exported_path(&["m"], "Renamed"),
+            ExportedPath { def_id: other_item, ..exported_path(&["m"], "Other") },
+            exported_path(&["m"], "Item"),
+            // A path equal to an alias is not stored, so its module does not list it twice.
+            exported_path(&["m"], "Renamed"),
+        ]);
+        let mut all_paths = MergedPublicPaths::default();
+        all_paths.extend(tcx, &paths, |_| true);
+
+        assert_eq!(
+            module_spellings(&all_paths, LOCAL_CRATE),
+            [vec!["Item", "Other"], vec!["m::Renamed", "m::Other", "m::Item"]]
+        );
+        assert!(all_paths.modules(CrateNum::from_u32(1)).is_empty());
+        assert_eq!(spelling(all_paths.canonical(item).unwrap()), "Item");
+        assert_eq!(spellings(all_paths.aliases(item)), ["m::Item", "m::Renamed"]);
+    });
+}
+
+/// After the paths of a second crate are added, each crate's modules still list their own paths,
+/// and a path reached through its module is the one reached through its definition.
+#[test]
+fn test_merged_public_paths_modules_survive_extend() {
+    run_compiler_for_testing("", |tcx| {
+        let core = crate_named(tcx, "core");
+        let core_item = core.as_def_id();
+        let local_item = LOCAL_CRATE.as_def_id();
+        let path = |def_id: DefId, krate: CrateNum, path: &[&str], name: &str| ExportedPath {
+            def_id,
+            krate,
+            ..exported_path(path, name)
+        };
+
+        let mut core_paths = CratePublicPaths::default();
+        core_paths.insert_module([
+            path(core_item, core, &["m"], "Item"),
+            path(core_item, core, &["m"], "Renamed"),
+        ]);
+        core_paths.insert_module([path(core_item, core, &["m", "n"], "Deep")]);
+        let mut local_paths = CratePublicPaths::default();
+        local_paths.insert_module([
+            path(core_item, LOCAL_CRATE, &[], "Item"),
+            path(local_item, LOCAL_CRATE, &[], "Local"),
+        ]);
+        local_paths.insert_module([path(local_item, LOCAL_CRATE, &["x"], "Local")]);
+
+        let mut all_paths = MergedPublicPaths::default();
+        all_paths.extend(tcx, &core_paths, |_| true);
+        all_paths.extend(tcx, &local_paths, |_| true);
+
+        assert_eq!(
+            module_spellings(&all_paths, core),
+            [vec!["m::Item", "m::Renamed"], vec!["m::n::Deep"]]
+        );
+        assert_eq!(
+            module_spellings(&all_paths, LOCAL_CRATE),
+            [vec!["Item", "Local"], vec!["x::Local"]]
+        );
+        let local_modules = all_paths
+            .modules(LOCAL_CRATE)
+            .into_iter()
+            .map(|module| module.collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+        for index in local_modules.iter().flatten() {
+            assert_eq!(all_paths.path(*index).krate, LOCAL_CRATE);
+        }
+
+        // `core` defines `core_item`, so the local crate's path for it is an alias, while the
+        // local crate's shortest path for its own definition is canonical.
+        let (reexport, local, nested_local) =
+            (local_modules[0][0], local_modules[0][1], local_modules[1][0]);
+        assert!(!all_paths.is_canonical(reexport));
+        assert!(all_paths.is_canonical(local));
+        assert!(!all_paths.is_canonical(nested_local));
+
+        // A name stored through a module's path is seen from the path's definition.
+        let (alias_name, canonical_name) = (Symbol::intern("Item_"), Symbol::intern("Local_"));
+        all_paths.set_cc_alias_name(reexport, Ok(alias_name));
+        all_paths.set_cc_alias_name(local, Ok(canonical_name));
+        let named = |path: &ExportedPath, expected: Symbol| {
+            path.cc_alias_name
+                .as_ref()
+                .is_some_and(|name| name.as_ref().is_ok_and(|n| *n == expected))
+        };
+        let aliases = all_paths.aliases(core_item).collect::<Vec<_>>();
+        assert_eq!(aliases.len(), 3);
+        for alias in aliases {
+            assert_eq!(named(alias, alias_name), alias.krate == LOCAL_CRATE);
+        }
+        assert!(named(all_paths.canonical(local_item).unwrap(), canonical_name));
+        assert!(all_paths.canonical(core_item).unwrap().cc_alias_name.is_none());
+        assert!(local_paths.canonical(local_item).unwrap().cc_alias_name.is_none());
     });
 }

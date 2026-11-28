@@ -13,8 +13,10 @@ use quote::quote;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::Symbol;
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::ops::Range;
 use std::rc::Rc;
 
 /// Represents the unqualified name of a Rust item. For the fully qualified name
@@ -35,6 +37,10 @@ pub struct UnqualifiedName {
     /// ```
     /// will be generated as a C++ struct named `Bar` instead of `Foo`.
     pub cpp_name: Symbol,
+
+    /// True if `cpp_name` was explicitly specified via `#[crubit_annotate::...(cpp_name="...")]`
+    /// rather than derived implicitly by unkeywording `rs_name`.
+    pub has_explicit_cpp_name: bool,
 
     /// The fully-qualified C++ type to use for this, if this was originally a C++ type.
     ///
@@ -169,7 +175,7 @@ impl FullyQualifiedName {
 ///
 /// This path is not necessarily semantically meaningful (i.e. it won't always have a corresponding
 /// scope and DefId), but is always valid to spell out in syntax.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct ExportedPath {
     /// The definition that this path names.
     pub def_id: DefId,
@@ -188,7 +194,19 @@ pub struct ExportedPath {
     pub is_reexport: bool,
     /// The crate that defines this path.
     pub krate: CrateNum,
+    /// Collision-disambiguated C++ identifier for this path when emitted as an alias in the source
+    /// crate, if resolved by scope disambiguation.
+    pub cc_alias_name: Option<Result<Symbol>>,
 }
+
+/// Two paths are equal when neither is preferred over the other (see the `Ord` implementation).
+impl PartialEq for ExportedPath {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == std::cmp::Ordering::Equal
+    }
+}
+
+impl Eq for ExportedPath {}
 
 // Checks for a list of known clang builtin macros and renames their namespaces to avoid
 // collisions in C++ preprocessing. Generating a namespace with the same name as a macro causes
@@ -229,17 +247,108 @@ pub fn rename_c_stdlib_functions(ns: Rc<str>) -> Rc<str> {
     ns
 }
 
+/// Normalizes a Rust module name into its C++ namespace identifier by renaming known Clang
+/// builtin macros (`unix` -> `rs_unix`, etc.) and escaping C++ reserved keywords (`int` -> `int_`).
+pub fn format_cc_namespace_segment(seg: Symbol) -> Rc<str> {
+    let renamed = rename_clang_builtin_macros(Rc::from(seg.as_str()));
+    match code_gen_utils::unkeyword_cpp_ident(&renamed) {
+        Cow::Borrowed(_) => renamed,
+        Cow::Owned(unkeyworded) => Rc::from(unkeyworded),
+    }
+}
+
+/// Computes the [`UnqualifiedName`] of `def_id` when exposed under the Rust identifier `rs_name`.
+pub fn unqualified_name_for_def(
+    db: &BindingsGenerator<'_>,
+    def_id: DefId,
+    rs_name: Symbol,
+) -> UnqualifiedName {
+    let tcx = db.tcx();
+    let attributes = crubit_attr::get_attrs(tcx, def_id)
+        .unwrap_or_else(|e| panic!("Malformed crubit_attrs on {}: {e}", tcx.def_path_str(def_id)));
+    let has_explicit_cpp_name = attributes.cpp_name.is_some();
+    let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).unwrap_or_else(|| {
+        // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
+        // This prevents silly Rust names like "reinterpret_cast" from trying to be named
+        // "reinterpret_cast" in C++, which would be an error.
+        // If the user has opted in to one of these reserved names by setting cpp_name, however,
+        // we should _not_ implicitly change it, and should instead given them an error.
+        // Hence, this unkeywording behavior only happens in the case where we implicitly
+        // delegate to the Rust name.
+        Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
+    });
+    let cpp_type = attributes.cpp_type;
+    UnqualifiedName { cpp_name, rs_name, has_explicit_cpp_name, cpp_type }
+}
+
 impl ExportedPath {
+    /// Resolves the unqualified Rust and C++ names for this exported path of `self.def_id`.
+    ///
+    /// When this path is canonical (`is_canonical == true`), Crubit attributes (`cpp_name`,
+    /// `cpp_type`) are read from `self.def_id` (or from `self.type_alias_def_id` when the
+    /// canonical path is a `pub type` alias with non-default attributes or from another crate).
+    /// When this path is a non-canonical alias (`is_canonical == false`), attributes are read from
+    /// `self.type_alias_def_id` if it originates from a `pub type` alias, or the `pub use`
+    /// identifier `self.name` is unkeyworded directly.
+    ///
+    /// If alias disambiguation has renamed this path (`self.cc_alias_name == Some(Ok(name))`),
+    /// the returned `UnqualifiedName::cpp_name` reflects the disambiguated C++ identifier.
+    pub fn unqualified_name(
+        &self,
+        db: &BindingsGenerator<'_>,
+        is_canonical: bool,
+    ) -> UnqualifiedName {
+        let tcx = db.tcx();
+        let attr_def_id = match self.type_alias_def_id {
+            Some(alias_def_id) => {
+                let attrs = crubit_attr::get_attrs(tcx, alias_def_id).unwrap();
+                if is_canonical
+                    && attrs == crubit_attr::CrubitAttrs::default()
+                    && self.def_id.krate == alias_def_id.krate
+                {
+                    Some(self.def_id)
+                } else {
+                    Some(alias_def_id)
+                }
+            }
+            None if is_canonical => Some(self.def_id),
+            None => None,
+        };
+        let mut unqualified = match attr_def_id {
+            Some(def_id) => unqualified_name_for_def(db, def_id, self.name),
+            None => {
+                let cpp_name = Symbol::intern(
+                    code_gen_utils::unkeyword_cpp_ident(self.name.as_str()).as_ref(),
+                );
+                UnqualifiedName {
+                    rs_name: self.name,
+                    cpp_name,
+                    has_explicit_cpp_name: false,
+                    cpp_type: None,
+                }
+            }
+        };
+        if let Some(Ok(cc_name)) = self.cc_alias_name {
+            unqualified.cpp_name = cc_name;
+        }
+        unqualified
+    }
+
+    /// Returns the collision-disambiguated C++ identifier for this path, or the disambiguation /
+    /// identifier-formatting error if it could not be bound.
+    pub fn cc_name(&self, db: &BindingsGenerator<'_>, is_canonical: bool) -> Result<Symbol> {
+        if let Some(res) = &self.cc_alias_name {
+            return res.clone();
+        }
+        Ok(self.unqualified_name(db, is_canonical).cpp_name)
+    }
+
     pub fn to_namespace_qualifier(&self, db: &BindingsGenerator) -> NamespaceQualifier {
         let features = db.crate_features(self.krate);
         let use_leading_colons =
             features.contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
         NamespaceQualifier::new(
-            self.path
-                .iter()
-                .map(|s| Rc::<str>::from(s.as_str()))
-                .map(rename_clang_builtin_macros)
-                .collect::<Vec<_>>(),
+            self.path.iter().map(|&s| format_cc_namespace_segment(s)),
             use_leading_colons,
         )
     }
@@ -319,6 +428,11 @@ impl CrateOwnershipRank {
     }
 }
 
+/// Position of an [`ExportedPath`] in the [`MergedPublicPaths`] that stores it. Only
+/// [`MergedPublicPaths::modules`] hands these out.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PathIndex(usize);
+
 /// The paths that name one definition, as positions in the table that stores them.
 ///
 /// The canonical path is the preferred path that should be treated as the primary definition for
@@ -338,12 +452,15 @@ impl DefinitionPaths {
     }
 }
 
-/// Public paths, each stored once, and the positions of the paths that name each definition.
+/// Public paths, each stored once, and the positions of the paths that name each definition
+/// and of the paths that each module exports.
 #[derive(Debug, Default)]
 struct PathTable {
     paths: Vec<ExportedPath>,
     /// The paths that name each definition.
     by_def: HashMap<DefId, DefinitionPaths>,
+    /// The positions in `paths` of the paths that each module exports.
+    modules: Vec<Range<usize>>,
 }
 
 impl PathTable {
@@ -372,9 +489,20 @@ pub struct CratePublicPaths {
 }
 
 impl CratePublicPaths {
+    /// Adds the paths that one module exports.
+    pub fn insert_module(&mut self, module_paths: impl IntoIterator<Item = ExportedPath>) {
+        let start = self.table.paths.len();
+        for path in module_paths {
+            self.insert(path);
+        }
+        if self.table.paths.len() > start {
+            self.table.modules.push(start..self.table.paths.len());
+        }
+    }
+
     /// Adds a path of the definition `path.def_id`, unless the definition already has an equal
     /// path.
-    pub fn insert(&mut self, path: ExportedPath) {
+    fn insert(&mut self, path: ExportedPath) {
         use std::collections::hash_map::Entry;
         let index = self.table.paths.len();
         match self.table.by_def.entry(path.def_id) {
@@ -451,6 +579,13 @@ impl MergedPublicPaths {
         use std::collections::hash_map::Entry;
         let offset = self.table.paths.len();
         self.table.paths.extend_from_slice(&krate_paths.table.paths);
+        self.table.modules.extend(
+            krate_paths
+                .table
+                .modules
+                .iter()
+                .map(|module| module.start + offset..module.end + offset),
+        );
         for (&def_id, paths) in &krate_paths.table.by_def {
             if !keep(def_id) {
                 continue;
@@ -498,5 +633,34 @@ impl MergedPublicPaths {
     /// The paths of `def_id` other than its canonical path, a crate at a time.
     pub fn aliases(&self, def_id: DefId) -> impl Iterator<Item = &ExportedPath> {
         self.table.aliases(def_id)
+    }
+
+    /// The paths that each module of `krate` exports, a module at a time.
+    pub fn modules(&self, krate: CrateNum) -> Vec<impl Iterator<Item = PathIndex> + use<>> {
+        self.table
+            .modules
+            .iter()
+            .filter(|module| self.table.paths[module.start].krate == krate)
+            .map(|module| module.clone().map(PathIndex))
+            .collect()
+    }
+
+    /// The path at `index`.
+    pub fn path(&self, index: PathIndex) -> &ExportedPath {
+        &self.table.paths[index.0]
+    }
+
+    /// Whether the path at `index` is the canonical path of the definition it names.
+    pub fn is_canonical(&self, index: PathIndex) -> bool {
+        self.table
+            .by_def
+            .get(&self.table.paths[index.0].def_id)
+            .is_some_and(|paths| paths.canonical == index.0)
+    }
+
+    /// Stores the collision-disambiguated C++ identifier of the path at `index`, or the reason
+    /// it has none.
+    pub fn set_cc_alias_name(&mut self, index: PathIndex, cc_alias_name: Result<Symbol>) {
+        self.table.paths[index.0].cc_alias_name = Some(cc_alias_name);
     }
 }

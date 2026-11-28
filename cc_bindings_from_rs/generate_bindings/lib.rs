@@ -28,9 +28,9 @@ use database::code_snippet::{
     RsSnippet, TemplateSpecialization,
 };
 use database::{
-    rename_clang_builtin_macros, CoreBindingsCommon, CrateOwnershipRank, CratePublicPaths,
-    ExportedPath, FullyQualifiedName, MergedPublicPaths, StaticMethodMode, TypeLocation,
-    UnqualifiedName,
+    format_cc_namespace_segment, unqualified_name_for_def, CoreBindingsCommon, CrateOwnershipRank,
+    CratePublicPaths, ExportedPath, FullyQualifiedName, MergedPublicPaths, PathIndex,
+    StaticMethodMode, TypeLocation, UnqualifiedName,
 };
 pub use database::{
     BindingsGenerator, CopyCodegenStyle, CppTypeSpecialization, IncludeGuard, MoveCodegenStyle,
@@ -597,6 +597,7 @@ fn public_paths_by_def_id(db: &BindingsGenerator<'_>, crate_num: CrateNum) -> Cr
     });
 
     let mut add_child = |bfs_queue: &mut VecDeque<_>,
+                         module_paths: &mut Vec<ExportedPath>,
                          child: &ModChild,
                          parent: &[Symbol],
                          is_doc_hidden: bool| {
@@ -688,7 +689,7 @@ fn public_paths_by_def_id(db: &BindingsGenerator<'_>, crate_num: CrateNum) -> Cr
             return;
         }
 
-        visible_parent_map.insert(ExportedPath {
+        module_paths.push(ExportedPath {
             def_id,
             path: parent.to_vec(),
             name: child.ident.name,
@@ -696,6 +697,7 @@ fn public_paths_by_def_id(db: &BindingsGenerator<'_>, crate_num: CrateNum) -> Cr
             is_doc_hidden,
             is_reexport: !child.reexport_chain.is_empty(),
             krate: crate_num,
+            cc_alias_name: None,
         });
         // TODO: b/459865403 - Support bindings for `pub extern crate core`.
         let is_extern_crate_core = |child: &ModChild| {
@@ -718,9 +720,11 @@ fn public_paths_by_def_id(db: &BindingsGenerator<'_>, crate_num: CrateNum) -> Cr
     while let Some(mod_like) = bfs_queue.pop_front() {
         let module_children = module_children(tcx, mod_like.def_id);
         let is_doc_hidden = mod_like.is_doc_hidden || tcx.is_doc_hidden(mod_like.def_id);
+        let mut module_paths = Vec::new();
         for child in module_children.iter() {
-            add_child(bfs_queue, child, &mod_like.path_so_far, is_doc_hidden);
+            add_child(bfs_queue, &mut module_paths, child, &mod_like.path_so_far, is_doc_hidden);
         }
+        visible_parent_map.insert_module(module_paths);
     }
 
     visible_parent_map
@@ -752,6 +756,7 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> MergedPublicPaths {
                     .is_ok_and(|attrs| attrs.cpp_type.is_some() || attrs.specializes_cpp_type)
         });
     }
+    disambiguate_cc_public_paths(db, &mut out);
     out
 }
 
@@ -784,32 +789,20 @@ fn module_children(tcx: TyCtxt<'_>, parent: DefId) -> &[ModChild] {
 }
 
 fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<UnqualifiedName> {
-    let tcx = db.tcx();
-    let item_name = db
-        .all_public_paths_by_def_id()
-        .canonical(def_id)
-        .map(|path| path.name)
-        .or_else(|| tcx.opt_item_name(def_id))?;
-    let rs_name = item_name;
-    let attributes = crubit_attr::get_attrs(tcx, def_id)
-        .unwrap_or_else(|e| panic!("Malformed crubit_attrs on {}: {e}", tcx.def_path_str(def_id)));
-    let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).unwrap_or_else(|| {
-        // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
-        // This prevents silly Rust names like "reinterpret_cast" from trying to be named
-        // "reinterpret_cast" in C++, which would be an error.
-        // If the user has opted in to one of these reserved names by setting cpp_name, however,
-        // we should _not_ implicitly change it, and should instead given them an error.
-        // Hence, this unkeywording behavior only happens in the case where we implicitly
-        // delegate to the Rust name.
-        Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
-    });
-    let cpp_type = attributes.cpp_type;
-    Some(UnqualifiedName { cpp_name, rs_name, cpp_type })
+    if let Some(canonical_path) = db.all_public_paths_by_def_id().canonical(def_id) {
+        return Some(canonical_path.unqualified_name(db, /* is_canonical= */ true));
+    }
+    let rs_name = db.tcx().opt_item_name(def_id)?;
+    Some(unqualified_name_for_def(db, def_id, rs_name))
 }
 
-/// Implementation of `BindingsGenerator::symbol_canonical_name`.
-fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<FullyQualifiedName> {
+/// Computes the fully qualified name of a definition from its canonical path.
+fn resolve_canonical_name(
+    db: &BindingsGenerator<'_>,
+    canonical_path: &ExportedPath,
+) -> Result<FullyQualifiedName> {
     let tcx = db.tcx();
+    let def_id = canonical_path.def_id;
     assert!(!matches!(tcx.def_kind(def_id), DefKind::Use));
 
     // Symbols that should not receive bindings should not have a canonical name, so that we do not
@@ -817,55 +810,27 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
     // etc.).
     should_receive_bindings(db, def_id)?;
 
-    let (full_path_strs, type_alias_def_id, krate_num) = {
-        // Select a canonical path for this symbol from available paths.
-        let canonical_path = db
-            .all_public_paths_by_def_id()
-            .canonical(def_id)
-            .ok_or_else(|| anyhow!("Not a public or a supported reexported type (b/262052635)."))?;
+    // `DefiningCrate` outranks everything, so a `TransitiveReexport` winner proves the stdlib
+    // withheld a path for this item on purpose: the walk above drops everything under
+    // `std::os` (to avoid colliding with the C++ standard library) and everything unstable.
+    // Letting an arbitrary re-exporter claim the vacated name instead is worse than having no
+    // name, because each crate that re-exports the item defines its own incompatible C++ type
+    // for it.
+    //
+    // Non-stdlib crates rely on re-exporter naming to surface types from dependencies that are
+    // not directly visible here, so they are left alone.
+    if matches!(tcx.crate_name(def_id.krate).as_str(), "std" | "core" | "alloc")
+        && CrateOwnershipRank::new(tcx, def_id, canonical_path.krate)
+            == CrateOwnershipRank::TransitiveReexport
+    {
+        bail!(
+            "Only reachable through a transitive re-export of the standard library \
+             (b/262052635)."
+        );
+    }
 
-        // `DefiningCrate` outranks everything, so a `TransitiveReexport` winner proves the stdlib
-        // withheld a path for this item on purpose: the walk above drops everything under
-        // `std::os` (to avoid colliding with the C++ standard library) and everything unstable.
-        // Letting an arbitrary re-exporter claim the vacated name instead is worse than having no
-        // name, because each crate that re-exports the item defines its own incompatible C++ type
-        // for it.
-        //
-        // Non-stdlib crates rely on re-exporter naming to surface types from dependencies that are
-        // not directly visible here, so they are left alone.
-        if matches!(tcx.crate_name(def_id.krate).as_str(), "std" | "core" | "alloc")
-            && CrateOwnershipRank::new(tcx, def_id, canonical_path.krate)
-                == CrateOwnershipRank::TransitiveReexport
-        {
-            bail!(
-                "Only reachable through a transitive re-export of the standard library \
-                 (b/262052635)."
-            );
-        }
-
-        // If the use is in the same scope as the canonical path, we want to use the original
-        // name of the symbol, not the alias.
-        (
-            canonical_path.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
-            canonical_path.type_alias_def_id,
-            canonical_path.krate,
-        )
-    };
-
-    let unqualified = type_alias_def_id
-        .and_then(|alias_def_id| {
-            use crubit_attr::CrubitAttrs;
-            let attrs = crubit_attr::get_attrs(tcx, alias_def_id).unwrap();
-            if attrs == CrubitAttrs::default() && def_id.krate == alias_def_id.krate {
-                None
-            } else {
-                db.symbol_unqualified_name(alias_def_id)
-            }
-        })
-        .or_else(|| db.symbol_unqualified_name(def_id))
-        .ok_or_else(|| {
-            anyhow!("Failed to get unqualified name for `{}`", tcx.def_path_str(def_id))
-        })?;
+    let krate_num = canonical_path.krate;
+    let unqualified = canonical_path.unqualified_name(db, /* is_canonical= */ true);
 
     // `crate_name` gets the crate name written out in the rmeta file, which is not always the name
     // we want to spell out in our generated bindings. Proto targets, for example, rename their
@@ -887,20 +852,15 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
         // not supported by the compiler and must not be considered.
         //
         // See https://github.com/rust-lang/rust/issues/144333 for details.
-        let path_strs: Vec<&str> = full_path_strs.iter().map(|x| &**x).collect();
-        if matches!(&*path_strs, ["dsl"]) {
+        if canonical_path.path.len() == 1 && canonical_path.path[0].as_str() == "dsl" {
             bail!("Unsupported ambiguous re-export in polars_plan::dsl");
         }
     }
 
-    let features = db.crate_features(krate_num);
-    let use_leading_colons =
-        features.contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
-
-    let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone(), use_leading_colons);
-    let cpp_ns_path = NamespaceQualifier::new(
-        full_path_strs.into_iter().map(rename_clang_builtin_macros),
-        use_leading_colons,
+    let cpp_ns_path = canonical_path.to_namespace_qualifier(db);
+    let rs_mod_path = NamespaceQualifier::new(
+        canonical_path.path.iter().map(|s| Rc::<str>::from(s.as_str())),
+        cpp_ns_path.use_leading_colons,
     );
     let cpp_top_level_ns = format_top_level_ns_for_crate(db, krate_num);
     Ok(FullyQualifiedName {
@@ -909,13 +869,38 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
         cpp_top_level_ns: cpp_top_level_ns.into(),
         cpp_ns_path,
         rs_mod_path,
-        unqualified: *unqualified,
+        unqualified,
     })
 }
 
+/// Implementation of `BindingsGenerator::symbol_canonical_name`.
+fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<FullyQualifiedName> {
+    let canonical_path = db
+        .all_public_paths_by_def_id()
+        .canonical(def_id)
+        .ok_or_else(|| anyhow!("Not a public or a supported reexported type (b/262052635)."))?;
+    resolve_canonical_name(db, canonical_path)
+}
+
+fn trait_has_generic_ty_args(tcx: TyCtxt<'_>, def_id: DefId) -> bool {
+    let generics = tcx.generics_of(def_id);
+    // Traits do not support const generics; skip the implicit `Self` type parameter when present.
+    generics
+        .own_params
+        .iter()
+        .filter(|param| matches!(param.kind, GenericParamDefKind::Type { .. }))
+        .nth(usize::from(generics.has_self))
+        .is_some()
+}
+
+/// Generates the C++ declaration that makes `def_id` available under another of its paths.
+///
+/// `using_name` is the Rust name of that path. `cc_alias_name` is the C++ name chosen for it, or
+/// the reason it has none; an alias of a function is named after `using_name` instead.
 fn generate_using<'tcx>(
     db: &BindingsGenerator<'tcx>,
     using_name: &Symbol,
+    cc_alias_name: Result<Symbol>,
     def_id: DefId,
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
@@ -962,9 +947,10 @@ fn generate_using<'tcx>(
                     template_args,
                     ..
                 } = get_generic_adt_header(db, def_id)?;
+                let cc_alias_name = cc_alias_name?;
                 let doc_comment = generate_doc_comment(db, def_id);
-                let using_name_ident =
-                    format_cc_ident(using_name.as_str()).context("Error formatting using name")?;
+                let using_name_ident = format_cc_ident(cc_alias_name.as_str())
+                    .context("Error formatting using name")?;
                 let deprecated_tag = generate_deprecated_tag(tcx, def_id);
                 let bracketed_alias_name = capture_for_kythe(db, &using_name_ident);
 
@@ -983,10 +969,11 @@ fn generate_using<'tcx>(
                     tcx.param_env(def_id),
                     tcx.type_of(def_id).instantiate_identity(),
                 );
-                create_type_alias(db, def_id, using_name.as_str(), alias_type)?
+                let cc_alias_name = cc_alias_name?;
+                create_type_alias(db, def_id, cc_alias_name.as_str(), alias_type)?
             }
         }
-        DefKind::TyAlias => generate_type_alias(db, def_id, using_name.as_str())?,
+        DefKind::TyAlias => generate_type_alias(db, def_id, cc_alias_name)?,
         DefKind::Trait => {
             if !db.supported_traits().contains(&def_id) {
                 bail!(
@@ -994,19 +981,7 @@ fn generate_using<'tcx>(
                     tcx.def_path_str(def_id)
                 )
             }
-            let generics = tcx.generics_of(def_id);
-            // Traits do not support const generics.
-            let generic_ty_args_count = generics
-                .own_params
-                .iter()
-                .filter(|param| matches!(param.kind, GenericParamDefKind::Type { .. }))
-                .count();
-            let has_generic_ty_args = if generics.has_self {
-                generic_ty_args_count > 1
-            } else {
-                generic_ty_args_count > 0
-            };
-            if has_generic_ty_args {
+            if trait_has_generic_ty_args(tcx, def_id) {
                 bail!("Aliases to generic trait `{}` are not supported.", tcx.def_path_str(def_id))
             }
             let canonical_name = db.symbol_canonical_name(def_id).expect(
@@ -1014,8 +989,9 @@ fn generate_using<'tcx>(
             );
 
             let trait_name = canonical_name.format_for_cc(db)?;
+            let cc_alias_name = cc_alias_name?;
             let using_name_ident =
-                format_cc_ident(using_name.as_str()).context("Error formatting using name")?;
+                format_cc_ident(cc_alias_name.as_str()).context("Error formatting using name")?;
             let mut prereqs = CcPrerequisites::default();
             prereqs.depend_on_def(db, def_id)?;
             let tokens = if using_name_ident == canonical_name.unqualified.cpp_name.as_str() {
@@ -1057,92 +1033,93 @@ fn generate_using<'tcx>(
     Ok(snippet)
 }
 
+fn is_supported_trait_def(tcx: TyCtxt<'_>, trait_id: DefId) -> bool {
+    // Traits do not support const generics.
+    let has_const_generics = tcx
+        .generics_of(trait_id)
+        .own_params
+        .iter()
+        .any(|param| matches!(param.kind, GenericParamDefKind::Const { .. }));
+    if has_const_generics {
+        return false;
+    }
+
+    let trait_def = tcx.trait_def(trait_id);
+    // Filter out traits that don't have meaningful impls or exist to interact with the
+    // compiler in ways we don't want to reflect in FFI bindings (Sized, etc).
+    let has_meaningful_impl = !(trait_def.is_marker
+        || trait_def.is_fundamental
+        || trait_def.deny_explicit_impl
+        || trait_def.has_auto_impl);
+    // List of traits which we handle specially, usually in generate_struct_and_union, and
+    // so do not want to bind here. Doing so causes duplicate thunks to be generated.
+    let lang_items = tcx.lang_items();
+    let excluded_traits = [
+        lang_items.drop_trait(),
+        lang_items.clone_trait(),
+        lang_items.copy_trait(),
+        tcx.get_diagnostic_item(sym::Into),
+        tcx.get_diagnostic_item(sym::From),
+        tcx.get_diagnostic_item(sym::PartialEq),
+        tcx.get_diagnostic_item(sym::Default),
+        tcx.get_diagnostic_item(sym::Hash),
+        lang_items.partial_ord_trait(),
+        // std::ops traits:
+        lang_items.add_trait(),
+        lang_items.add_assign_trait(),
+        lang_items.sub_trait(),
+        lang_items.sub_assign_trait(),
+        lang_items.mul_trait(),
+        lang_items.mul_assign_trait(),
+        lang_items.div_trait(),
+        lang_items.div_assign_trait(),
+        lang_items.rem_trait(),
+        lang_items.rem_assign_trait(),
+        lang_items.neg_trait(),
+        lang_items.not_trait(),
+        lang_items.bitand_trait(),
+        lang_items.bitand_assign_trait(),
+        lang_items.bitor_trait(),
+        lang_items.bitor_assign_trait(),
+        lang_items.bitxor_trait(),
+        lang_items.bitxor_assign_trait(),
+        lang_items.shl_trait(),
+        lang_items.shl_assign_trait(),
+        lang_items.shr_trait(),
+        lang_items.shr_assign_trait(),
+        lang_items.index_trait(),
+        lang_items.index_mut_trait(),
+        lang_items.deref_trait(),
+        lang_items.deref_mut_trait(),
+        lang_items.deref_pure_trait(),
+        lang_items.fn_trait(),
+        lang_items.fn_mut_trait(),
+        lang_items.fn_once_trait(),
+        lang_items.async_fn_trait(),
+        lang_items.async_fn_mut_trait(),
+        lang_items.async_fn_once_trait(),
+        lang_items.coroutine_trait(),
+        lang_items.coerce_unsized_trait(),
+        lang_items.dispatch_from_dyn_trait(),
+        lang_items.receiver_trait(),
+        lang_items.legacy_receiver_trait(),
+        lang_items.try_trait(),
+    ];
+    let is_excluded_builtin = excluded_traits.iter().any(|id| id.eq(&Some(trait_id)));
+
+    let included_auto_traits = [lang_items.unpin_trait()];
+    let is_included_auto_trait = included_auto_traits.iter().any(|id| id.eq(&Some(trait_id)));
+
+    (is_included_auto_trait || has_meaningful_impl) && !is_excluded_builtin
+}
+
 // Implementation of `BindingsGenerator::supported_traits`.
 fn supported_traits(db: &BindingsGenerator<'_>) -> Vec<DefId> {
     let tcx = db.tcx();
     tcx.visible_traits()
         .filter(|trait_id| {
             // Does the trait get bindings?
-            db.symbol_canonical_name(*trait_id).is_ok()
-        })
-        .filter(|trait_id| {
-            // Traits do not support const generics.
-            let has_const_generics = tcx
-                .generics_of(*trait_id)
-                .own_params
-                .iter()
-                .any(|param| matches!(param.kind, GenericParamDefKind::Const { .. }));
-            !has_const_generics
-        })
-        .filter(|trait_id| {
-            let trait_def = tcx.trait_def(*trait_id);
-            // Filter out traits that don't have meaningful impls or exist to interact with the
-            // compiler in ways we don't want to reflect in FFI bindings (Sized, etc).
-            let has_meaningful_impl = !(trait_def.is_marker
-                || trait_def.is_fundamental
-                || trait_def.deny_explicit_impl
-                || trait_def.has_auto_impl);
-            // List of traits which we handle specially, usually in generate_struct_and_union, and
-            // so do not want to bind here. Doing so causes duplicate thunks to be generated.
-            let lang_items = tcx.lang_items();
-            let excluded_traits = [
-                lang_items.drop_trait(),
-                lang_items.clone_trait(),
-                lang_items.copy_trait(),
-                tcx.get_diagnostic_item(sym::Into),
-                tcx.get_diagnostic_item(sym::From),
-                tcx.get_diagnostic_item(sym::PartialEq),
-                tcx.get_diagnostic_item(sym::Default),
-                tcx.get_diagnostic_item(sym::Hash),
-                lang_items.partial_ord_trait(),
-                // std::ops traits:
-                lang_items.add_trait(),
-                lang_items.add_assign_trait(),
-                lang_items.sub_trait(),
-                lang_items.sub_assign_trait(),
-                lang_items.mul_trait(),
-                lang_items.mul_assign_trait(),
-                lang_items.div_trait(),
-                lang_items.div_assign_trait(),
-                lang_items.rem_trait(),
-                lang_items.rem_assign_trait(),
-                lang_items.neg_trait(),
-                lang_items.not_trait(),
-                lang_items.bitand_trait(),
-                lang_items.bitand_assign_trait(),
-                lang_items.bitor_trait(),
-                lang_items.bitor_assign_trait(),
-                lang_items.bitxor_trait(),
-                lang_items.bitxor_assign_trait(),
-                lang_items.shl_trait(),
-                lang_items.shl_assign_trait(),
-                lang_items.shr_trait(),
-                lang_items.shr_assign_trait(),
-                lang_items.index_trait(),
-                lang_items.index_mut_trait(),
-                lang_items.deref_trait(),
-                lang_items.deref_mut_trait(),
-                lang_items.deref_pure_trait(),
-                lang_items.fn_trait(),
-                lang_items.fn_mut_trait(),
-                lang_items.fn_once_trait(),
-                lang_items.async_fn_trait(),
-                lang_items.async_fn_mut_trait(),
-                lang_items.async_fn_once_trait(),
-                lang_items.coroutine_trait(),
-                lang_items.coerce_unsized_trait(),
-                lang_items.dispatch_from_dyn_trait(),
-                lang_items.receiver_trait(),
-                lang_items.legacy_receiver_trait(),
-                lang_items.try_trait(),
-            ];
-            let is_excluded_builtin = excluded_traits.iter().any(|id| id.eq(&Some(*trait_id)));
-
-            let included_auto_traits = [lang_items.unpin_trait()];
-            let is_included_auto_trait =
-                included_auto_traits.iter().any(|id| id.eq(&Some(*trait_id)));
-
-            (is_included_auto_trait || has_meaningful_impl) && !is_excluded_builtin
+            db.symbol_canonical_name(*trait_id).is_ok() && is_supported_trait_def(tcx, *trait_id)
         })
         .collect::<Vec<DefId>>()
 }
@@ -1200,18 +1177,182 @@ fn generate_trait<'tcx>(
     Ok(ApiSnippets { main_api, ..Default::default() })
 }
 
+/// Picks the first valid C++ identifier derived from `base` that is not in `taken_names` and does
+/// not introduce a reserved double underscore (`__`, C++ `[lex.name]`).
+///
+/// Follows Crubit's C++ keyword-escaping convention (`Foo` -> `Foo_`) when `base` does not already
+/// end with `_`, then falls back to numbered suffixes (`Foo_1`, `Foo_2`, ...; or `Foo_1` directly
+/// when `base` already ends with `_`, avoiding `Foo__`).
+fn next_available_cc_alias_name(base: &str, taken_names: &HashSet<String>) -> String {
+    let (first, prefix) = if base.ends_with('_') {
+        (None, Cow::Borrowed(base))
+    } else {
+        let with_underscore = format!("{base}_");
+        (Some(with_underscore.clone()), Cow::Owned(with_underscore))
+    };
+    first
+        .into_iter()
+        .chain((1usize..).map(|index| format!("{prefix}{index}")))
+        .find(|candidate| {
+            !taken_names.contains(candidate) && code_gen_utils::format_cc_ident(candidate).is_ok()
+        })
+        .expect("usize space cannot be exhausted by items in a single module")
+}
+
+/// Resolves collision-disambiguated C++ identifier names for all type and trait alias paths in the
+/// source crate, storing the resolved results directly on each [`ExportedPath`] in `public_paths`.
+///
+/// Rust separates types and values into distinct namespaces (allowing e.g. `pub type Foo = i32;`
+/// alongside `pub fn Foo()`), whereas C++ rejects a `using Foo = ...;` alias sharing a name with a
+/// function, variable, or namespace in the same declarative region. Within each module,
+/// non-alias declarations and non-colliding implicit aliases keep their preferred names, explicit
+/// `#[crubit_annotate::cpp_name("...")]` aliases claim their requested names verbatim or report a
+/// collision error, and remaining colliding implicit aliases receive deterministic suffixes
+/// (`Foo_`, `Foo_1`, ...).
+///
+/// Each Rust module is disambiguated as a scope of its own. Distinct Rust modules that map to the
+/// same C++ namespace (`unix` and `rs_unix`, `r#struct` and `struct_`) are therefore
+/// disambiguated separately, and a name from one of them can still collide with a name from the
+/// other.
+///
+/// `public_paths` holds the paths of every crate, because only that settles whether a path of the
+/// source crate is the definition (which keeps its name) or an alias of another crate's
+/// definition.
+fn disambiguate_cc_public_paths(db: &BindingsGenerator<'_>, public_paths: &mut MergedPublicPaths) {
+    let tcx = db.tcx();
+    let source_krate = db.source_crate_num();
+
+    for module in public_paths.modules(source_krate) {
+        // The C++ names of the module's declarations that cannot be renamed.
+        let mut taken_names = HashSet::new();
+        // The module's paths that C++ spells as `using` aliases, each as its Rust name, its
+        // position in `public_paths` and the C++ name it would like. Explicit aliases got that
+        // name from a `cpp_name` attribute.
+        let mut explicit_aliases = Vec::new();
+        let mut implicit_aliases = Vec::new();
+
+        for index in module {
+            let path = public_paths.path(index);
+            let (rs_name, def_id) = (path.name, path.def_id);
+            let kind = tcx.def_kind(def_id);
+            if kind == DefKind::Mod {
+                taken_names.insert(format_cc_namespace_segment(rs_name).as_ref().into());
+                continue;
+            }
+            let canonical = public_paths
+                .canonical(def_id)
+                .expect("every path of the source crate names a definition that is kept");
+            if !matches!(
+                kind,
+                DefKind::Struct
+                    | DefKind::Enum
+                    | DefKind::Union
+                    | DefKind::Fn
+                    | DefKind::TyAlias
+                    | DefKind::Const { .. }
+                    | DefKind::Trait
+            ) || crubit_attr::get_attrs(tcx, def_id).unwrap().specializes_cpp_type
+                || (kind == DefKind::Trait && !is_supported_trait_def(tcx, def_id))
+                || resolve_canonical_name(db, canonical).is_err()
+            {
+                continue;
+            }
+
+            // A definition keeps its name unless it is itself a type alias. Of the other paths,
+            // those of types and traits become `using` aliases, and a re-exported function keeps
+            // its name.
+            let is_canonical = public_paths.is_canonical(index);
+            let is_alias = if is_canonical {
+                kind == DefKind::TyAlias
+            } else {
+                if rs_name.as_str().starts_with("__CrubitProject") {
+                    continue;
+                }
+                match kind {
+                    DefKind::Fn => false,
+                    DefKind::Struct | DefKind::Enum | DefKind::Union | DefKind::TyAlias => true,
+                    DefKind::Trait if !trait_has_generic_ty_args(tcx, def_id) => true,
+                    _ => continue,
+                }
+            };
+            let unqualified = path.unqualified_name(db, is_canonical);
+            let cc_name = unqualified.cpp_name.as_str().to_owned();
+            if !is_alias {
+                taken_names.insert(cc_name);
+                continue;
+            }
+
+            if let Err(err) = code_gen_utils::format_cc_ident(&cc_name).with_context(|| {
+                format!("Error formatting type alias name `{}`", unqualified.cpp_name)
+            }) {
+                public_paths.set_cc_alias_name(index, Err(err));
+            } else if unqualified.has_explicit_cpp_name {
+                explicit_aliases.push((rs_name, index, cc_name));
+            } else {
+                implicit_aliases.push((rs_name, index, cc_name));
+            }
+        }
+
+        // An alias whose Rust spelling already equals its C++ name goes first, so that it keeps
+        // the name (a literal `int_` stays `int_` while the escaped `r#int` moves on to `int_1`).
+        // The aliases of one module have distinct Rust names, which settle the rest of the order.
+        // Names are compared as strings: `Symbol`'s `Ord` follows the interner.
+        let by_name = |(lhs_rs, _, lhs_cc): &(Symbol, PathIndex, String),
+                       (rhs_rs, _, rhs_cc): &(Symbol, PathIndex, String)| {
+            (lhs_rs.as_str() != lhs_cc.as_str())
+                .cmp(&(rhs_rs.as_str() != rhs_cc.as_str()))
+                .then_with(|| lhs_rs.as_str().cmp(rhs_rs.as_str()))
+        };
+        implicit_aliases.sort_by(by_name);
+        explicit_aliases.sort_by(by_name);
+
+        // Pass 1: Every implicit alias whose preferred C++ name does not collide reserves its own
+        // name first, so neither explicit `cpp_name` errors nor renamed sibling aliases steal it.
+        let mut deferred_implicit = Vec::new();
+        for (_, index, cc_name) in implicit_aliases {
+            if taken_names.insert(cc_name.clone()) {
+                public_paths.set_cc_alias_name(index, Ok(Symbol::intern(&cc_name)));
+            } else {
+                deferred_implicit.push((index, cc_name));
+            }
+        }
+
+        // Pass 2: Explicit `cpp_name` aliases claim their requested names verbatim or error on
+        // collision; failed explicit aliases emit only a comment so they do not reserve a symbol.
+        for (rs_name, index, cc_name) in explicit_aliases {
+            let cc_alias_name = if taken_names.insert(cc_name.clone()) {
+                Ok(Symbol::intern(&cc_name))
+            } else {
+                Err(anyhow!(
+                    "Type alias `{rs_name}` has explicit `cpp_name` `{cc_name}` that collides \
+                     with another item in the same scope",
+                ))
+            };
+            public_paths.set_cc_alias_name(index, cc_alias_name);
+        }
+
+        // Pass 3: Assign remaining colliding implicit aliases their next available C++ name.
+        for (index, cc_name) in deferred_implicit {
+            let cc_name = next_available_cc_alias_name(&cc_name, &taken_names);
+            public_paths.set_cc_alias_name(index, Ok(Symbol::intern(&cc_name)));
+            taken_names.insert(cc_name);
+        }
+    }
+}
+
+/// Generates the `using` declaration of the type alias `def_id` under the C++ name
+/// `cc_alias_name`, or fails with the reason it has no such name.
 fn generate_type_alias<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-    using_name: &str,
+    cc_alias_name: Result<Symbol>,
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let unnorm_ty = tcx.type_of(def_id).instantiate_identity();
-    let norm_result = try_normalize_ty(tcx, tcx.param_env(def_id), unnorm_ty);
-    let Ok(alias_type) = norm_result else {
+    let Ok(alias_type) = try_normalize_ty(tcx, tcx.param_env(def_id), unnorm_ty) else {
         bail!("Generic type aliases of {} not supported", unnorm_ty.skip_normalization());
     };
-    create_type_alias(db, def_id, using_name, alias_type)
+    create_type_alias(db, def_id, cc_alias_name?.as_str(), alias_type)
 }
 
 fn create_type_alias<'tcx>(
@@ -1324,8 +1465,15 @@ fn generate_item_impl<'tcx>(
         DefKind::Fn => {
             db.generate_function(def_id, None, None, StaticMethodMode::Infer).cloned().map(Some)
         }
-        DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
-            .map(|snippets| Some(snippets.into_main_api())),
+        DefKind::TyAlias => {
+            let cc_alias_name = db
+                .all_public_paths_by_def_id()
+                .canonical(def_id)
+                .expect("a definition that has a canonical name has a canonical path")
+                .cc_name(db, /* is_canonical= */ true);
+            generate_type_alias(db, def_id, cc_alias_name)
+                .map(|snippets| Some(snippets.into_main_api()))
+        }
         #[allow(clippy::unneeded_struct_pattern)]
         DefKind::Const { .. } => generate_const(db, def_id, None).map(Some),
         DefKind::Trait => generate_trait(db, def_id).map(Some),
@@ -1503,16 +1651,23 @@ fn formatted_items_in_crate<'db, 'tcx>(
     db: &'db BindingsGenerator<'tcx>,
 ) -> impl Iterator<Item = FormattedItem<'db, 'tcx>> {
     let tcx = db.tcx();
-    let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
-    defs_in_crate
+    let source_crate_num = db.source_crate_num();
+    let all_public_paths = db.all_public_paths_by_def_id();
+    db.public_paths_by_def_id(source_crate_num)
         .def_ids()
-        .filter_map(|def_id| {
+        .filter_map(move |def_id| {
+            let aliases_in_source_crate = || {
+                all_public_paths
+                    .aliases(def_id)
+                    .filter(|path| path.krate == source_crate_num)
+                    .collect::<Vec<_>>()
+            };
             if crubit_attr::get_attrs(tcx, def_id).unwrap().specializes_cpp_type {
                 return None;
             }
-            let mut snippets = None;
             let canonical_name = db.symbol_canonical_name(def_id).ok()?;
-            let aliases = if canonical_name.krate_num == db.source_crate_num() {
+            let mut snippets = None;
+            let aliases = if canonical_name.krate_num == source_crate_num {
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
                 // want to regenerate those definitions.
@@ -1521,7 +1676,7 @@ fn formatted_items_in_crate<'db, 'tcx>(
                     Ok(None) => return None,
                     Ok(Some(api_snippets)) => {
                         // Only generate aliases if we generate a definition.
-                        (api_snippets.clone(), defs_in_crate.aliases(def_id).collect())
+                        (api_snippets.clone(), aliases_in_source_crate())
                     }
                     Err(err) => (
                         generate_unsupported_def(db, def_id, err.clone()).into_main_api(),
@@ -1531,12 +1686,9 @@ fn formatted_items_in_crate<'db, 'tcx>(
                 snippets = Some(api_snippets);
                 aliases
             } else {
-                // An external crate's definition is only aliased, by each of our paths for it.
-                defs_in_crate
-                    .canonical(def_id)
-                    .into_iter()
-                    .chain(defs_in_crate.aliases(def_id))
-                    .collect()
+                // Another crate's definition is only aliased, by each of the source crate's
+                // paths for it.
+                aliases_in_source_crate()
             };
             Some(FormattedItem {
                 def_id,
@@ -1862,8 +2014,9 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
         // We delay handling aliases until after sorting by def id to ensure they are emitted in a
         // deterministic order, same as the main api definitions. This is important for caching and
         // testing.
-        item.aliases.into_iter().for_each(|alias| {
-            let using_snippets = generate_using(db, &alias.name, def_id)
+        for alias in item.aliases {
+            let cc_alias_name = alias.cc_name(db, /* is_canonical= */ false);
+            let using_snippets = generate_using(db, &alias.name, cc_alias_name, def_id)
                 .unwrap_or_else(|err| generate_unsupported_def(db, def_id, err));
             cc_details.push(CcDetails::new(
                 // `def_id` gets used for coalescing namespaces in
@@ -1873,7 +2026,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
                 Cow::Owned(alias.to_namespace_qualifier(db)),
                 using_snippets.into_tokens(&mut cc_details_prereqs),
             ));
-        });
+        }
         let Some(api_snippets) = item.snippets else {
             continue;
         };
@@ -1883,7 +2036,7 @@ fn generate_crate<'tcx>(db: &BindingsGenerator<'tcx>) -> Result<GeneratedCrate<'
         if cpp_top_level_ns.len() >= 2
             && let Some(alias_name) = prelude_parent_ns_alias(db, def_id)
         {
-            let using_snippets = generate_using(db, &alias_name, def_id)
+            let using_snippets = generate_using(db, &alias_name, Ok(alias_name), def_id)
                 .unwrap_or_else(|err| generate_unsupported_def(db, def_id, err));
             let use_leading_colons = db
                 .crate_features(def_id.krate)

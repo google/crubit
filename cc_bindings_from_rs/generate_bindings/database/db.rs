@@ -217,6 +217,8 @@ memoized::query_group! {
       /// DefId. This will not account for paths available in the entire forest of crates, unlike
       /// visible_parent_map(), strictly those within the provided crate.
       ///
+      /// The paths can also be listed by the module that exports them.
+      ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:public_paths_by_def_id
       fn public_paths_by_def_id(&self, crate_num: CrateNum) -> &CratePublicPaths;
 
@@ -227,7 +229,9 @@ memoized::query_group! {
       /// direct dependencies.
       ///
       /// Paths from the crate that defines a definition are preferred for the canonical path. A
-      /// re-export of a definition will only be used if the defining crate has no paths.
+      /// re-export of a definition will only be used if the defining crate has no paths. Type and
+      /// trait alias paths in the source crate also have their collision-disambiguated C++ names
+      /// resolved within each module.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:all_public_paths_by_def_id
       fn all_public_paths_by_def_id(&self) -> &MergedPublicPaths;

@@ -54,4 +54,41 @@ TEST(TypeAliasesTest, GenericsMatching) {
   EXPECT_EQ(r3.value(), 0);
 }
 
+TEST(TypeAliasesTest, SameNameTypeAliasAndFunction) {
+  namespace ns = type_aliases::test_same_name_type_alias_and_function;
+
+  static_assert(std::is_same_v<std::int32_t, ns::SameName_>);
+  ns::SameName_ x = 42;
+  EXPECT_EQ(ns::SameName(x), 42);
+
+  static_assert(std::is_same_v<std::int64_t, ns::Trailing_1>);
+  ns::Trailing_1 t = 100;
+  EXPECT_EQ(ns::Trailing_(t), 100);
+
+  static_assert(std::is_same_v<std::int16_t, ns::Secondary_1>);
+  EXPECT_EQ(ns::Secondary(), 1);
+  EXPECT_EQ(ns::Secondary_(), 2);
+
+  static_assert(std::is_same_v<std::uint32_t, ns::Sibling_>);
+  static_assert(std::is_same_v<std::int32_t, ns::Sibling_1>);
+  EXPECT_EQ(ns::Sibling(), 3);
+
+  static_assert(std::is_same_v<std::int32_t, ns::SAME_CONST_>);
+  EXPECT_EQ(ns::SAME_CONST, 99);
+
+  static_assert(std::is_same_v<std::int32_t, ns::WithSubmod_1>);
+  EXPECT_EQ(ns::WithSubmod(), 7);
+  EXPECT_EQ(ns::WithSubmod_::inside(), 8);
+
+  static_assert(std::is_same_v<ns::Wrapped, ns::SameAdt_>);
+  ns::SameAdt_ w = ns::SameAdt(55);
+  EXPECT_EQ(w.value, 55);
+
+  static_assert(std::is_same_v<std::int32_t, ns::Reexported_>);
+  EXPECT_EQ(ns::Reexported(10), 11);
+
+  static_assert(std::is_same_v<std::uint16_t, ns::Shared_>);
+  EXPECT_EQ(ns::Shared(), 12);
+}
+
 }  // namespace
