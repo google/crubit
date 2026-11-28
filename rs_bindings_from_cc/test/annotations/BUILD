@@ -221,3 +221,49 @@ golden_test(
     golden_cc = "thread_safe_api_impl.cc",
     golden_rs = "thread_safe_rs_api.rs",
 )
+
+# CRUBIT_VIEW / CRUBIT_OWNER: today's bindings, without and with `unsafe_view`.
+crubit_test_cc_library(
+    name = "view_owner",
+    hdrs = ["view_owner.h"],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+rust_api_from_cpp(
+    name = "view_owner_rust",
+    cpp_target = ":view_owner",
+)
+
+golden_test(
+    name = "view_owner_golden_test",
+    basename = "view_owner",
+    cc_library = "view_owner",
+    golden_cc = "view_owner_api_impl.cc",
+    golden_rs = "view_owner_rs_api.rs",
+)
+
+crubit_test_cc_library(
+    name = "view_owner_unsafe",
+    hdrs = ["view_owner_unsafe.h"],
+    aspect_hints = [
+        "//features:unsafe_view",
+    ],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+rust_api_from_cpp(
+    name = "view_owner_unsafe_rust",
+    cpp_target = ":view_owner_unsafe",
+)
+
+golden_test(
+    name = "view_owner_unsafe_golden_test",
+    basename = "view_owner_unsafe",
+    cc_library = "view_owner_unsafe",
+    golden_cc = "view_owner_unsafe_api_impl.cc",
+    golden_rs = "view_owner_unsafe_rs_api.rs",
+)
