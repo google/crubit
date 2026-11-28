@@ -520,7 +520,7 @@ llvm::Error AnalyzeDefaultedFunction(
     LifetimeConstraints& constraints, ObjectSet& single_valued_objects) {
   assert(func->isDefaulted());
 
-  // TODO(b/230693710): Add complete support for defaulted functions.
+  // Only defaulted default constructors are analyzed here.
 
   if (const auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(func)) {
     if (ctor->isDefaultConstructor()) {
@@ -643,9 +643,9 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
   // change based on whether a body happened to be created for them, and we
   // want to make sure we always exercise our logic for defaulted functions in
   // tests.
-  // TODO(b/230693710): We currently only support analyzing defaulted default
-  // constructors, so for other defaulted functions, we currently fall back to
-  // AnalyzeFunctionBody() (if they do have a body).
+  // `AnalyzeDefaultedFunction` only handles defaulted default constructors;
+  // other defaulted functions fall back to `AnalyzeFunctionBody()` when a body
+  // is present.
   const auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(func);
   bool can_analyze_defaulted_func =
       ctor != nullptr && ctor->isDefaultConstructor();
@@ -774,7 +774,7 @@ llvm::Expected<llvm::DenseSet<const clang::FunctionDecl*>>
 GetDefaultedFunctionCallees(const clang::FunctionDecl* func) {
   assert(func->isDefaulted());
 
-  // TODO(b/230693710): Add complete support for defaulted functions.
+  // Only defaulted default constructors are analyzed here.
 
   if (const auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(func)) {
     if (ctor->isDefaultConstructor()) {
@@ -825,11 +825,9 @@ llvm::Expected<llvm::DenseSet<const clang::FunctionDecl*>> GetCallees(
 
   const clang::Stmt* body = func->getBody();
   if (!body) {
-    // TODO(b/230693710): Do this unconditionally for defaulted functions, even
-    // if they happen to have a body (because something caused Sema to create a
-    // body for them). We can't do this yet because we don't have full support
-    // for defaulted functions yet, so we would break tests where we happen to
-    // have a body for the defaulted function today.
+    // Only use `GetDefaultedFunctionCallees` when no body was synthesized,
+    // because `GetDefaultedFunctionCallees` only handles defaulted default
+    // constructors.
     if (func->isDefaulted()) {
       return GetDefaultedFunctionCallees(func);
     }
