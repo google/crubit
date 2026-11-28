@@ -384,5 +384,66 @@ TEST(GenerateBindingsAndMetadataTest, SucceedsOnClangDriverWarning) {
   EXPECT_OK(GenerateBindingsWithExtraClangArg("-Wl,--foo"));
 }
 
+TEST(GenerateBindingsAndMetadataTest,
+     TemplateBlocklistPathRegexRequiresFullPathMatch) {
+  std::string blocked_h = WriteFileForCurrentTest("blocked.h", R"cc(
+#pragma clang lifetime_elision
+    template <typename T>
+    struct [[clang::annotate("crubit_always_instantiate")]] BlockedTemplateA {
+      void Method() {}
+      T value;
+    };
+    template <typename T>
+    struct [[clang::annotate("crubit_always_instantiate")]] BlockedTemplateB {
+      void Method() {}
+      T value;
+    };
+    BlockedTemplateA<int> MakeBlockedA();
+    BlockedTemplateB<int> MakeBlockedB();
+  )cc");
+  std::string allowed_h = WriteFileForCurrentTest("allowed.h", R"cc(
+#pragma clang lifetime_elision
+    template <typename T>
+    struct [[clang::annotate("crubit_always_instantiate")]] AllowedTemplateA {
+      void Method() {}
+      T value;
+    };
+    template <typename T>
+    struct [[clang::annotate("crubit_always_instantiate")]] AllowedTemplateB {
+      void Method() {}
+      T value;
+    };
+    AllowedTemplateA<int> MakeAllowedA();
+    AllowedTemplateB<int> MakeAllowedB();
+  )cc");
+
+  CmdlineArgs args = MakeCmdline("a.h").args();
+  args.public_headers = {HeaderName(blocked_h), HeaderName(allowed_h)};
+  args.headers_to_targets.clear();
+  args.headers_to_targets[HeaderName(blocked_h)] = args.current_target;
+  args.headers_to_targets[HeaderName(allowed_h)] = args.current_target;
+  args.target_to_features[args.current_target] = {"supported",
+                                                  "template_instantiation"};
+  // `.*/blocked\.h` matches the full path of `blocked_h`, while `allowed\.h`
+  // only matches a substring of `allowed_h` and must not block it.
+  // Multiple templates and inline member functions in each header exercise
+  // both initial `FileID` cache misses and repeated `FileID` cache hits.
+  args.template_blocklist_path_regex = ".*/blocked\\.h|allowed\\.h";
+  ASSERT_OK_AND_ASSIGN(Cmdline cmdline, Cmdline::Create(args));
+
+  ASSERT_OK_AND_ASSIGN(
+      BindingsAndMetadata result,
+      GenerateBindingsAndMetadata(cmdline, DefaultClangArgs(),
+                                  /*virtual_headers_contents_for_testing=*/{}));
+
+  EXPECT_THAT(result.rs_api,
+              HasSubstr("Class template instantiation forbidden by blocklist"));
+  EXPECT_THAT(result.rs_api, Not(HasSubstr("fn MakeBlockedA")));
+  EXPECT_THAT(result.rs_api, Not(HasSubstr("fn MakeBlockedB")));
+  EXPECT_THAT(result.rs_api, HasSubstr("fn MakeAllowedA"));
+  EXPECT_THAT(result.rs_api, HasSubstr("fn MakeAllowedB"));
+  EXPECT_THAT(result.rs_api, HasSubstr("fn Method"));
+}
+
 }  // namespace
 }  // namespace crubit

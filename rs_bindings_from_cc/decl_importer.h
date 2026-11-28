@@ -26,7 +26,9 @@
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/FileEntry.h"
 #include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
@@ -150,14 +152,32 @@ class Invocation {
     if (loc.isInvalid()) {
       return true;
     }
-    llvm::StringRef path = source_manager.getFilename(loc);
-    if (path.empty()) {
+    clang::FileID file_id = source_manager.getFileID(loc);
+    if (file_id.isInvalid()) {
       return true;
     }
-    llvm::SmallVector<llvm::StringRef, 4> captures;
-    return !(template_blocklist_path_regex_->match(path, &captures)
-                 ? captures[0].size() == path.size()
-                 : false);
+    if (&source_manager != template_blocklist_cache_source_manager_) {
+      template_blocklist_cache_source_manager_ = &source_manager;
+      template_blocklist_cache_.clear();
+    }
+    if (auto it = template_blocklist_cache_.find(file_id);
+        it != template_blocklist_cache_.end()) {
+      return it->second;
+    }
+    bool should_instantiate = true;
+    if (clang::OptionalFileEntryRef file_entry =
+            source_manager.getFileEntryRefForID(file_id)) {
+      llvm::StringRef path = file_entry->getName();
+      if (!path.empty()) {
+        llvm::SmallVector<llvm::StringRef, 4> captures;
+        should_instantiate =
+            !(template_blocklist_path_regex_->match(path, &captures)
+                  ? captures[0].size() == path.size()
+                  : false);
+      }
+    }
+    template_blocklist_cache_.insert({file_id, should_instantiate});
+    return should_instantiate;
   }
 
  private:
@@ -169,6 +189,13 @@ class Invocation {
   // If non-null, a regex that matches the paths of definition files of
   // templates that should not be instantiated.
   std::shared_ptr<const llvm::Regex> template_blocklist_path_regex_;
+
+  // Cache mapping `clang::FileID` to `should_instantiate_template_from_path`
+  // results for `template_blocklist_cache_source_manager_`.
+  mutable const clang::
+      SourceManager* _Nullable template_blocklist_cache_source_manager_ =
+          nullptr;
+  mutable llvm::DenseMap<clang::FileID, bool> template_blocklist_cache_;
 
   CarcinizeMode carcinize_mode_;
 
