@@ -8,7 +8,7 @@ pub fn returns_status(is_ok: bool) -> Status {
     if is_ok {
         ok(())
     } else {
-        err(status::internal("Something went wrong, oh no!"))
+        err(status::internal!("Something went wrong, oh no!"))
     }
 }
 
@@ -16,6 +16,6 @@ pub fn returns_status_or_int(is_ok: bool) -> StatusOr<i32> {
     if is_ok {
         ok(42)
     } else {
-        err(status::internal("Something went wrong, oh no!"))
+        err(status::internal!("Something went wrong, oh no!"))
     }
 }
