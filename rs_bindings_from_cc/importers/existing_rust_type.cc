@@ -339,9 +339,14 @@ std::unique_ptr<crubit::ffi::Item> ExistingRustTypeImporter::Import(
   existing->set_owning_target(ictx_.GetOwningTarget(*type_decl).value());
   if (!cpp_type->isIncompleteType()) {
     auto* size_align = existing->mutable_size_align();
-    size_align->set_size(context.getTypeSizeInChars(cpp_type).getQuantity());
-    size_align->set_alignment(
-        context.getTypeAlignInChars(cpp_type).getQuantity());
+    if (existing->rs_name() == "!") {
+      size_align->set_size(0);
+      size_align->set_alignment(1);
+    } else {
+      size_align->set_size(context.getTypeSizeInChars(cpp_type).getQuantity());
+      size_align->set_alignment(
+          context.getTypeAlignInChars(cpp_type).getQuantity());
+    }
     existing->set_is_trivially_copyable(
         cc_qualtype.isTriviallyCopyableType(context));
   }

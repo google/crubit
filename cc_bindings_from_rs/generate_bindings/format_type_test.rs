@@ -578,10 +578,8 @@ fn test_format_ty_for_cc_failures() {
     let testcases = [
         // ( <Rust type>, <expected error message> )
         (
-            // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
-            // details).
             "!", // TyKind::Never
-            "The never type `!` is only supported as a return type (b/254507801)",
+            "The never type `!` is not supported as a parameter type (b/254507801)",
         ),
         (
             "extern \"C\" fn (&i32)", // TyKind::Ref (nested reference - underneath fn ptr)

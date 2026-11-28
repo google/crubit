@@ -654,6 +654,7 @@ private_common_attrs = {
             "//support/rs:option",
             "//support/rs:result",
             "//support/rs:tuple",
+            "//support/rs:never",
             "//support/rs:unit",
             "//support/rs:vec",
             "//support/rs:box",

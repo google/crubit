@@ -22,6 +22,7 @@ exports_files(
         "int.h",
         "iterator_adapter.h",
         "lossy_formatter_for_bindings.h",
+        "never.h",
         "option.h",
         "result.h",
         "slice_ref.h",
@@ -419,6 +420,33 @@ alias(
     ],
     visibility = [
         "//visibility:public",
+    ],
+)
+
+alias(
+    name = "never",
+    actual = "//support/rs:never",
+    compatible_with = ["//buildenv/target:non_prod"],
+    # Prefer //support/rs:never.
+    tags = [
+        "alt_dep=//support/rs:never",
+        "avoid_dep",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+crubit_cc_test(
+    name = "never_test",
+    srcs = ["never_test.cc"],
+    tags = [
+        "no_android",
+        "no_ios",
+    ],
+    deps = [
+        "//support/rs:never",
+        "@googletest//:gtest_main",
     ],
 )
 

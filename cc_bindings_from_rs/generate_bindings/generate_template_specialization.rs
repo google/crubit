@@ -110,24 +110,17 @@ fn parse_unit_in_specialization<'tcx>(
 fn enum_tag_info<'tcx>(
     db: &BindingsGenerator<'tcx>,
     layout: rustc_abi::Layout<'tcx>,
-) -> Result<EnumTagInfo<'tcx>> {
+) -> Result<Option<EnumTagInfo<'tcx>>> {
     let tcx = db.tcx();
     let (tag, tag_encoding, tag_field) = match layout.variants() {
-        rustc_abi::Variants::Empty => {
-            unreachable!("Specialized enum is uninhabited, which is unsupported before queuing.")
-        }
-        rustc_abi::Variants::Single { .. } => {
-            unreachable!(
-                "Specialized enum has only a single inhabited variant, which is unsupported before queuing."
-            )
-        }
+        rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => return Ok(None),
         rustc_abi::Variants::Multiple { tag, tag_encoding, tag_field, .. } => {
             (tag, tag_encoding, *tag_field)
         }
     };
     let tag_type = tag.primitive().to_int_ty(tcx);
     let tag_type_cc = db.format_ty_for_cc(tag_type, TypeLocation::Other)?.clone();
-    Ok(EnumTagInfo { tag_type, tag_type_cc, tag_field, tag_encoding })
+    Ok(Some(EnumTagInfo { tag_type, tag_type_cc, tag_field, tag_encoding }))
 }
 
 fn parse_adt_def_template_specialization<'tcx>(
@@ -1316,29 +1309,68 @@ fn specialize_vec<'tcx>(
     }
 }
 
-fn specialize_result<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+fn build_result_api<'tcx>(
+    tcx: TyCtxt<'tcx>,
     adt_spec: &AdtTemplateSpecialization<'tcx>,
-    ok_ty: FormattedTy<'tcx>,
-    err_ty: FormattedTy<'tcx>,
-    tag_info: &EnumTagInfo<'tcx>,
-) -> ApiSnippets<'tcx> {
-    let tcx = db.tcx();
-    let mut prereqs = CcPrerequisites::default();
-    let ok_ty_tokens = ok_ty.to_cc_type_tokens(db, &mut prereqs);
-    let err_ty_tokens = err_ty.to_cc_type_tokens(db, &mut prereqs);
+    ok_ty_tokens: &CcTypeTokens,
+    err_ty_tokens: &CcTypeTokens,
+    tag_info: Option<&EnumTagInfo<'tcx>>,
+    prereqs: &mut CcPrerequisites<'tcx>,
+) -> ResultApiGenerator<'tcx> {
     let layout = adt_spec.layout;
-    let tag_type = tag_info.tag_type;
-    let tag_type_cc_tokens: TokenStream = tag_info.tag_type_cc.clone().into_tokens(&mut prereqs);
-    let tag_field = tag_info.tag_field;
-    let tag_encoding = tag_info.tag_encoding;
-    let ok_ty_for_rs = ok_ty.for_rs;
-    let err_ty_for_rs = err_ty.for_rs;
-
     let ty::TyKind::Adt(adt, _) = adt_spec.self_ty_rs.kind() else {
         unreachable!("Result<T, E> must be an ADT");
     };
     let ResultVariantIndices { ok_idx, err_idx } = get_result_variant_indices(tcx, *adt);
+    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, ty::TypingEnv::fully_monomorphized());
+    let Some(tag_info) = tag_info else {
+        return match layout.variants() {
+            rustc_abi::Variants::Empty => ResultApiGenerator {
+                ok_ty_cpp: ok_ty_tokens.clone(),
+                err_ty_cpp: err_ty_tokens.clone(),
+                needs_drop,
+                tag_method: ApiSnippets::default(),
+                has_value_impl: quote! { false },
+                write_ok_to_tag: quote! {},
+                write_err_to_tag: quote! {},
+                ok_ptr_val: quote! { this },
+                err_ptr_val: quote! { this },
+            },
+            rustc_abi::Variants::Single { index } => {
+                let is_ok = *index == ok_idx;
+                let has_value_impl = quote! { #is_ok };
+                #[rustversion::before(2026-05-18)]
+                let data_offset = layout.fields().offset(0).bytes();
+                #[rustversion::since(2026-05-18)]
+                let data_offset = layout.fields.offset(0).bytes();
+                let ptr_val = if layout.size().bytes() == 0 {
+                    quote! { this }
+                } else {
+                    let data_offset_lit = Literal::u64_unsuffixed(data_offset);
+                    quote! { __storage + #data_offset_lit }
+                };
+                ResultApiGenerator {
+                    ok_ty_cpp: ok_ty_tokens.clone(),
+                    err_ty_cpp: err_ty_tokens.clone(),
+                    needs_drop,
+                    tag_method: ApiSnippets::default(),
+                    has_value_impl,
+                    write_ok_to_tag: quote! {},
+                    write_err_to_tag: quote! {},
+                    ok_ptr_val: ptr_val.clone(),
+                    err_ptr_val: ptr_val,
+                }
+            }
+            rustc_abi::Variants::Multiple { .. } => {
+                unreachable!("Variants::Multiple should have produced Some(EnumTagInfo)")
+            }
+        };
+    };
+
+    let tag_type = tag_info.tag_type;
+    let tag_type_cc_tokens: TokenStream = tag_info.tag_type_cc.clone().into_tokens(prereqs);
+    let tag_field = tag_info.tag_field;
+    let tag_encoding = tag_info.tag_encoding;
     let tag_method = generate_tag_accessors(
         tcx,
         quote! { ::rs::Result<#ok_ty_tokens, #err_ty_tokens> },
@@ -1347,7 +1379,6 @@ fn specialize_result<'tcx>(
         quote! { __storage },
     );
 
-    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, ty::TypingEnv::fully_monomorphized());
     let discr_for_ok = adt_spec.self_ty_rs.discriminant_for_variant(tcx, ok_idx).expect(
         "We do not support zero sized types. Before generating a specialization, we\
             check that the type can be formatted as a C++ type. That should exclude this case \
@@ -1368,7 +1399,7 @@ fn specialize_result<'tcx>(
         Literal::u64_unsuffixed(LayoutData::for_variant(&layout, err_idx).fields.offset(0).bytes()),
     );
 
-    let result_api = match tag_encoding {
+    match tag_encoding {
         rustc_abi::TagEncoding::Direct => ResultApiGenerator {
             ok_ty_cpp: ok_ty_tokens.clone(),
             err_ty_cpp: err_ty_tokens.clone(),
@@ -1432,7 +1463,29 @@ fn specialize_result<'tcx>(
                 err_ptr_val,
             }
         }
+    }
+}
+
+fn specialize_result<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    adt_spec: &AdtTemplateSpecialization<'tcx>,
+    ok_ty: FormattedTy<'tcx>,
+    err_ty: FormattedTy<'tcx>,
+    tag_info: Option<&EnumTagInfo<'tcx>>,
+) -> ApiSnippets<'tcx> {
+    let tcx = db.tcx();
+    let mut prereqs = CcPrerequisites::default();
+    let ok_ty_tokens = ok_ty.to_cc_type_tokens(db, &mut prereqs);
+    let err_ty_tokens = err_ty.to_cc_type_tokens(db, &mut prereqs);
+    let layout = adt_spec.layout;
+    let ok_ty_for_rs = ok_ty.for_rs;
+    let err_ty_for_rs = err_ty.for_rs;
+
+    let ty::TyKind::Adt(adt, _) = adt_spec.self_ty_rs.kind() else {
+        unreachable!("Result<T, E> must be an ADT");
     };
+    let result_api =
+        build_result_api(tcx, adt_spec, &ok_ty_tokens, &err_ty_tokens, tag_info, &mut prereqs);
 
     let rs_fully_qualified_name = quote! { core::result::Result<#ok_ty_for_rs, #err_ty_for_rs> };
     let cc_fully_qualified_name = quote! { ::rs::Result<#ok_ty_tokens, #err_ty_tokens> };
@@ -1463,8 +1516,21 @@ fn specialize_result<'tcx>(
     .collect();
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
 
-    let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
+    let (storage_decl, static_assert_size) = if layout.size().bytes() == 0 {
+        (
+            quote! {},
+            quote! { static_assert(sizeof(::rs::Result<#ok_ty_tokens, #err_ty_tokens>) == #align_literal); __NEWLINE__ },
+        )
+    } else {
+        let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
+        (quote! { unsigned char __storage[#size_literal]; }, quote! {})
+    };
+    let default_ctor_delete = if matches!(layout.variants(), rustc_abi::Variants::Empty) {
+        quote! { Result() = delete; __NEWLINE__ }
+    } else {
+        quote! {}
+    };
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
     let main_api_tokens = quote! {
         template<> __NEWLINE__
@@ -1474,11 +1540,13 @@ fn specialize_result<'tcx>(
         ::rs::Result<#ok_ty_tokens, #err_ty_tokens>
             : public ::rs::ResultBase<::rs::Result<#ok_ty_tokens, #err_ty_tokens>, #ok_ty_tokens, #err_ty_tokens> { __NEWLINE__
         public:
+            #default_ctor_delete
             #main_api_tokens __NEWLINE__
 
             private:
-               unsigned char __storage[#size_literal]; __NEWLINE__
+               #storage_decl __NEWLINE__
         };
+        #static_assert_size
     };
 
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
@@ -1497,36 +1565,50 @@ fn specialize_result<'tcx>(
     }
 }
 
-fn specialize_option<'tcx>(
-    db: &BindingsGenerator<'tcx>,
+fn build_option_api<'tcx>(
+    tcx: TyCtxt<'tcx>,
     adt_spec: &AdtTemplateSpecialization<'tcx>,
-    arg_ty: FormattedTy<'tcx>,
-    tag_info: &EnumTagInfo<'tcx>,
-) -> ApiSnippets<'tcx> {
-    let tcx = db.tcx();
-    let mut prereqs = CcPrerequisites::default();
-    let ty_tokens = arg_ty.to_cc_type_tokens(db, &mut prereqs);
+    ty_tokens: &CcTypeTokens,
+    tag_info: Option<&EnumTagInfo<'tcx>>,
+    prereqs: &mut CcPrerequisites<'tcx>,
+) -> OptionApiGenerator<'tcx> {
     let layout = adt_spec.layout;
-    // Under the `option_references` feature, `Option<&T>` is `rs::Option<T const&>`, whose only
-    // state is a pointer owned by `rs::OptionBase<Derived, T&>`. This matches the layout of
-    // `Option<&T>`: for a sized `T`, Rust guarantees that it has the layout of `&T`, with `None`
-    // represented as a null pointer.
-    let is_reference = format_type::is_option_arg_formatted_as_cc_ref(db, arg_ty.ty);
-
-    let tag_type = tag_info.tag_type;
-    let tag_type_cc: TokenStream = tag_info.tag_type_cc.clone().into_tokens(&mut prereqs);
-    let tag_field = tag_info.tag_field;
-    let tag_encoding = tag_info.tag_encoding;
-    let arg_ty_for_rs = arg_ty.for_rs;
-
     let ty::TyKind::Adt(adt, _) = adt_spec.self_ty_rs.kind() else {
         unreachable!("Option<T> must be an ADT");
     };
-    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, ty::TypingEnv::fully_monomorphized());
-
     let OptionVariantIndices { some_idx, none_idx } = get_option_variant_indices(tcx, *adt);
+    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, ty::TypingEnv::fully_monomorphized());
+    let Some(tag_info) = tag_info else {
+        return match layout.variants() {
+            rustc_abi::Variants::Empty => {
+                unreachable!("Option<T> is never uninhabited because of the None variant")
+            }
+            rustc_abi::Variants::Single { .. } => OptionApiGenerator {
+                arg_ty: ty_tokens.clone(),
+                needs_drop,
+                tag_method: ApiSnippets {
+                    main_api: CcSnippet::new(quote! {
+                        constexpr unsigned char tag() const& noexcept { return 0; } __NEWLINE__
+                        constexpr void set_tag(unsigned char) noexcept {} __NEWLINE__
+                    }),
+                    ..Default::default()
+                },
+                none_val: quote! { 0 },
+                write_some_to_tag: quote! {},
+                some_ptr_val: quote! { reinterpret_cast<#ty_tokens*>(this) },
+                some_const_ptr_val: quote! { reinterpret_cast<#ty_tokens const*>(this) },
+                tag_type_cc: quote! { unsigned char },
+            },
+            rustc_abi::Variants::Multiple { .. } => {
+                unreachable!("Variants::Multiple should have produced Some(EnumTagInfo)")
+            }
+        };
+    };
 
-    prereqs.includes.insert(CcInclude::optional());
+    let tag_type = tag_info.tag_type;
+    let tag_type_cc: TokenStream = tag_info.tag_type_cc.clone().into_tokens(prereqs);
+    let tag_field = tag_info.tag_field;
+    let tag_encoding = tag_info.tag_encoding;
     let tag_method = generate_tag_accessors(
         tcx,
         quote! { ::rs::Option<#ty_tokens> },
@@ -1543,7 +1625,7 @@ fn specialize_option<'tcx>(
         adt_spec.self_ty_rs.discriminant_for_variant(tcx, none_idx).expect(expect_msg);
     let none_discr_val = int_literal_of_ty(tcx, discr_for_none.val, tag_type)
         .expect("tag to be valid scalar tokens");
-    let option_api = match tag_encoding {
+    match tag_encoding {
         rustc_abi::TagEncoding::Direct => {
             // Option::None is variant 0. Option::Some is variant 1.
             let payload_offset = Literal::u64_unsuffixed(
@@ -1592,7 +1674,30 @@ fn specialize_option<'tcx>(
                 tag_type_cc: tag_type_cc.clone(),
             }
         }
+    }
+}
+
+fn specialize_option<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    adt_spec: &AdtTemplateSpecialization<'tcx>,
+    arg_ty: FormattedTy<'tcx>,
+    tag_info: Option<&EnumTagInfo<'tcx>>,
+) -> ApiSnippets<'tcx> {
+    let tcx = db.tcx();
+    let mut prereqs = CcPrerequisites::default();
+    let ty_tokens = arg_ty.to_cc_type_tokens(db, &mut prereqs);
+    let layout = adt_spec.layout;
+    // Under the `option_references` feature, `Option<&T>` is `rs::Option<T const&>`, whose only
+    // state is a pointer owned by `rs::OptionBase<Derived, T&>`. This matches the layout of
+    // `Option<&T>`: for a sized `T`, Rust guarantees that it has the layout of `&T`, with `None`
+    // represented as a null pointer.
+    let is_reference = format_type::is_option_arg_formatted_as_cc_ref(db, arg_ty.ty);
+    let arg_ty_for_rs = arg_ty.for_rs;
+
+    let ty::TyKind::Adt(adt, _) = adt_spec.self_ty_rs.kind() else {
+        unreachable!("Option<T> must be an ADT");
     };
+    prereqs.includes.insert(CcInclude::optional());
     let rs_fully_qualified_name = quote! { core::option::Option<#arg_ty_for_rs> };
     let cc_fully_qualified_name = quote! { ::rs::Option<#ty_tokens> };
     let core = Rc::new(AdtCoreBindings {
@@ -1616,20 +1721,31 @@ fn specialize_option<'tcx>(
 
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().bytes());
-    let (option_api, storage_field) = if is_reference {
+    let (option_api, storage_field, static_assert_size) = if is_reference {
         let option_ref_api = OptionRefApiGenerator {
             arg_ty: ty_tokens.clone(),
             size_in_bytes: size_literal.clone(),
             alignment_in_bytes: align_literal.clone(),
         };
-        (option_ref_api.api_snippets(), quote! {})
+        (option_ref_api.api_snippets(), quote! {}, quote! {})
     } else {
-        let storage_field = quote! {
-            private:
-                unsigned char storage_[#size_literal];
-                __NEWLINE__
+        let option_api = build_option_api(tcx, adt_spec, &ty_tokens, tag_info, &mut prereqs);
+        let (storage_field, static_assert_size) = if layout.size().bytes() == 0 {
+            (
+                quote! {},
+                quote! { static_assert(sizeof(::rs::Option<#ty_tokens>) == #align_literal); __NEWLINE__ },
+            )
+        } else {
+            (
+                quote! {
+                    private:
+                        unsigned char storage_[#size_literal];
+                        __NEWLINE__
+                },
+                quote! {},
+            )
         };
-        (option_api.api_snippets(), storage_field)
+        (option_api.api_snippets(), storage_field, static_assert_size)
     };
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
@@ -1656,6 +1772,7 @@ fn specialize_option<'tcx>(
 
             #storage_field
         };
+        #static_assert_size
     };
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
     // The guard must spell the C++ type exactly as `ty_tokens` does, so format `T` as the
@@ -1684,7 +1801,7 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for AdtTemplateSpecialization<'tcx> {
         match &self.args {
             AdtSpecializationArgs::Option { some_ty, tag_info } => {
                 let some_ty_ty = some_ty.ty;
-                let mut snippets = specialize_option(db, self, some_ty.clone(), tag_info);
+                let mut snippets = specialize_option(db, self, some_ty.clone(), tag_info.as_ref());
                 snippets.main_api.prereqs.forward_declare_type(some_ty_ty);
                 snippets
             }
@@ -1692,7 +1809,7 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for AdtTemplateSpecialization<'tcx> {
                 let ok_ty_ty = ok_ty.ty;
                 let err_ty_ty = err_ty.ty;
                 let mut snippets =
-                    specialize_result(db, self, ok_ty.clone(), err_ty.clone(), tag_info);
+                    specialize_result(db, self, ok_ty.clone(), err_ty.clone(), tag_info.as_ref());
                 snippets.main_api.prereqs.forward_declare_type(ok_ty_ty);
                 snippets.main_api.prereqs.forward_declare_type(err_ty_ty);
                 snippets

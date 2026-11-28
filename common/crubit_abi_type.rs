@@ -43,6 +43,9 @@ impl ToTokens for FullyQualifiedPath {
 /// Abstract representation of the type selector for bridge operations on a type.
 #[derive(Clone, Debug)]
 pub enum CrubitAbiType {
+    Never {
+        cpp_type: TokenStream,
+    },
     /// The Crubit ABI of a pointer is just transmuting the pointer
     Ptr {
         is_const: bool,
@@ -176,6 +179,9 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
                 };
                 quote! { #root::std::BoxedCppStringAbi }.to_tokens(tokens)
             }
+            CrubitAbiType::Never { .. } => {
+                quote! { ::crubit_support::bridge::NeverAbi }.to_tokens(tokens);
+            }
             CrubitAbiType::Transmute { rust_type, .. } => {
                 quote! { ::crubit_support::bridge::TransmuteAbi<#rust_type> }.to_tokens(tokens);
             }
@@ -228,6 +234,9 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
                     quote! { ::cc_std }
                 };
                 quote! { #root::std::BoxedCppStringAbi }.to_tokens(tokens)
+            }
+            CrubitAbiType::Never { .. } => {
+                quote! { ::crubit_support::bridge::NeverAbi }.to_tokens(tokens);
             }
             CrubitAbiType::Transmute { rust_type, .. } => {
                 quote! { ::crubit_support::bridge::transmute_abi::<#rust_type>() }
@@ -283,6 +292,9 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
             CrubitAbiType::StdString { .. } => {
                 quote! { ::crubit::BoxedAbi<std::string> }.to_tokens(tokens)
             }
+            CrubitAbiType::Never { cpp_type } => {
+                quote! { ::crubit::internal::NeverAbi<#cpp_type> }.to_tokens(tokens);
+            }
             CrubitAbiType::Transmute { cpp_type, .. } => {
                 quote! { ::crubit::TransmuteAbi<#cpp_type> }.to_tokens(tokens);
             }
@@ -336,6 +348,9 @@ impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
             }
             CrubitAbiType::StdString { .. } => {
                 quote! { ::crubit::BoxedAbi<std::string>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::Never { cpp_type } => {
+                quote! { ::crubit::internal::NeverAbi<#cpp_type>() }.to_tokens(tokens);
             }
             CrubitAbiType::Transmute { cpp_type, .. } => {
                 quote! { ::crubit::TransmuteAbi<#cpp_type>() }.to_tokens(tokens);

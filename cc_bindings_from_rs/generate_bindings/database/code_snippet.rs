@@ -197,8 +197,15 @@ pub struct EnumTagInfo<'tcx> {
 #[derive(Clone, Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum AdtSpecializationArgs<'tcx> {
-    Option { some_ty: FormattedTy<'tcx>, tag_info: EnumTagInfo<'tcx> },
-    Result { ok_ty: FormattedTy<'tcx>, err_ty: FormattedTy<'tcx>, tag_info: EnumTagInfo<'tcx> },
+    Option {
+        some_ty: FormattedTy<'tcx>,
+        tag_info: Option<EnumTagInfo<'tcx>>,
+    },
+    Result {
+        ok_ty: FormattedTy<'tcx>,
+        err_ty: FormattedTy<'tcx>,
+        tag_info: Option<EnumTagInfo<'tcx>>,
+    },
     Tuple(Vec<FormattedTy<'tcx>>),
     Vec(FormattedTy<'tcx>),
     UserDefinedAdt,

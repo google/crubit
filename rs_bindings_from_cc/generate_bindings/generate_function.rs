@@ -1745,6 +1745,10 @@ fn generate_func_body(
             })
         }
         _ => {
+            if let Some(idx) = param_types.iter().position(|p| p.is_never()) {
+                let never_ident = &thunk_args[idx];
+                return Ok(quote! { match #never_ident {} });
+            }
             let mut body = match return_type.passing_convention() {
                 PassingConvention::AbiCompatible | PassingConvention::Void => {
                     quote! {
@@ -1800,6 +1804,15 @@ fn generate_func_body(
                                 );
                             }
                         )
+                    }
+                }
+
+                PassingConvention::Never => {
+                    quote! {
+                        #crate_root_path::detail::#thunk_ident(
+                            #( #clone_prefixes #thunk_args #clone_suffixes ),*
+                        );
+                        ::core::unreachable!()
                     }
                 }
                 PassingConvention::OwnedPtr => {
@@ -3339,7 +3352,7 @@ fn function_signature(
             };
 
         match type_.passing_convention() {
-            PassingConvention::AbiCompatible => {
+            PassingConvention::AbiCompatible | PassingConvention::Never => {
                 api_params.push(quote! {#ident: #quoted_type_or_self});
                 thunk_args.push(quote! {#ident});
             }

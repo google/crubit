@@ -38,4 +38,43 @@ TEST(NeverTest, MethodNeverReturnDoesNotReturn) {
                       "You can't do that as a method!");
 }
 
+TEST(NeverTest, OptionNever) {
+  auto opt = never::option_never();
+  EXPECT_FALSE(opt.has_value());
+}
+
+TEST(NeverTest, ResultUnitNever) {
+  auto res = never::result_unit_never();
+  EXPECT_TRUE(res.has_value());
+}
+
+TEST(NeverTest, ResultNeverUnit) {
+  auto res = never::result_never_unit();
+  EXPECT_FALSE(res.has_value());
+}
+
+TEST(NeverTest, ResultI32Never) {
+  auto res = never::result_i32_never();
+  EXPECT_TRUE(res.has_value());
+  EXPECT_EQ(res.value(), 42);
+}
+
+TEST(NeverTest, ResultNeverI32) {
+  auto res = never::result_never_i32();
+  EXPECT_FALSE(res.has_value());
+  EXPECT_EQ(res.error(), 42);
+}
+
+TEST(NeverTest, ResultStringNever) {
+  auto res = never::result_string_never();
+  EXPECT_TRUE(res.has_value());
+  auto value = std::move(res).value();
+  (void)value;
+}
+
+TEST(NeverTest, OptionNeverHasValue) {
+  rs::Option<rs::never_t> opt = std::nullopt;
+  EXPECT_FALSE(opt.has_value());
+}
+
 }  // namespace
