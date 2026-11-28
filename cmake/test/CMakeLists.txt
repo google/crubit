@@ -81,6 +81,8 @@ crubit_add_fixture(not_libcxx LINUX_ONLY FAIL_REGEX "Crubit requires libc\\+\\+"
 crubit_add_fixture(clang_args)
 crubit_add_fixture(std_only)
 crubit_add_fixture(basic)
+crubit_add_fixture(bound_deps)
+crubit_add_fixture(unbound_dep)
 crubit_add_fixture(std_target)
 crubit_add_fixture(std_target_and_arch)
 crubit_add_fixture(std_mismatch FAIL_REGEX "Only the build reads:.*i386/_types\\.h.*Only rs_bindings_from_cc would read:.*arm/_types\\.h")
